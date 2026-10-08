@@ -1,0 +1,22 @@
+# Never let line endings be rewritten by a client: migrations, fixtures and the
+# reference Pine file must stay byte-identical across checkouts (PD-7, PD-6).
+* text=auto
+
+*.md text eol=lf
+*.py text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+*.ini text eol=lf
+*.json text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.ps1 text eol=crlf
+*.sh text eol=lf
+
+*.pine binary
+*.png binary
+
+# Golden fixtures are recorded data, not text: store the exact recorded bytes
+# (no EOL normalization on either side) so a checkout equals the recording.
+fixtures/** -text

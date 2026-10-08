@@ -1,0 +1,34 @@
+# config/defaults.yaml — the ONLY source of parameter defaults (PD-11).
+#
+# A parameter that is neither listed here nor supplied by the request is
+# rejected with HTTP 422 VALIDATION_ERROR. Nothing may be invented: every key
+# below cites the spec section that documents it.
+#
+# schema_version guards the shape of this file itself.
+
+schema_version: 1
+
+data:
+  # Section 16 OD-5 — Storage budget GB; "ingest refuses to exceed" it.
+  # Operational guard, not a research parameter: PD-11 still routes it through
+  # this file (only "the request, or config/defaults.yaml" may supply defaults).
+  storage_budget_gb: 20
+
+detectors:
+  rvol_climax_v5:
+    # IMPLEMENTATION_SPEC section 6.3 — Detector RVOL_CLIMAX v5.0
+    vol_len: 20
+    climax_mult: 3.0
+    top_mult: 2.0
+    range_len: 20
+    trend_len: 5
+    close_pos_lo: 0.30
+    close_pos_hi: 0.70
+    regime_len: 100
+    bounce_len: 10
+    bounce_atr: 1.5
+    wick_min: 0.40
+    cooldown: 5
+    atr_len: 14
+    fail_mode: "failed_bounce" # alternative "legacy_v1" (see docs/DECISIONS.md OQ-2)
+    lookback_bars: 100

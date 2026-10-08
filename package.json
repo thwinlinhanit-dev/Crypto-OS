@@ -1,0 +1,10 @@
+{
+  "name": "cryptosos",
+  "private": true,
+  "packageManager": "pnpm@10.18.3",
+  "scripts": {
+    "gen:openapi": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/gen-openapi.ps1",
+    "typecheck": "pnpm -r typecheck",
+    "build": "pnpm --filter web build"
+  }
+}

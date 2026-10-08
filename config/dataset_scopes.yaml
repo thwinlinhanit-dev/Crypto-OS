@@ -1,0 +1,7 @@
+# config/dataset_scopes.yaml — data-scope definitions (spec section 10, data_scope
+# values DEVELOPMENT / HOLDOUT; section 16 OD-8 owns the split point).
+#
+# No keys yet: the DEVELOPMENT/HOLDOUT boundary is an owner decision (OD-8) and
+# PD-4 forbids inventing it. Sections that need it must fail loudly until then.
+
+scopes: {}

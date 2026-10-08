@@ -1,0 +1,35 @@
+# --- secrets (PD-8) ---
+.env
+.env.*
+!.env.example
+
+# --- python ---
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# --- node ---
+node_modules/
+.npm-cache/
+.next/
+out/
+dist/
+*.tsbuildinfo
+
+# --- data (PD-7: local, immutable, never edited in place) ---
+data/*
+!data/.gitkeep
+!data/README.md
+
+# --- tooling / logs ---
+*.log
+logs/
+.DS_Store
+Thumbs.db
+uv-cache/

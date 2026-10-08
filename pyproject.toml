@@ -1,0 +1,66 @@
+[project]
+name = "cryptosos"
+version = "0.1.0"
+description = "CryptoOS — TradingView-identical market research platform (read-only; PD-1)"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+    "sqlalchemy>=2.0.36",
+    "alembic>=1.14",
+    "psycopg[binary]>=3.2",
+    "pyyaml>=6.0.2",
+    "httpx>=0.27",
+    "polars>=1.12",
+    "pyarrow>=18.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "hypothesis>=6.112",
+    "ruff>=0.8",
+    "mypy>=1.13",
+    "types-pyyaml>=6.0.12",
+]
+
+# Not an installable package: the repo is a flat monorepo (engine/, apps/, exchanges/)
+# run from the repo root, so setuptools auto-discovery would claim multiple top-level
+# packages. Dependencies only; imports resolve from the working directory.
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+# "/data" is root-anchored (gitignore semantics): a bare "data" would also
+# match engine/data/ and silently hide the data package from every check.
+extend-exclude = ["/data", ".venv", "node_modules"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "SIM", "RUF"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unreachable = true
+disallow_any_explicit = false
+exclude = ["^data/", "^\\.venv/"]
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_decorators = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+asyncio_mode = "auto"
+pythonpath = ["."]

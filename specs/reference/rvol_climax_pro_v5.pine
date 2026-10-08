@@ -1,0 +1,462 @@
+//@version=6
+strategy("RVOL Climax Pro v5 — trade management", overlay = true,
+     initial_capital = 10000,
+     default_qty_type = strategy.fixed, default_qty_value = 1,
+     commission_type = strategy.commission.percent, commission_value = 0.10,
+     slippage = 0,
+     pyramiding = 0, calc_on_every_tick = false, process_orders_on_close = true,
+     max_bars_back = 5000)
+
+// ================= Inputs =================
+// NOTE: keep this declaration order. The export script reads inputs by position (in_N).
+grpD = "Detection"
+volLen       = input.int(20, "Volume average length (prior bars)", group = grpD)
+climaxMult   = input.float(3.0, "Climax RVOL threshold (x prior avg)", step = 0.1, group = grpD)
+topMult      = input.float(2.0, "TOP short RVOL threshold (x prior avg)", step = 0.1, group = grpD)
+rangeLen     = input.int(20, "Range lookback (bars)", group = grpD)
+trendLen     = input.int(5, "Trend context lookback (bars)", group = grpD)
+closePosLo   = input.float(0.30, "Close-at-low threshold (position in bar)", step = 0.05, group = grpD)
+closePosHi   = input.float(0.70, "Close-at-high threshold", step = 0.05, group = grpD)
+regimeLen    = input.int(100, "Regime EMA length", minval = 2, group = grpD)
+bounceLen    = input.int(10, "Bounce lookback (bars, FAIL)", minval = 2, group = grpD)
+bounceATR    = input.float(1.5, "Min bounce off recent low (x ATR, FAIL)", step = 0.1, group = grpD)
+wickMin      = input.float(0.40, "Min upper-wick share (rejection)", step = 0.05, minval = 0.0, maxval = 1.0, group = grpD)
+cooldown     = input.int(5, "Signal cooldown (bars, 0 = off)", minval = 0, group = grpD)
+
+grpS = "Signals"
+sideMode     = input.string("Long only", "Trade side", options = ["Both", "Long only", "Short only"], group = grpS)
+useLongCont  = input.bool(true, "LONG 1: climax + up-trend + at 20-bar high (continuation)", group = grpS)
+useLongCap   = input.bool(true, "LONG 2: climax + down-trend + low close + at 20-bar low (capitulation)", group = grpS)
+useShortFail = input.bool(true, "SHORT FAIL: failed bounce in a down-trend", group = grpS)
+useShortTop  = input.bool(true, "SHORT TOP: climax at highs + rejection (blow-off)", group = grpS)
+failMode     = input.string("Failed bounce (new)", "FAIL rule", options = ["Failed bounce (new)", "Legacy (v1)"], group = grpS)
+exitOnOpp    = input.bool(false, "Exit on opposite signal", group = grpS)
+exitLongOnTop = input.bool(false, "Exit longs on TOP/FAIL signal", group = grpS)
+showBase     = input.bool(true, "Show untraded climax dots", group = grpS)
+
+grpM = "Risk & management"
+useRiskSizing = input.bool(true, "Risk-based sizing (off = fixed % of equity)", group = grpM)
+riskPct       = input.float(1.0, "Risk per trade (% of equity)", step = 0.1, minval = 0.01, group = grpM)
+maxAllocPct   = input.float(25.0, "Max allocation (% of equity)", step = 5.0, minval = 1.0, group = grpM)
+fixedAllocPct = input.float(10.0, "Allocation when sizing is fixed (%)", step = 1.0, group = grpM)
+stopKind      = input.string("ATR", "Initial stop type", options = ["ATR", "Structure", "None"], group = grpM)
+atrLen        = input.int(14, "ATR length", minval = 1, group = grpM)
+atrStopMult   = input.float(3.0, "Initial ATR stop multiple", step = 0.1, minval = 0.1, group = grpM)
+structBuffer  = input.float(0.25, "Structure stop buffer (x ATR)", step = 0.05, minval = 0.0, group = grpM)
+useBE         = input.bool(false, "Move stop to breakeven", group = grpM)
+beTriggerR    = input.float(1.0, "Breakeven trigger (R)", step = 0.1, minval = 0.1, group = grpM)
+targetR       = input.float(0.0, "Target (R, 0 = none)", step = 0.5, minval = 0.0, group = grpM)
+useTimeStop   = input.bool(true, "Max-hold / time stop", group = grpM)
+horizon       = input.int(80, "Max hold (bars)", minval = 1, group = grpM)
+
+grpR = "Trailing stop"
+useTrail     = input.bool(true, "Enable trailing stop", group = grpR)
+trailKind    = input.string("ATR chandelier", "Trail method", options = ["ATR chandelier", "Percent", "Donchian", "Pivot swing", "Profit giveback", "EMA close"], group = grpR)
+trailMult    = input.float(3.8, "ATR chandelier: multiple (x ATR)", step = 0.1, minval = 0.1, group = grpR)
+pctTrail     = input.float(12.0, "Percent: distance from extreme (%)", step = 0.5, minval = 0.5, group = grpR)
+donLen       = input.int(20, "Donchian: lookback (bars)", minval = 2, group = grpR)
+pivL         = input.int(5, "Pivot swing: left bars", minval = 1, group = grpR)
+pivR         = input.int(3, "Pivot swing: right bars", minval = 1, group = grpR)
+pivBuf       = input.float(0.25, "Pivot swing: buffer (x ATR)", step = 0.05, minval = 0.0, group = grpR)
+gbActR       = input.float(2.0, "Giveback: activates after (R)", step = 0.5, minval = 0.5, group = grpR)
+gbPct        = input.float(35.0, "Giveback: % of open profit returned", step = 5.0, minval = 5.0, maxval = 95.0, group = grpR)
+emaTrailLen  = input.int(21, "EMA close: length", minval = 2, group = grpR)
+
+grpT = "Table / study"
+showTable     = input.bool(true, "Show live signal stats", group = grpT)
+studyHorizon  = input.int(10, "Forward-return study horizon (bars)", minval = 1, group = grpT)
+
+// Benchmark inputs are declared LAST so earlier input positions never shift.
+grpB = "Benchmark"
+benchMode = input.bool(false, "BENCHMARK: random long entries instead of signals (same exits)", group = grpB)
+benchProb = input.float(0.45, "Benchmark: entry probability per flat bar (%)", step = 0.05, minval = 0.01, group = grpB)
+benchSeed = input.int(1, "Benchmark: random seed", minval = 1, group = grpB)
+
+// ================= Detection =================
+atrS  = ta.atr(atrLen)
+volMA = ta.sma(volume, volLen)[1]              // prior bars only: current bar excluded
+rvol  = volMA > 0 ? volume / volMA : na
+
+hiN = ta.highest(high, rangeLen)[1]
+loN = ta.lowest(low, rangeLen)[1]
+
+emaR    = ta.ema(close, regimeLen)
+swingLo = ta.lowest(low, bounceLen)[1]
+
+rng    = high - low
+cpos   = rng > 0 ? (close - low) / rng : 0.5
+upW    = rng > 0 ? (high - math.max(open, close)) / rng : 0.0
+trendU = close > close[trendLen]
+atHi   = close >= hiN
+atLo   = close <= loN
+nearHi = high >= hiN
+
+isClimax = rvol >= climaxMult
+
+arch = not isClimax ? 0 :
+     not trendU     ? (cpos <= closePosLo ? 4 : cpos >= closePosHi ? 5 : 6) :
+                       (cpos >= closePosHi ? 1 : cpos <= closePosLo ? 2 : 3)
+
+archName(int a) =>
+    a == 1 ? "top · drive high" : a == 2 ? "top · sell pressure" : a == 3 ? "top · mid" :
+     a == 4 ? "bot · drive low"  : a == 5 ? "bot · cover press"  : a == 6 ? "bot · mid" : ""
+
+// ================= Trail building blocks (global scope) =================
+donLo = ta.lowest(low, donLen)
+donHi = ta.highest(high, donLen)
+emaT  = ta.ema(close, emaTrailLen)
+plv   = ta.pivotlow(low, pivL, pivR)
+phv   = ta.pivothigh(high, pivL, pivR)
+
+var float lastPL    = na
+var int   lastPLbar = na
+var float lastPH    = na
+var int   lastPHbar = na
+if not na(plv)
+    lastPL    := plv
+    lastPLbar := bar_index - pivR
+if not na(phv)
+    lastPH    := phv
+    lastPHbar := bar_index - pivR
+
+// ================= Signal rules =================
+inDown   = close < emaR and emaR < emaR[5]               // down-trend regime
+bounced  = high - swingLo >= bounceATR * atrS            // price actually rallied off the recent low
+rejected = close < open and upW >= wickMin               // red bar with an upper-wick rejection
+
+// blow-off top: elevated volume, above the regime EMA, tags the 20-bar high, then rejects
+topReject = close < open and (upW >= wickMin or cpos <= closePosLo)
+rawTop    = rvol >= topMult and close > emaR and nearHi and topReject
+
+rawCont = isClimax and trendU and atHi and not rawTop
+rawCap  = isClimax and not trendU and cpos <= closePosLo and atLo
+bool legacyFail = isClimax and not trendU and cpos > closePosLo
+bool newFail    = isClimax and inDown and bounced and rejected and not atLo
+rawFail = failMode == "Failed bounce (new)" ? newFail : legacyFail
+
+// ta.* calls stay at global scope; gaps computed separately
+gapCont = nz(ta.barssince(rawCont)[1], 999)
+gapCap  = nz(ta.barssince(rawCap)[1], 999)
+gapFail = nz(ta.barssince(rawFail)[1], 999)
+gapTop  = nz(ta.barssince(rawTop)[1], 999)
+
+sigLongCont  = rawCont and gapCont >= cooldown
+sigLongCap   = rawCap  and gapCap  >= cooldown
+sigShortFail = rawFail and gapFail >= cooldown
+sigShortTop  = rawTop  and gapTop  >= cooldown
+
+// random number for the benchmark (called every bar so the sequence stays repeatable per seed)
+float rnd = math.random(0.0, 100.0, benchSeed)
+
+longSignal  = benchMode ? rnd < benchProb : (sideMode != "Short only" and ((useLongCont and sigLongCont) or (useLongCap and sigLongCap)))
+shortSignal = benchMode ? false : (sideMode != "Long only" and ((useShortFail and sigShortFail) or (useShortTop and sigShortTop)))
+bearSig     = (useShortTop and sigShortTop) or (useShortFail and sigShortFail)   // ignores the side switch
+sigDir      = longSignal ? 1 : shortSignal ? -1 : 0
+
+string entryTag = benchMode ? "BENCH" : longSignal ? ((useLongCont and sigLongCont) ? "CONT" : "CAPIT") : ((useShortFail and sigShortFail) ? "FAIL" : "TOP")
+
+// ================= Risk engine =================
+isStruct  = stopKind == "Structure"
+noStop    = stopKind == "None"
+structLong  = math.min(low, low[1]) - structBuffer * atrS
+structShort = math.max(high, high[1]) + structBuffer * atrS
+
+riskDist(bool isLong) =>
+    float d = isStruct ? (isLong ? close - structLong : structShort - close) : atrStopMult * atrS
+    math.max(d, syminfo.mintick)
+
+stopFor(bool isLong) =>
+    isStruct ? (isLong ? structLong : structShort) : (isLong ? close - atrStopMult * atrS : close + atrStopMult * atrS)
+
+qtyFor(bool isLong) =>
+    float eq = strategy.equity
+    float d  = riskDist(isLong)
+    useRiskSizing ? math.min(eq * riskPct / 100.0 / d, eq * maxAllocPct / 100.0 / close) : eq * fixedAllocPct / 100.0 / close
+
+// ================= Entries =================
+var float pStop     = na     // stop computed on the signal bar
+var float pR        = na     // risk distance computed on the signal bar
+var float entryR    = na
+var float stopKeep  = na     // persistent stop: only ever tightens
+var int   inBar     = na
+var float hiSince   = na
+var float loSince   = na
+var float stopLevel = na
+var bool  emaArmed  = false
+
+bool flat = strategy.position_size == 0
+
+if flat
+    if longSignal
+        float q = qtyFor(true)
+        if q > 0
+            strategy.entry("LONG", strategy.long, qty = q, comment = entryTag)
+            pStop := noStop ? na : stopFor(true)
+            pR    := riskDist(true)
+            if not noStop
+                strategy.exit("XL", from_entry = "LONG", stop = pStop)   // protected from the first bar
+    else if shortSignal
+        float q = qtyFor(false)
+        if q > 0
+            strategy.entry("SHORT", strategy.short, qty = q, comment = entryTag)
+            pStop := noStop ? na : stopFor(false)
+            pR    := riskDist(false)
+            if not noStop
+                strategy.exit("XL", from_entry = "SHORT", stop = pStop)
+
+// fill detection: process_orders_on_close fills at the close, visible next bar
+bool justLong  = strategy.position_size > 0 and strategy.position_size[1] <= 0
+bool justShort = strategy.position_size < 0 and strategy.position_size[1] >= 0
+
+if justLong or justShort
+    inBar    := bar_index - 1          // the signal bar
+    entryR   := pR
+    stopKeep := pStop
+    hiSince  := justLong ? high : na
+    loSince  := justShort ? low : na
+    emaArmed := false
+
+// ================= Trade management =================
+if strategy.position_size > 0
+    hiSince := na(hiSince) ? high : math.max(hiSince, high)
+else if strategy.position_size < 0
+    loSince := na(loSince) ? low : math.min(loSince, low)
+
+if strategy.position_size != 0
+    bool isL = strategy.position_size > 0
+    float avg = strategy.position_avg_price
+    float R   = na(entryR) or entryR <= 0 ? atrStopMult * atrS : entryR
+    float gain = isL ? (close - avg) / R : (avg - close) / R
+    float hi2 = na(hiSince) ? high : hiSince
+    float lo2 = na(loSince) ? low : loSince
+
+    float stopP = stopKeep
+    if useBE and gain >= beTriggerR
+        stopP := isL ? (na(stopP) ? avg : math.max(stopP, avg)) : (na(stopP) ? avg : math.min(stopP, avg))
+
+    if useTrail
+        float cand = na
+        if trailKind == "ATR chandelier"
+            cand := isL ? hi2 - trailMult * atrS : lo2 + trailMult * atrS
+        else if trailKind == "Percent"
+            cand := isL ? hi2 * (1.0 - pctTrail / 100.0) : lo2 * (1.0 + pctTrail / 100.0)
+        else if trailKind == "Donchian"
+            cand := isL ? donLo : donHi
+        else if trailKind == "Pivot swing"
+            if isL and not na(lastPL) and not na(inBar) and lastPLbar > inBar
+                cand := lastPL - pivBuf * atrS
+            if not isL and not na(lastPH) and not na(inBar) and lastPHbar > inBar
+                cand := lastPH + pivBuf * atrS
+        else if trailKind == "Profit giveback"
+            float peakGain = isL ? hi2 - avg : avg - lo2
+            if peakGain >= gbActR * R
+                cand := isL ? hi2 - gbPct / 100.0 * peakGain : lo2 + gbPct / 100.0 * peakGain
+
+        if not na(cand)
+            cand := isL ? math.min(cand, close - syminfo.mintick) : math.max(cand, close + syminfo.mintick)
+            stopP := isL ? (na(stopP) ? cand : math.max(stopP, cand)) : (na(stopP) ? cand : math.min(stopP, cand))
+
+        // EMA close trail: armed once price has been on the right side of the EMA
+        if trailKind == "EMA close"
+            if (isL and close > emaT) or (not isL and close < emaT)
+                emaArmed := true
+            if emaArmed and ((isL and close < emaT) or (not isL and close > emaT))
+                strategy.close_all("ema trail")
+
+    stopKeep := stopP
+    float tgt = targetR > 0 ? avg + (isL ? targetR : -targetR) * R : na
+    stopLevel := stopP
+    strategy.exit("XL", from_entry = isL ? "LONG" : "SHORT", stop = stopP, limit = tgt)
+
+    if useTimeStop and not na(inBar) and bar_index - inBar >= horizon
+        strategy.close_all("max hold")
+    if exitOnOpp
+        if isL and shortSignal
+            strategy.close("LONG", comment = "opp")
+        if not isL and longSignal
+            strategy.close("SHORT", comment = "opp")
+    if exitLongOnTop and isL and bearSig
+        strategy.close("LONG", comment = "top exit")
+else
+    stopLevel := na
+    stopKeep  := na
+    hiSince   := na
+    loSince   := na
+
+// ================= Forward-return study (live, per signal) =================
+var int[]   iA = array.new_int()
+var float[] pA = array.new_float()
+var int[]   iB = array.new_int()
+var float[] pB = array.new_float()
+var int[]   iS = array.new_int()
+var float[] pS = array.new_float()
+var int[]   iT = array.new_int()
+var float[] pT = array.new_float()
+var float sA = 0.0
+var int   nA = 0
+var int   wA = 0
+var float sB = 0.0
+var int   nB = 0
+var int   wB = 0
+var float sS = 0.0
+var int   nS = 0
+var int   wS = 0
+var float sT = 0.0
+var int   nT = 0
+var int   wT = 0
+
+if sigLongCont
+    array.push(iA, bar_index)
+    array.push(pA, close)
+if sigLongCap
+    array.push(iB, bar_index)
+    array.push(pB, close)
+if sigShortFail
+    array.push(iS, bar_index)
+    array.push(pS, close)
+if sigShortTop
+    array.push(iT, bar_index)
+    array.push(pT, close)
+
+while array.size(iA) > 0
+    if bar_index - array.get(iA, 0) < studyHorizon
+        break
+    array.shift(iA)
+    float p0 = array.shift(pA)
+    float r = (close - p0) / p0 * 100
+    sA += r
+    nA += 1
+    if r > 0
+        wA += 1
+
+while array.size(iB) > 0
+    if bar_index - array.get(iB, 0) < studyHorizon
+        break
+    array.shift(iB)
+    float p0 = array.shift(pB)
+    float r = (close - p0) / p0 * 100
+    sB += r
+    nB += 1
+    if r > 0
+        wB += 1
+
+while array.size(iS) > 0
+    if bar_index - array.get(iS, 0) < studyHorizon
+        break
+    array.shift(iS)
+    float p0 = array.shift(pS)
+    float r = (p0 - close) / p0 * 100
+    sS += r
+    nS += 1
+    if r > 0
+        wS += 1
+
+while array.size(iT) > 0
+    if bar_index - array.get(iT, 0) < studyHorizon
+        break
+    array.shift(iT)
+    float p0 = array.shift(pT)
+    float r = (p0 - close) / p0 * 100
+    sT += r
+    nT += 1
+    if r > 0
+        wT += 1
+
+// ================= Closed trades split by signal =================
+float[] tPnl = array.new_float(5, 0.0)
+int[]   tCnt = array.new_int(5, 0)
+int[]   tWin = array.new_int(5, 0)
+if barstate.islast and strategy.closedtrades > 0
+    for i = 0 to strategy.closedtrades - 1
+        string tg = strategy.closedtrades.entry_comment(i)
+        int k = tg == "CONT" ? 0 : tg == "CAPIT" ? 1 : tg == "FAIL" ? 2 : tg == "TOP" ? 3 : 4
+        float pr = strategy.closedtrades.profit(i)
+        array.set(tPnl, k, array.get(tPnl, k) + pr)
+        array.set(tCnt, k, array.get(tCnt, k) + 1)
+        if pr > 0
+            array.set(tWin, k, array.get(tWin, k) + 1)
+
+fmtT(int c, int w, float p) =>
+    str.tostring(c) + "t " + str.tostring(w) + "W " + str.tostring(p, "#.#")
+
+// ================= Plots =================
+colBase = cpos <= closePosLo ? color.new(color.lime, 40) : cpos >= closePosHi ? color.new(color.red, 40) : color.new(color.gray, 55)
+plotshape(showBase and isClimax and sigDir == 0, title = "climax (no trade)", style = shape.circle, location = location.abovebar, color = trendU ? color.new(color.red, 45) : colBase, size = size.tiny)
+
+plotshape(useLongCont and sigLongCont, title = "LONG continuation", style = shape.triangleup, location = location.belowbar, color = color.teal, size = size.normal, text = "CONT", textcolor = color.teal)
+plotshape(useLongCap and sigLongCap, title = "LONG capitulation", style = shape.labelup, location = location.belowbar, color = color.lime, size = size.small, text = "CAPIT", textcolor = color.black)
+plotshape(useShortFail and sigShortFail, title = "SHORT failed bounce", style = shape.triangledown, location = location.abovebar, color = color.orange, size = size.normal, text = "FAIL", textcolor = color.orange)
+plotshape(useShortTop and sigShortTop, title = "SHORT blow-off top", style = shape.triangledown, location = location.abovebar, color = color.red, size = size.normal, text = "TOP", textcolor = color.red)
+
+// actual fills (drawn on the signal bar)
+plotshape(justLong,  title = "LONG entry",  style = shape.xcross, location = location.belowbar, color = color.aqua, size = size.tiny, offset = -1)
+plotshape(justShort, title = "SHORT entry", style = shape.xcross, location = location.abovebar, color = color.red,  size = size.tiny, offset = -1)
+
+plot(stopLevel, title = "active stop", color = color.new(color.orange, 20), style = plot.style_linebr)
+plot(emaR, title = "Regime EMA", color = color.new(color.gray, 60))
+plot(useTrail and trailKind == "EMA close" ? emaT : na, title = "Trail EMA", color = color.new(color.yellow, 40))
+
+// hover a bar to see why a signal did or didn't fire
+plot(rvol, title = "RVOL", display = display.data_window)
+plot(cpos, title = "Close position", display = display.data_window)
+plot(upW,  title = "Upper wick share", display = display.data_window)
+
+// ================= Live stats table =================
+stopTxt = noStop ? "none" : isStruct ? "Struct +" + str.tostring(structBuffer, "#.##") + "xATR" : "ATR " + str.tostring(atrStopMult, "#.#") + "x"
+trailTxt = not useTrail ? "" : "TRAIL " + trailKind + " "
+
+var table t = table.new(position.top_right, 5, 9, border_width = 1)
+if barstate.islast and showTable
+    table.cell(t, 0, 0, "Signal", text_color = color.white, bgcolor = color.new(color.gray, 30))
+    table.cell(t, 1, 0, "N", text_color = color.white, bgcolor = color.new(color.gray, 30))
+    table.cell(t, 2, 0, "Avg%", text_color = color.white, bgcolor = color.new(color.gray, 30))
+    table.cell(t, 3, 0, "Win%", text_color = color.white, bgcolor = color.new(color.gray, 30))
+    table.cell(t, 4, 0, "Traded n/W/pnl", text_color = color.white, bgcolor = color.new(color.gray, 30), text_size = size.small)
+
+    table.cell(t, 0, 1, "LONG continuation", text_color = color.teal)
+    table.cell(t, 1, 1, str.tostring(nA))
+    table.cell(t, 2, 1, nA > 0 ? str.tostring(sA / nA, "#.##") : "-")
+    table.cell(t, 3, 1, nA > 0 ? str.tostring(wA / nA * 100, "#.#") : "-")
+    table.cell(t, 4, 1, fmtT(array.get(tCnt, 0), array.get(tWin, 0), array.get(tPnl, 0)), text_size = size.small)
+
+    table.cell(t, 0, 2, "LONG capitulation", text_color = color.lime)
+    table.cell(t, 1, 2, str.tostring(nB))
+    table.cell(t, 2, 2, nB > 0 ? str.tostring(sB / nB, "#.##") : "-")
+    table.cell(t, 3, 2, nB > 0 ? str.tostring(wB / nB * 100, "#.#") : "-")
+    table.cell(t, 4, 2, fmtT(array.get(tCnt, 1), array.get(tWin, 1), array.get(tPnl, 1)), text_size = size.small)
+
+    table.cell(t, 0, 3, "SHORT failed bounce", text_color = color.orange)
+    table.cell(t, 1, 3, str.tostring(nS))
+    table.cell(t, 2, 3, nS > 0 ? str.tostring(sS / nS, "#.##") : "-")
+    table.cell(t, 3, 3, nS > 0 ? str.tostring(wS / nS * 100, "#.#") : "-")
+    table.cell(t, 4, 3, fmtT(array.get(tCnt, 2), array.get(tWin, 2), array.get(tPnl, 2)), text_size = size.small)
+
+    table.cell(t, 0, 4, "SHORT blow-off top", text_color = color.red)
+    table.cell(t, 1, 4, str.tostring(nT))
+    table.cell(t, 2, 4, nT > 0 ? str.tostring(sT / nT, "#.##") : "-")
+    table.cell(t, 3, 4, nT > 0 ? str.tostring(wT / nT * 100, "#.#") : "-")
+    table.cell(t, 4, 4, fmtT(array.get(tCnt, 3), array.get(tWin, 3), array.get(tPnl, 3)), text_size = size.small)
+
+    table.cell(t, 0, 5, "climax bar archetype", text_color = color.white, bgcolor = color.new(color.gray, 30))
+    table.cell(t, 1, 5, archName(arch) == "" ? "-" : archName(arch), text_color = color.white, bgcolor = color.new(color.gray, 30), text_size = size.small)
+    table.cell(t, 2, 5, "RVOL", text_color = color.white, bgcolor = color.new(color.gray, 30), text_size = size.small)
+    table.cell(t, 3, 5, na(rvol) ? "-" : str.tostring(rvol, "#.##"), text_color = color.white, bgcolor = color.new(color.gray, 30), text_size = size.small)
+    table.cell(t, 4, 5, na(cpos) ? "-" : str.tostring(cpos, "#.00"), text_color = color.white, bgcolor = color.new(color.gray, 30), text_size = size.small)
+
+    table.cell(t, 0, 6, "Risk & management", text_color = color.white, bgcolor = color.new(color.gray, 30))
+    table.cell(t, 1, 6, useRiskSizing ? str.tostring(riskPct, "#.#") + "% risk" : str.tostring(fixedAllocPct, "#.#") + "% equity", text_size = size.small)
+    table.cell(t, 2, 6, "Stop", text_size = size.small)
+    table.cell(t, 3, 6, stopTxt, text_size = size.small)
+    table.cell(t, 4, 6, "TR " + str.tostring(targetR, "#.#") + "R", text_size = size.small)
+
+    table.cell(t, 0, 7, "Modules", text_color = color.white, bgcolor = color.new(color.gray, 30))
+    table.cell(t, 1, 7, (useBE ? "BE " : "") + trailTxt + (useTimeStop ? "MAX " + str.tostring(horizon) : ""), text_size = size.small)
+    table.cell(t, 2, 7, (exitOnOpp ? "exit on opp " : "") + (exitLongOnTop ? "top exit" : ""), text_size = size.small)
+    table.cell(t, 3, 7, "atr " + str.tostring(atrLen), text_size = size.small)
+    table.cell(t, 4, 7, "cd " + str.tostring(cooldown) + " / study " + str.tostring(studyHorizon), text_size = size.small)
+
+    table.cell(t, 0, 8, "Random benchmark", text_color = color.white, bgcolor = color.new(color.gray, 30), text_size = size.small)
+    table.cell(t, 1, 8, benchMode ? "ON " + str.tostring(benchProb, "#.##") + "%" : "off", text_size = size.small)
+    table.cell(t, 2, 8, benchMode ? "seed " + str.tostring(benchSeed) : "", text_size = size.small)
+    table.cell(t, 3, 8, "", text_size = size.small)
+    table.cell(t, 4, 8, fmtT(array.get(tCnt, 4), array.get(tWin, 4), array.get(tPnl, 4)), text_size = size.small)

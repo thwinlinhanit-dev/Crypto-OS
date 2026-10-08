@@ -1,0 +1,10 @@
+# config/validation.yaml — validation thresholds (spec section 8.3 evidence grade,
+# section 9 walk-forward settings).
+#
+# Empty on purpose: the thresholds are owner inputs (Section 16) and PD-4 forbids
+# inventing numbers. Nothing in the engine reads a value from here until the owner
+# supplies it; a consumer must treat an empty section as configuration missing.
+
+evidence_grade: {}
+walk_forward: {}
+monte_carlo: {}
