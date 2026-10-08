@@ -1,6 +1,103 @@
 {
   "components": {
     "schemas": {
+      "CandleQualityView": {
+        "description": "``quality`` block of the section 11 candle response.",
+        "properties": {
+          "completeness": {
+            "title": "Completeness",
+            "type": "number"
+          },
+          "exclusions": {
+            "items": {
+              "$ref": "#/components/schemas/ExclusionView"
+            },
+            "title": "Exclusions",
+            "type": "array"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "state",
+          "completeness",
+          "exclusions"
+        ],
+        "title": "CandleQualityView",
+        "type": "object"
+      },
+      "CandlesView": {
+        "description": "Section 11 candle window, columnar, plus the ``window`` echo (D-007 style).",
+        "properties": {
+          "c": {
+            "items": {
+              "type": "number"
+            },
+            "title": "C",
+            "type": "array"
+          },
+          "dataset_version": {
+            "title": "Dataset Version",
+            "type": "string"
+          },
+          "h": {
+            "items": {
+              "type": "number"
+            },
+            "title": "H",
+            "type": "array"
+          },
+          "l": {
+            "items": {
+              "type": "number"
+            },
+            "title": "L",
+            "type": "array"
+          },
+          "o": {
+            "items": {
+              "type": "number"
+            },
+            "title": "O",
+            "type": "array"
+          },
+          "quality": {
+            "$ref": "#/components/schemas/CandleQualityView"
+          },
+          "t": {
+            "items": {
+              "type": "string"
+            },
+            "title": "T",
+            "type": "array"
+          },
+          "v": {
+            "items": {
+              "type": "number"
+            },
+            "title": "V",
+            "type": "array"
+          },
+          "window": {
+            "$ref": "#/components/schemas/WindowView"
+          }
+        },
+        "required": [
+          "dataset_version",
+          "quality",
+          "window",
+          "t",
+          "o",
+          "h",
+          "l",
+          "c",
+          "v"
+        ],
+        "title": "CandlesView",
+        "type": "object"
+      },
       "DatasetManifestView": {
         "description": "GET /v1/datasets/{version}: 'what exactly did this use?' (AC2).",
         "properties": {
@@ -130,6 +227,43 @@
         "title": "DefaultsResponse",
         "type": "object"
       },
+      "ExclusionView": {
+        "description": "One active exclusion interval; the chart shades it (design D-013/D-014).",
+        "properties": {
+          "exclusion_end": {
+            "format": "date-time",
+            "title": "Exclusion End",
+            "type": "string"
+          },
+          "exclusion_start": {
+            "format": "date-time",
+            "title": "Exclusion Start",
+            "type": "string"
+          },
+          "gap_id": {
+            "format": "uuid",
+            "title": "Gap Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "gap_id",
+          "exclusion_start",
+          "exclusion_end",
+          "kind",
+          "status"
+        ],
+        "title": "ExclusionView",
+        "type": "object"
+      },
       "GapView": {
         "properties": {
           "detected_at": {
@@ -249,6 +383,62 @@
           "exclusions"
         ],
         "title": "HealthView",
+        "type": "object"
+      },
+      "IndicatorsView": {
+        "description": "``GET /v1/indicators`` body (design D-011).",
+        "properties": {
+          "dataset_version": {
+            "title": "Dataset Version",
+            "type": "string"
+          },
+          "instrument_id": {
+            "format": "uuid",
+            "title": "Instrument Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "params": {
+            "additionalProperties": true,
+            "title": "Params",
+            "type": "object"
+          },
+          "series": {
+            "items": {
+              "$ref": "#/components/schemas/SeriesView"
+            },
+            "title": "Series",
+            "type": "array"
+          },
+          "t": {
+            "items": {
+              "type": "string"
+            },
+            "title": "T",
+            "type": "array"
+          },
+          "tf": {
+            "title": "Tf",
+            "type": "string"
+          },
+          "window": {
+            "$ref": "#/components/schemas/WindowView"
+          }
+        },
+        "required": [
+          "name",
+          "params",
+          "instrument_id",
+          "tf",
+          "dataset_version",
+          "window",
+          "t",
+          "series"
+        ],
+        "title": "IndicatorsView",
         "type": "object"
       },
       "IngestRequest": {
@@ -585,6 +775,35 @@
         "title": "RepairRequest",
         "type": "object"
       },
+      "SeriesView": {
+        "description": "One keyed indicator output; warm-up entries are ``null`` (section 5).",
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Values",
+            "type": "array"
+          }
+        },
+        "required": [
+          "key",
+          "values"
+        ],
+        "title": "SeriesView",
+        "type": "object"
+      },
       "SourceFileView": {
         "properties": {
           "content_sha256": {
@@ -709,6 +928,56 @@
         ],
         "title": "ValidationError",
         "type": "object"
+      },
+      "WindowView": {
+        "description": "Resolved window knobs echoed so every served payload is reproducible.",
+        "properties": {
+          "as_of": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of"
+          },
+          "from": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "to": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To"
+          }
+        },
+        "required": [
+          "limit"
+        ],
+        "title": "WindowView",
+        "type": "object"
       }
     }
   },
@@ -719,6 +988,127 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/v1/candles": {
+      "get": {
+        "description": "Closed bars for one (instrument, timeframe) window (spec section 11).",
+        "operationId": "candles_v1_candles_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "instrument_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Instrument Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tf",
+            "required": true,
+            "schema": {
+              "title": "Tf",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "as_of",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "As Of"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandlesView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Candles",
+        "tags": [
+          "market",
+          "market"
+        ]
+      }
+    },
     "/v1/config/defaults": {
       "get": {
         "description": "Documented defaults (PD-11): the file the API resolves parameters against.",
@@ -1040,6 +1430,152 @@
         "tags": [
           "data",
           "data"
+        ]
+      }
+    },
+    "/v1/indicators": {
+      "get": {
+        "description": "Server-computed indicator over the same window as /v1/candles (D-011).\n\nName and params fail fast (422) before any I/O: unknown names,\nundocumented keys and missing documented defaults are never guessed.",
+        "operationId": "indicators_v1_indicators_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "instrument_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Instrument Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tf",
+            "required": true,
+            "schema": {
+              "title": "Tf",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "title": "Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "params",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Params"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "as_of",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "As Of"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndicatorsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Indicators",
+        "tags": [
+          "market",
+          "market"
         ]
       }
     },

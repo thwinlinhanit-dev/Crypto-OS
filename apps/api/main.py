@@ -1,7 +1,8 @@
-"""FastAPI application entrypoint (M0 T0.2, extended by M1).
+"""FastAPI application entrypoint (M0 T0.2, extended by M1 and M2).
 
 Scope: the skeleton, GET /v1/status, the error envelope and OpenAPI for client
-generation, plus the M1 data surface (design note section 10). Research/
+generation, the M1 data surface (design note section 10) and the M2 market
+reads (candles + indicators, design note m2_chart section 3). Research/
 market endpoints stay undeclared until their milestone (PD-9).
 """
 
@@ -16,6 +17,7 @@ from pydantic import BaseModel
 from apps.api.data import router as data_router
 from apps.api.db import database_reachable
 from apps.api.errors import install_error_handlers
+from apps.api.market import router as market_router
 from apps.api.settings import get_settings
 from engine.versions import (
     DATASET_SCHEMA_VERSION,
@@ -72,6 +74,9 @@ def create_app() -> FastAPI:
     # M1 data surface (spec section 11, design note section 10). Reads plus
     # queue-only POSTs: no endpoint ever places an order (PD-1).
     app.include_router(data_router)
+    # M2 market reads (spec section 11, design note m2_chart section 3):
+    # GET /v1/candles and GET /v1/indicators, reads only (PD-1).
+    app.include_router(market_router)
 
     @app.get(f"/{API_VERSION}/status", response_model=StatusResponse, tags=["system"])
     async def status() -> StatusResponse:

@@ -70,6 +70,10 @@ def _section(defaults: Mapping[str, Any], section: str) -> Mapping[str, Any]:
 
 
 def _type_ok(documented: Any, provided: Any) -> bool:
+    if documented is None:
+        # `key: null` documents "required, no default" (PD-11): the value is
+        # unconstrained here and validated by the calling module's domain rules.
+        return True
     if isinstance(documented, bool):
         return isinstance(provided, bool)
     if isinstance(documented, int) and not isinstance(documented, bool):

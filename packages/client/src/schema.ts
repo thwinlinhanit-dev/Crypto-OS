@@ -4,6 +4,26 @@
  */
 
 export interface paths {
+    "/v1/candles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Candles
+         * @description Closed bars for one (instrument, timeframe) window (spec section 11).
+         */
+        get: operations["candles_v1_candles_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/config/defaults": {
         parameters: {
             query?: never;
@@ -124,6 +144,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/indicators": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Indicators
+         * @description Server-computed indicator over the same window as /v1/candles (D-011).
+         *
+         *     Name and params fail fast (422) before any I/O: unknown names,
+         *     undocumented keys and missing documented defaults are never guessed.
+         */
+        get: operations["indicators_v1_indicators_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/instruments": {
         parameters: {
             query?: never;
@@ -185,6 +228,40 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * CandleQualityView
+         * @description ``quality`` block of the section 11 candle response.
+         */
+        CandleQualityView: {
+            /** Completeness */
+            completeness: number;
+            /** Exclusions */
+            exclusions: components["schemas"]["ExclusionView"][];
+            /** State */
+            state: string;
+        };
+        /**
+         * CandlesView
+         * @description Section 11 candle window, columnar, plus the ``window`` echo (D-007 style).
+         */
+        CandlesView: {
+            /** C */
+            c: number[];
+            /** Dataset Version */
+            dataset_version: string;
+            /** H */
+            h: number[];
+            /** L */
+            l: number[];
+            /** O */
+            o: number[];
+            quality: components["schemas"]["CandleQualityView"];
+            /** T */
+            t: string[];
+            /** V */
+            v: number[];
+            window: components["schemas"]["WindowView"];
+        };
         /**
          * DatasetManifestView
          * @description GET /v1/datasets/{version}: 'what exactly did this use?' (AC2).
@@ -250,6 +327,31 @@ export interface components {
             /** Source */
             source: string;
         };
+        /**
+         * ExclusionView
+         * @description One active exclusion interval; the chart shades it (design D-013/D-014).
+         */
+        ExclusionView: {
+            /**
+             * Exclusion End
+             * Format: date-time
+             */
+            exclusion_end: string;
+            /**
+             * Exclusion Start
+             * Format: date-time
+             */
+            exclusion_start: string;
+            /**
+             * Gap Id
+             * Format: uuid
+             */
+            gap_id: string;
+            /** Kind */
+            kind: string;
+            /** Status */
+            status: string;
+        };
         /** GapView */
         GapView: {
             /**
@@ -304,6 +406,32 @@ export interface components {
             exclusions: components["schemas"]["GapView"][];
             /** Series */
             series: components["schemas"]["QualityView"][];
+        };
+        /**
+         * IndicatorsView
+         * @description ``GET /v1/indicators`` body (design D-011).
+         */
+        IndicatorsView: {
+            /** Dataset Version */
+            dataset_version: string;
+            /**
+             * Instrument Id
+             * Format: uuid
+             */
+            instrument_id: string;
+            /** Name */
+            name: string;
+            /** Params */
+            params: {
+                [key: string]: unknown;
+            };
+            /** Series */
+            series: components["schemas"]["SeriesView"][];
+            /** T */
+            t: string[];
+            /** Tf */
+            tf: string;
+            window: components["schemas"]["WindowView"];
         };
         /**
          * IngestRequest
@@ -447,6 +575,16 @@ export interface components {
             /** Storage Budget Gb */
             storage_budget_gb?: number | null;
         };
+        /**
+         * SeriesView
+         * @description One keyed indicator output; warm-up entries are ``null`` (section 5).
+         */
+        SeriesView: {
+            /** Key */
+            key: string;
+            /** Values */
+            values: (number | null)[];
+        };
         /** SourceFileView */
         SourceFileView: {
             /** Content Sha256 */
@@ -499,6 +637,20 @@ export interface components {
             /** Error Type */
             type: string;
         };
+        /**
+         * WindowView
+         * @description Resolved window knobs echoed so every served payload is reproducible.
+         */
+        WindowView: {
+            /** As Of */
+            as_of?: string | null;
+            /** From */
+            from?: string | null;
+            /** Limit */
+            limit: number;
+            /** To */
+            to?: string | null;
+        };
     };
     responses: never;
     parameters: never;
@@ -508,6 +660,42 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    candles_v1_candles_get: {
+        parameters: {
+            query: {
+                instrument_id: string;
+                tf: string;
+                from?: string | null;
+                to?: string | null;
+                limit?: number | null;
+                as_of?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CandlesView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     config_defaults_v1_config_defaults_get: {
         parameters: {
             query?: never;
@@ -678,6 +866,44 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DatasetManifestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    indicators_v1_indicators_get: {
+        parameters: {
+            query: {
+                instrument_id: string;
+                tf: string;
+                name: string;
+                params?: string | null;
+                from?: string | null;
+                to?: string | null;
+                limit?: number | null;
+                as_of?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IndicatorsView"];
                 };
             };
             /** @description Validation Error */

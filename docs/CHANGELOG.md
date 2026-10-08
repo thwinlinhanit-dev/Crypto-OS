@@ -3,6 +3,50 @@
 Format follows [Keep a Changelog](https://keepachangelog.com/); version tags start at M0
 (the spec defines no release numbering yet).
 
+## [M2] - 2026-10-08 - Chart workspace
+
+### Added
+- `GET /v1/candles` (§11, T2.1): windowed OHLCV with `from` / `to` / `limit`, answering the
+  requested `(venue, market_type, instrument, timeframe, dataset)` only — an unregistered
+  scope returns `DATA_UNAVAILABLE` (PD-10), every row carries `dataset_version` and the
+  quality state (PD-5, PD-6).
+- `GET /v1/indicators` (§11, T2.1) over the engine indicator registry
+  (`engine/features/indicators.py`: `sma`, `ema`, `atr`, `rsi`, `bb`, `rvol`, `cpos`,
+  `upper_wick`, …): parameters resolve from the request or `config/defaults.yaml` only,
+  unknown names and parameters are `422` (PD-11), values computed by the engine with the
+  same window semantics as `/v1/candles`.
+- Chart workspace (§14.3, T2.2) in `apps/web/app/chart/`: lightweight-charts main pane
+  with `candle` plot plus stacked Volume and RSI sub-panes, one shared time scale and a
+  synchronized crosshair; the hover row reports `O/H/L/C/V` with `RVOL`, `CPOS`, `WICK`,
+  `ATR`, `EMA100` for the hovered bar; header shows `N bars · dataset <hash>` and the §12
+  quality badge (`GREEN · 100.0%`); `Loading` / empty / error+retry states.
+- Lazy history: reaching the oldest loaded bar requests the adjacent older window
+  (`to=<oldest - 1ms>&limit=5000`) and prepends it — observed 5000 → 10000 bars with the
+  viewport preserved and no silent timeframe substitution.
+- Layout persistence (T2.3, D-012): instrument, timeframe, overlays, lengths and sub-pane
+  state stored in `localStorage` under `cryptosos-chart-layout` and restored on reload.
+- Command palette (T2.3): `Ctrl+K` / `⌘K` dialog grouping instrument, timeframe, overlay,
+  pane, layout and navigation actions with type-ahead filter.
+- Tests: 253 (14 new API candle + 14 indicator + 28 feature tests on top of M1's 196);
+  the §14.3 budgets are asserted and recorded in the test output —
+  `candles` 5,000 bars p50 31.2 ms / p95 46.2 ms (<300 ms),
+  `ema` 32.2 / 47.0, `bb` 35.7 / 37.6, `rsi` 35.7 / 39.6 (all <150 ms).
+
+### Fixed
+- Infinite re-render ("Maximum update depth exceeded") while dragging the crosshair and
+  zooming: `useChartBundle` memoized `merged` on the `useQueries` result array, whose
+  identity changes on every render, so `candles` / `series` were rebuilt each commit,
+  re-pushing series data (`setData`) which re-emitted a crosshair move and set a new
+  hover time — a render loop. The memo now keys off a data signature
+  (`dataUpdatedAt` / error / presence), which only moves when a query result changes.
+  Console is clean under the reproduction sequence.
+
+### Notes
+- The suite's fixtures run `DELETE FROM market.dataset_manifest | market.instrument |
+  …` against the configured `DATABASE_URL`, so `make test` clears the seeded dev rows;
+  re-run `make seed-fixtures` afterwards (same `dataset_version`, files reused).
+  Parked in `docs/BACKLOG.md`.
+
 ## [M1] - 2026-10-08 - Candle data + Guardian
 
 ### Added

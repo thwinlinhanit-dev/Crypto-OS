@@ -7,6 +7,12 @@ export type HealthView = components["schemas"]["HealthView"];
 export type GapView = components["schemas"]["GapView"];
 export type QualityView = components["schemas"]["QualityView"];
 export type DatasetManifestView = components["schemas"]["DatasetManifestView"];
+export type CandleQualityView = components["schemas"]["CandleQualityView"];
+export type ExclusionView = components["schemas"]["ExclusionView"];
+export type WindowView = components["schemas"]["WindowView"];
+export type CandlesView = components["schemas"]["CandlesView"];
+export type SeriesView = components["schemas"]["SeriesView"];
+export type IndicatorsView = components["schemas"]["IndicatorsView"];
 export type JobView = components["schemas"]["JobView"];
 export type JobQueued = components["schemas"]["JobQueued"];
 export type IngestRequest = components["schemas"]["IngestRequest"];
@@ -97,6 +103,20 @@ export async function getDataset(
     `/v1/datasets/${encodeURIComponent(datasetVersion)}`,
     baseUrl,
   )) as DatasetManifestView;
+}
+
+export async function getCandles(
+  query: Query,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<CandlesView> {
+  return (await readJson(`/v1/candles${queryString(query)}`, baseUrl)) as CandlesView;
+}
+
+export async function getIndicators(
+  query: Query,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<IndicatorsView> {
+  return (await readJson(`/v1/indicators${queryString(query)}`, baseUrl)) as IndicatorsView;
 }
 
 export async function postIngest(

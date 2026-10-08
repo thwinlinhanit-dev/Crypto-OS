@@ -77,6 +77,13 @@ def test_missing_parameter_without_default_is_rejected() -> None:
     assert exc.value.code is ParamErrorCode.MISSING_PARAM
 
 
+def test_required_parameter_accepts_a_supplied_value() -> None:
+    # `key: null` documents "required, no default" (PD-11). Supplying it must
+    # resolve; only the *absence* of a value is an error (M2 indicator lengths).
+    defaults = {"section": {"required": None}}
+    assert resolve_params(defaults, "section", {"required": 14}) == {"required": 14}
+
+
 def test_type_mismatch_is_rejected() -> None:
     defaults = {"section": {"cooldown": 5}}
     with pytest.raises(ParamError) as exc:

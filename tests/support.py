@@ -51,6 +51,28 @@ def daily(*, skip: Sequence[int] = ()) -> list[Kline]:
     return [kline(T0 + i * DAY) for i in range(10) if i not in skip]
 
 
+def hourly(count: int) -> list[Kline]:
+    """``count`` contiguous hourly candles from the golden epoch, all closed."""
+    rows: list[Kline] = []
+    for index in range(count):
+        open_ms = T0 + index * 3_600_000
+        open_ = 100.0 + (index % 1000)
+        rows.append(
+            Kline(
+                open_time=open_ms,
+                close_time=open_ms + 3_600_000,
+                open=open_,
+                high=open_ + 5.0,
+                low=open_ - 5.0,
+                close=open_ + 1.0,
+                volume=1000.0,
+                quote_volume=open_ * 1000.0,
+                trades=500,
+            )
+        )
+    return rows
+
+
 class FixtureAdapter:
     """Protocol-faithful fake venue: serves bars from memory, records fetches."""
 

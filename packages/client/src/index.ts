@@ -7,20 +7,28 @@ export {
   getDataset,
   getStatus,
   getJob,
+  getCandles,
+  getIndicators,
   postIngest,
   postRepair,
 } from "./api";
 export type {
+  CandlesView,
+  CandleQualityView,
   DefaultsResponse,
   DatasetManifestView,
+  ExclusionView,
   GapView,
   HealthView,
+  IndicatorsView,
   IngestRequest,
   InstrumentView,
   JobQueued,
   JobView,
   QualityView,
   RepairRequest,
+  SeriesView,
   StatusResponse,
+  WindowView,
 } from "./api";
 export type { components, paths } from "./schema";

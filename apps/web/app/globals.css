@@ -275,3 +275,233 @@ dd {
 .back-link:hover {
   color: var(--text);
 }
+
+/* --- chart workspace (M2) ---------------------------------------------- */
+
+main:has(.chart-page) {
+  max-width: none;
+}
+
+.chart-page {
+  position: relative;
+}
+
+.chart-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.chart-select,
+.chart-num {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.chart-select:focus,
+.chart-num:focus {
+  outline: none;
+  border-color: var(--muted);
+}
+
+.chart-num {
+  width: 4.5rem;
+}
+
+.menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+}
+
+.chart-menu {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  z-index: 31;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.75rem;
+  min-width: 26rem;
+  max-width: 36rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+.chart-menu-title {
+  color: var(--muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.35rem;
+}
+
+.chart-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  padding: 0.15rem 0;
+}
+
+.chart-menu-note {
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.chart-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chart-pane {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.chart-pane-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.chart-pane-collapsed {
+  border: 1px dashed var(--line);
+  border-radius: 4px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  padding: 0.35rem 0.75rem;
+}
+
+.chart-bands {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.chart-band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(251, 146, 60, 0.14);
+  border-left: 1px solid rgba(251, 146, 60, 0.5);
+  border-right: 1px solid rgba(251, 146, 60, 0.5);
+  pointer-events: auto;
+}
+
+.chart-hover {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  align-items: baseline;
+  margin-top: 0.6rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 0.82rem;
+}
+
+.chart-hover > span {
+  color: var(--muted);
+}
+
+.chart-hover b {
+  color: var(--text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- command palette --------------------------------------------------- */
+
+.palette-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 12vh;
+}
+
+.palette {
+  width: min(36rem, 92vw);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.palette-input {
+  width: 100%;
+  background: var(--bg);
+  border: none;
+  border-bottom: 1px solid var(--line);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 0.75rem 1rem;
+  box-sizing: border-box;
+}
+
+.palette-input:focus {
+  outline: none;
+}
+
+.palette-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.35rem 0;
+  max-height: 22rem;
+  overflow-y: auto;
+}
+
+.palette-group {
+  color: var(--muted);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.5rem 1rem 0.2rem;
+}
+
+.palette-item {
+  padding: 0.4rem 1rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.palette-item.is-active {
+  background: #1b222a;
+  color: var(--text);
+}
+
+.palette-empty {
+  color: var(--muted);
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+}
+
+.palette-footer {
+  border-top: 1px solid var(--line);
+  padding: 0.45rem 1rem;
+  font-size: 0.72rem;
+}

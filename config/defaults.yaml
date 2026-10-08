@@ -9,10 +9,37 @@
 schema_version: 1
 
 data:
-  # Section 16 OD-5 — Storage budget GB; "ingest refuses to exceed" it.
+  # Section 16 OD-5 - Storage budget GB; "ingest refuses to exceed" it.
   # Operational guard, not a research parameter: PD-11 still routes it through
   # this file (only "the request, or config/defaults.yaml" may supply defaults).
   storage_budget_gb: 20
+
+candles:
+  # IMPLEMENTATION_SPEC section 11 GET /v1/candles limit; section 14.3 names
+  # 5,000 candles as the chart working set and the API performance target.
+  default_limit: 5000
+  max_limit: 5000
+
+indicators:
+  # IMPLEMENTATION_SPEC section 5 + section 11 GET /v1/indicators (M2 registry).
+  # `null` = documented but no default: the request must supply it (PD-11);
+  # sections that give a number (Bollinger(20, 2), rvol(n=20)) carry it here.
+  sma:
+    length: null
+  ema:
+    length: null
+  atr:
+    length: null
+  rsi:
+    length: null # section 5 defines no default length - OQ-8
+  vwap: {}
+  cpos: {}
+  upper_wick: {}
+  bb:
+    length: 20
+    mult: 2.0
+  rvol:
+    length: 20
 
 detectors:
   rvol_climax_v5:
