@@ -1,10 +1,14 @@
-"""M2 chart indicators (spec section 5) behind the ``/v1/indicators`` contract.
+"""Chart indicators behind the ``/v1/indicators`` contract (spec section 5).
 
 Each indicator is a pure function over the canonical bar columns; warm-up
 values are ``null`` and every output at bar ``t`` depends only on inputs at or
 before ``t`` (PD-2). Parameter resolution happens in :func:`resolve_indicator`
 through ``config/defaults.yaml`` (PD-11): a ``null`` default documents a
 *required* parameter, a numeric default documents the value section 5 pins.
+
+The numeric machinery lives in :mod:`engine.features.primitives` so detectors
+(M4) and the parity tool (M3) share exactly one implementation of each
+definition; this module owns only the registry contract.
 
 INTERPRETATIONS (docs/DECISIONS.md OQ-8): ``rsi`` emits its first value at
 index ``n`` (the first ``n`` price changes live at indices ``1..n``);
@@ -14,13 +18,28 @@ index ``n`` (the first ``n`` price changes live at indices ``1..n``);
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 import polars as pl
 
 from engine.config.defaults import load_defaults, resolve_params
 from engine.errors import ValidationError
+from engine.features.primitives import (
+    BAR_COLUMNS,
+    adx,
+    column,
+    ema,
+    highest,
+    lowest,
+    macd,
+    pivothigh,
+    pivotlow,
+    rma,
+    rolling_mean,
+    rolling_std_pop,
+    true_range,
+)
 
 DAY_MS = 86_400_000
 
@@ -28,85 +47,23 @@ Values = dict[str, list[float | None]]
 ComputeFn = Callable[[pl.DataFrame, Mapping[str, Any]], Values]
 
 
-def _column(frame: pl.DataFrame, name: str) -> list[float]:
-    return [float(value) for value in frame[name].to_list()]
-
-
-def _rolling_mean(values: list[float], length: int) -> list[float | None]:
-    if not values:
-        return []
-    return pl.Series(values, dtype=pl.Float64).rolling_mean(
-        window_size=length
-    ).to_list()
-
-
-def _rolling_std_pop(values: list[float], length: int) -> list[float | None]:
-    if not values:
-        return []
-    return pl.Series(values, dtype=pl.Float64).rolling_std(
-        window_size=length, ddof=0
-    ).to_list()
-
-
-def _ema(values: list[float], length: int) -> list[float | None]:
-    # Section 5: alpha = 2/(n+1), first output = x[0] (Pine ta.ema, no seed).
-    if not values:
-        return []
-    alpha = 2.0 / (length + 1)
-    out: list[float | None] = [values[0]]
-    previous = values[0]
-    for value in values[1:]:
-        previous = alpha * value + (1.0 - alpha) * previous
-        out.append(previous)
-    return out
-
-
-def _rma(values: list[float], length: int) -> list[float | None]:
-    # Section 5: alpha = 1/n, seeded with sma(x, n) at index n-1, null before.
-    out: list[float | None] = [None] * len(values)
-    if len(values) < length:
-        return out
-    previous = sum(values[:length]) / length
-    out[length - 1] = previous
-    for index in range(length, len(values)):
-        previous = previous + (values[index] - previous) / length
-        out[index] = previous
-    return out
-
-
-def _true_range(frame: pl.DataFrame) -> list[float]:
-    high = _column(frame, "high")
-    low = _column(frame, "low")
-    close = _column(frame, "close")
-    if not high:
-        return []
-    out = [high[0] - low[0]]
-    for index in range(1, len(high)):
-        out.append(
-            max(
-                high[index] - low[index],
-                abs(high[index] - close[index - 1]),
-                abs(low[index] - close[index - 1]),
-            )
-        )
-    return out
-
 
 def _compute_sma(frame: pl.DataFrame, params: Mapping[str, Any]) -> Values:
-    return {"sma": _rolling_mean(_column(frame, "close"), int(params["length"]))}
+    return {"sma": rolling_mean(column(frame, "close"), int(params["length"]))}
 
 
 def _compute_ema(frame: pl.DataFrame, params: Mapping[str, Any]) -> Values:
-    return {"ema": _ema(_column(frame, "close"), int(params["length"]))}
+    return {"ema": ema(column(frame, "close"), int(params["length"]))}
 
 
 def _compute_atr(frame: pl.DataFrame, params: Mapping[str, Any]) -> Values:
-    return {"atr": _rma(_true_range(frame), int(params["length"]))}
+    ranges = true_range(column(frame, "high"), column(frame, "low"), column(frame, "close"))
+    return {"atr": rma(ranges, int(params["length"]))}
 
 
 def _compute_rsi(frame: pl.DataFrame, params: Mapping[str, Any]) -> Values:
     length = int(params["length"])
-    close = _column(frame, "close")
+    close = column(frame, "close")
     out: list[float | None] = [None] * len(close)
     if len(close) < length + 1:
         return {"rsi": out}
@@ -135,9 +92,9 @@ def _compute_rsi(frame: pl.DataFrame, params: Mapping[str, Any]) -> Values:
 def _compute_bb(frame: pl.DataFrame, params: Mapping[str, Any]) -> Values:
     length = int(params["length"])
     mult = float(params["mult"])
-    close = _column(frame, "close")
-    middle = _rolling_mean(close, length)
-    deviation = _rolling_std_pop(close, length)
+    close = column(frame, "close")
+    middle = rolling_mean(close, length)
+    deviation = rolling_std_pop(close, length)
     upper: list[float | None] = []
     lower: list[float | None] = []
     for mid, sd in zip(middle, deviation, strict=True):
@@ -152,8 +109,8 @@ def _compute_bb(frame: pl.DataFrame, params: Mapping[str, Any]) -> Values:
 
 def _compute_rvol(frame: pl.DataFrame, params: Mapping[str, Any]) -> Values:
     length = int(params["length"])
-    volume = _column(frame, "volume")
-    sma = _rolling_mean(volume, length)
+    volume = column(frame, "volume")
+    sma = rolling_mean(volume, length)
     lagged: list[float | None] = [None, *sma[:-1]]
     return {
         "rvol": [
@@ -164,9 +121,9 @@ def _compute_rvol(frame: pl.DataFrame, params: Mapping[str, Any]) -> Values:
 
 
 def _compute_cpos(frame: pl.DataFrame, params: Mapping[str, Any]) -> Values:
-    high = _column(frame, "high")
-    low = _column(frame, "low")
-    close = _column(frame, "close")
+    high = column(frame, "high")
+    low = column(frame, "low")
+    close = column(frame, "close")
     return {
         "cpos": [
             (c - lo) / (hi - lo) if hi - lo > 0.0 else 0.5
@@ -176,10 +133,10 @@ def _compute_cpos(frame: pl.DataFrame, params: Mapping[str, Any]) -> Values:
 
 
 def _compute_upper_wick(frame: pl.DataFrame, params: Mapping[str, Any]) -> Values:
-    high = _column(frame, "high")
-    low = _column(frame, "low")
-    open_ = _column(frame, "open")
-    close = _column(frame, "close")
+    high = column(frame, "high")
+    low = column(frame, "low")
+    open_ = column(frame, "open")
+    close = column(frame, "close")
     return {
         "upper_wick": [
             (hi - max(o, c)) / (hi - lo) if hi - lo > 0.0 else 0.0
@@ -191,10 +148,10 @@ def _compute_upper_wick(frame: pl.DataFrame, params: Mapping[str, Any]) -> Value
 def _compute_vwap(frame: pl.DataFrame, params: Mapping[str, Any]) -> Values:
     # Section 5: UTC-day anchor - cumulative typical-price volume per UTC day.
     open_time = [int(value) for value in frame["open_time"].to_list()]
-    high = _column(frame, "high")
-    low = _column(frame, "low")
-    close = _column(frame, "close")
-    volume = _column(frame, "volume")
+    high = column(frame, "high")
+    low = column(frame, "low")
+    close = column(frame, "close")
+    volume = column(frame, "volume")
     cumulative_pv: dict[int, float] = {}
     cumulative_volume: dict[int, float] = {}
     out: list[float | None] = []
@@ -208,14 +165,87 @@ def _compute_vwap(frame: pl.DataFrame, params: Mapping[str, Any]) -> Values:
     return {"vwap": out}
 
 
+def _compute_rma(frame: pl.DataFrame, params: Mapping[str, Any]) -> Values:
+    return {"rma": rma(column(frame, "close"), int(params["length"]))}
+
+
+def _compute_tr(frame: pl.DataFrame, params: Mapping[str, Any]) -> Values:
+    out: list[float | None] = []
+    out.extend(true_range(column(frame, "high"), column(frame, "low"), column(frame, "close")))
+    return {"tr": out}
+
+
+def _source(frame: pl.DataFrame, params: Mapping[str, Any]) -> list[float]:
+    return column(frame, str(params["source"]))
+
+
+def _compute_highest(frame: pl.DataFrame, params: Mapping[str, Any]) -> Values:
+    return {"highest": highest(_source(frame, params), int(params["length"]))}
+
+
+def _compute_lowest(frame: pl.DataFrame, params: Mapping[str, Any]) -> Values:
+    return {"lowest": lowest(_source(frame, params), int(params["length"]))}
+
+
+def _compute_donchian_hi(frame: pl.DataFrame, params: Mapping[str, Any]) -> Values:
+    return {"donchian_hi": highest(column(frame, "high"), int(params["length"]))}
+
+
+def _compute_donchian_lo(frame: pl.DataFrame, params: Mapping[str, Any]) -> Values:
+    return {"donchian_lo": lowest(column(frame, "low"), int(params["length"]))}
+
+
+def _compute_pivotlow(frame: pl.DataFrame, params: Mapping[str, Any]) -> Values:
+    values = pivotlow(
+        _source(frame, params), int(params["left"]), int(params["right"])
+    )
+    return {"pivotlow": values}
+
+
+def _compute_pivothigh(frame: pl.DataFrame, params: Mapping[str, Any]) -> Values:
+    values = pivothigh(
+        _source(frame, params), int(params["left"]), int(params["right"])
+    )
+    return {"pivothigh": values}
+
+
+def _compute_macd(frame: pl.DataFrame, params: Mapping[str, Any]) -> Values:
+    return macd(
+        column(frame, "close"),
+        int(params["fast"]),
+        int(params["slow"]),
+        int(params["signal"]),
+    )
+
+
+def _compute_adx(frame: pl.DataFrame, params: Mapping[str, Any]) -> Values:
+    values = adx(
+        column(frame, "high"),
+        column(frame, "low"),
+        column(frame, "close"),
+        int(params["length"]),
+    )
+    return {"adx": values}
+
+
 @dataclass(frozen=True)
 class IndicatorSpec:
-    """One registry entry: outputs plus the pure compute function."""
+    """One registry entry: outputs plus the pure compute function.
+
+    ``categorical`` lists parameters restricted to a fixed vocabulary (the bar
+    ``source`` names of section 5) so a typo is a 422 instead of a runtime
+    ``KeyError`` on the frame.
+    """
 
     name: str
     outputs: tuple[str, ...]
     positive_int_params: tuple[str, ...]
     compute: ComputeFn
+    categorical: dict[str, tuple[str, ...]] = field(default_factory=dict)
+
+
+_SOURCE = {"source": BAR_COLUMNS}
+"""``high``/``low``/``close``/``open``/``volume`` (section 5)."""
 
 
 REGISTRY: dict[str, IndicatorSpec] = {
@@ -228,6 +258,27 @@ REGISTRY: dict[str, IndicatorSpec] = {
     "cpos": IndicatorSpec("cpos", ("cpos",), (), _compute_cpos),
     "upper_wick": IndicatorSpec("upper_wick", ("upper_wick",), (), _compute_upper_wick),
     "vwap": IndicatorSpec("vwap", ("vwap",), (), _compute_vwap),
+    # M3: the rest of the section 5 set (design note specs/design/m3_features.md).
+    "rma": IndicatorSpec("rma", ("rma",), ("length",), _compute_rma),
+    "tr": IndicatorSpec("tr", ("tr",), (), _compute_tr),
+    "highest": IndicatorSpec(
+        "highest", ("highest",), ("length",), _compute_highest, dict(_SOURCE)
+    ),
+    "lowest": IndicatorSpec(
+        "lowest", ("lowest",), ("length",), _compute_lowest, dict(_SOURCE)
+    ),
+    "donchian_hi": IndicatorSpec("donchian_hi", ("donchian_hi",), ("length",), _compute_donchian_hi),
+    "donchian_lo": IndicatorSpec("donchian_lo", ("donchian_lo",), ("length",), _compute_donchian_lo),
+    "pivotlow": IndicatorSpec(
+        "pivotlow", ("pivotlow",), ("left", "right"), _compute_pivotlow, dict(_SOURCE)
+    ),
+    "pivothigh": IndicatorSpec(
+        "pivothigh", ("pivothigh",), ("left", "right"), _compute_pivothigh, dict(_SOURCE)
+    ),
+    "macd": IndicatorSpec(
+        "macd", ("macd", "signal", "histogram"), ("fast", "slow", "signal"), _compute_macd
+    ),
+    "adx": IndicatorSpec("adx", ("adx",), ("length",), _compute_adx),
 }
 
 
@@ -261,6 +312,17 @@ def resolve_indicator(
                 f"parameter '{key}' of '{name}' must be an integer >= 1",
                 detail={"param": key, "value": value},
             )
+    for key, allowed in spec.categorical.items():
+        if resolved.get(key) not in allowed:
+            raise ValidationError(
+                f"parameter '{key}' of '{name}' must be one of {', '.join(allowed)}",
+                detail={"param": key, "value": resolved.get(key), "allowed": list(allowed)},
+            )
+    if name == "macd" and int(resolved["slow"]) <= int(resolved["fast"]):
+        raise ValidationError(
+            "macd requires slow > fast",
+            detail={"param": "slow", "value": resolved["slow"], "fast": resolved["fast"]},
+        )
     return spec, resolved
 
 

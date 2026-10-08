@@ -23,7 +23,7 @@ help:
 	@echo   health          GET /v1/status
 	@echo   ingest ARGS="--start ... --end ..."   live Binance backfill (network)
 	@echo   seed-fixtures   write the committed fixtures through the ingest path
-	@echo   parity          NOT_IMPLEMENTED until M6
+	@echo   parity          layer-1 parity vs the TradingView export (spec 14.2)
 
 setup:
 	$(PW) -File scripts/setup.ps1
@@ -75,5 +75,4 @@ seed-fixtures:
 	$(UV) run python scripts/seed_fixtures.py
 
 parity:
-	@echo NOT_IMPLEMENTED: the TradingView parity harness lands in M6.
-	@exit 1
+	$(UV) run python scripts/parity.py

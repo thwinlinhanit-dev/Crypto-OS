@@ -3,6 +3,58 @@
 Format follows [Keep a Changelog](https://keepachangelog.com/); version tags start at M0
 (the spec defines no release numbering yet).
 
+## [M3] - 2026-10-09 - Feature library + parity layer 1
+
+### Added
+- Section 5 feature library (T3.1): `engine/features/primitives.py` (numeric primitives
+  moved from `indicators.py` plus `highest`, `lowest`, `barssince`, `pivotlow`,
+  `pivothigh`, `macd`, `adx`, `atr_percentile`), `engine/features/regime.py`
+  (descriptive tags `trend_state` / `vol_state` / `volume_state`, D-017), and registry
+  growth in `engine/features/indicators.py` (D-015): `rma`, `tr`, `highest`, `lowest`,
+  `donchian_lo`, `donchian_hi`, `pivotlow`, `pivothigh`, `macd`, `adx` are now served by
+  `/v1/indicators` with parameters resolved from `config/defaults.yaml` only (PD-11);
+  `barssince` (boolean input) and the regime tags (labels) stay library-only.
+  Documented semantics: warm-up nulls per section 5 line 228/229, pivot ties strict on
+  both sides with the no-lookahead `+R` placement (D-016), ADX zero denominators yield
+  `null` never `inf`.
+- Truncation invariance suite (14.1): `tests/test_features_truncation.py` - hypothesis
+  properties over every registered indicator and every library/regime function: result
+  on data cut at t equals the restriction of the full result to <=t, and editing future
+  bars never changes the past (PD-2), exact `==` with no tolerance.
+- Parity tool (T3.2, 14.2): `engine/parity/` (`constants.py` warm-up 500 / rel tol 1e-6,
+  `metadata.py` nine-field sidecar fail-closed to `UNKNOWN`, `importers.py` alias-table
+  CSV import with fail-closed rejections, `status.py` five-value vocabulary + worst-wins
+  `overall()`, `platform_differences.py` anchored documented-difference table (OQ-15),
+  `compare.py` bar alignment + OHLCV check (bar diff capped at 20) + four-plot
+  comparison after skipping the first 500 bars, `run.py` gate exit codes) behind
+  `scripts/parity.py` and `make parity` (D-018).
+- Parity report at `reports/parity/layer1_report.json` (gitignored): kind
+  `parity_layer1`, per-plot statuses with samples and anchors, bar diff, warnings,
+  TradingView metadata verbatim plus PD-6 provenance (`dataset_version`,
+  `dataset_schema_version`, `engine_version`, `code_version`, `resolved_params`,
+  `seed: null`); deterministic JSON, no timestamps.
+- `make parity` gate (D-019): exit 0 only for `EXACT` /
+  `EXACT_WITH_DOCUMENTED_PLATFORM_DIFFERENCE`; `NO_REFERENCE_EXPORT` + non-zero until
+  the owner's TradingView export exists at `fixtures/parity/BINANCE_BTCUSDT_1D.csv`
+  with its `.meta.json` sidecar; the report's `pass` field stays spec-literal
+  (14.2 line 592: zero `ENGINE_BUG`, zero `UNKNOWN`).
+- Tests: 330 total (+77 vs M2's 253): 43 parity + 20 feature-contract + 3 truncation
+  properties in the new files, plus 11 across the existing suites (including a
+  `code_version` regression that caught `REPO_ROOT` resolving one directory above the
+  checkout - `engine/versions.py` `parents[2]` -> `parents[1]`).
+
+### Decisions
+- D-015 registry scope, D-016 pivot tie rule, D-017 regime tags descriptive only,
+  D-018 `make parity` amends D-005, D-019 gate exit code vs report `pass`;
+  open questions OQ-13 (highest/lowest warm-up value), OQ-14 (pivot ties vs Pine),
+  OQ-15 (documented platform differences pending the real export).
+
+### Notes
+- The AC parity run itself still needs the owner's export (design note section 0);
+  `make parity` exercises the full happy path today against a synthetic export written
+  outside the repository (1011 bars, 511 compared, all `EXACT`, exit 0) and the
+  `NO_REFERENCE_EXPORT` path against the default location (exit non-zero).
+
 ## [M2] - 2026-10-08 - Chart workspace
 
 ### Added

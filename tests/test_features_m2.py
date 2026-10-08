@@ -65,8 +65,10 @@ def _values(frame: pl.DataFrame, name: str, **params: Any) -> list[float | None]
 # --------------------------------------------------------------------------
 
 
-def test_the_registry_lists_exactly_the_m2_chart_set() -> None:
-    assert set(known_indicators()) == {
+def test_the_registry_lists_the_m2_subset_of_the_section_5_set() -> None:
+    # M3 adds the remaining section 5 features (test_features_m3.py asserts the
+    # full set); every M2 chart indicator must still be served unchanged.
+    assert {
         "sma",
         "ema",
         "vwap",
@@ -76,14 +78,14 @@ def test_the_registry_lists_exactly_the_m2_chart_set() -> None:
         "rvol",
         "cpos",
         "upper_wick",
-    }
+    } <= set(known_indicators())
 
 
 def test_unknown_indicator_is_a_validation_error() -> None:
     with pytest.raises(ValidationError) as exc:
-        resolve_indicator("macd")
+        resolve_indicator("momentum")
     assert exc.value.code == "VALIDATION_ERROR"
-    assert exc.value.detail["name"] == "macd"
+    assert exc.value.detail["name"] == "momentum"
 
 
 def test_undocumented_parameter_is_rejected() -> None:
@@ -344,7 +346,27 @@ def test_an_empty_frame_yields_empty_series() -> None:
 @pytest.mark.parametrize("name", sorted(known_indicators()))
 def test_truncating_the_input_never_changes_the_reachable_output(name: str) -> None:
     frame = _bars(40)
-    params: dict[str, Any] = {"length": 5} if name in {"sma", "ema", "atr", "rsi", "rvol", "bb"} else {}
+    # Section 5 pins no window for these, so the request must supply one.
+    required: dict[str, dict[str, Any]] = {
+        key: {"length": 5}
+        for key in (
+            "sma",
+            "ema",
+            "atr",
+            "rsi",
+            "rvol",
+            "bb",
+            "rma",
+            "highest",
+            "lowest",
+            "donchian_lo",
+            "donchian_hi",
+            "adx",
+        )
+    }
+    required["pivotlow"] = {"left": 2, "right": 2}
+    required["pivothigh"] = {"left": 2, "right": 2}
+    params = required.get(name, {})
     full = compute_indicator(frame, name=name, params=params or None)
     for cut in (1, 7, 39):
         partial = compute_indicator(frame.head(cut), name=name, params=params or None)

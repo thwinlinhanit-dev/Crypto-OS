@@ -222,7 +222,7 @@ def test_missing_required_length_is_422(
 def test_unknown_indicator_is_422(
     client: TestClient, conn: Connection, seeded: str
 ) -> None:
-    response = client.get("/v1/indicators", params=_params("macd"))
+    response = client.get("/v1/indicators", params=_params("momentum"))
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "VALIDATION_ERROR"
 

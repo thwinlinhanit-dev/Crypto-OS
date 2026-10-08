@@ -5,7 +5,7 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[1]
 
 # ASSUMPTION (open question for the owner): the spec requires every result to store
 # engine_version but does not define its format. Tracked in docs/DECISIONS.md.

@@ -40,6 +40,50 @@ indicators:
     mult: 2.0
   rvol:
     length: 20
+  # M3 — the rest of the section 5 set (spec line 241 "MACD(12,26,9),
+  # ... ADX(14)"). `null` means section 5 pins no window for that feature, so
+  # none is invented here; the request must supply it (PD-11).
+  rma:
+    length: null
+  tr: {}
+  highest:
+    length: null
+    source: high # section 6.3 and the reference study read highs
+  lowest:
+    length: null
+    source: low
+  donchian_lo:
+    length: null
+  donchian_hi:
+    length: null
+  pivotlow:
+    left: null
+    right: null
+    source: low # reference study plv = ta.pivotlow(low, ...)
+  pivothigh:
+    left: null
+    right: null
+    source: high # reference study phv = ta.pivothigh(high, ...)
+  macd:
+    fast: 12
+    slow: 26
+    signal: 9 # spec section 5 line 241: MACD(12,26,9)
+  adx:
+    length: 14 # spec section 5 line 241: ADX(14)
+
+features:
+  # IMPLEMENTATION_SPEC section 5 line 242 — regime tags: deterministic,
+  # documented, descriptive only. They label the event `regime{}` payload
+  # (section 6.2); they are never a filter, threshold or trading rule
+  # (docs/DECISIONS.md D-017). Engine-defined edges are marked as such below.
+  trend_state:
+    length: 100 # regime_len of specs/reference/rvol_climax_pro_v5.pine
+    slope_lag: 5 # inDown compares emaR against emaR[5] (line 123)
+  vol_state:
+    atr_length: 14 # atr_len of the reference study (section 6.3)
+    window: 252 # trailing-year percentile window; edges 33/67 are engine-defined
+  volume_state:
+    length: 20 # vol_len (section 6.3); edges 0.5/1.0 engine-defined, 2.0/3.0 spec
 
 detectors:
   rvol_climax_v5:

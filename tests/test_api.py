@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import pytest
@@ -45,6 +46,14 @@ def test_status_shape_and_values() -> None:
     assert body["database"] == ("up" if body["status"] == "ok" else "down")
     assert body["engine_version"] and body["code_version"]
     assert body["dataset_schema_version"] and body["spec"]
+
+
+def test_code_version_resolves_the_git_head() -> None:
+    from engine.versions import REPO_ROOT, code_version
+
+    if not (REPO_ROOT / ".git").exists():
+        pytest.skip("not a git checkout")
+    assert re.fullmatch(r"[0-9a-f]{7,40}", code_version())
 
 
 def test_defaults_endpoint_lists_documented_params() -> None:
