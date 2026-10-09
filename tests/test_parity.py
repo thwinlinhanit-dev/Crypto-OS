@@ -6,11 +6,14 @@ Acceptance evidence produced here:
   missing column, unparsable time, null OHLCV, ragged row, non-increasing
   time, empty file) instead of coercing (PD-10, design note 4.2);
 - run metadata with a missing field or sidecar fails closed (PD-11);
-- the classification order of design note 4.3: OHLCV mismatch ->
-  DATA_MISMATCH with a bar diff report; engine failure -> ENGINE_BUG;
-  unexplained plot differences -> ENGINE_BUG; rounded export values ->
-  EXACT_WITH_DOCUMENTED_PLATFORM_DIFFERENCE; < 501 comparable bars ->
-  UNKNOWN (spec line 590's skip-the-first-500 rule);
+- the classification order of design note 4.3: OHLCV mismatch with no
+  documented explanation -> DATA_MISMATCH with a bar diff report; a volume
+  difference inside the documented feed bound -> recorded as a documented
+  platform difference and the comparison continues (4.6); engine failure ->
+  ENGINE_BUG; unexplained plot differences -> ENGINE_BUG; rounded export
+  values, the TV volume feed (volume and its contaminated rvol window) and
+  the regime-EMA seed wash-out -> EXACT_WITH_DOCUMENTED_PLATFORM_DIFFERENCE;
+  < 501 comparable bars -> UNKNOWN (spec line 590's skip-the-first-500 rule);
 - the gate (D-019): exit 0 only for EXACT / EXACT_WITH_DOCUMENTED_PLATFORM_
   DIFFERENCE, exit 1 for DATA_MISMATCH, ENGINE_BUG, UNKNOWN and a missing
   export (``NO_REFERENCE_EXPORT``);
@@ -42,11 +45,16 @@ from engine.parity import (
     parse_time_ms,
     run_parity,
     significant_digits,
+    worst_of,
 )
 from engine.parity.compare import PLOT_SPECS, PlotSpec, compute_plots
 from engine.parity.importers import NA_TOKENS, REQUIRED_PLOTS
 from engine.parity.metadata import EXPECTED_BAR_MAGNIFIER, REQUIRED_FIELDS
-from engine.parity.platform_differences import PLATFORM_DIFFERENCES, find_documented_difference
+from engine.parity.platform_differences import (
+    PLATFORM_DIFFERENCES,
+    DifferenceContext,
+    find_documented_difference,
+)
 from engine.parity.run import EXIT_FAIL, EXIT_PASS
 from exchanges.base import Kline
 from tests.support import DAY, T0
@@ -117,31 +125,58 @@ def _write_export(
     extra_after: int = 0,
     ema_override: dict[int, str] | None = None,
     close_scale: dict[int, float] | None = None,
+    volume_scale: dict[int, float] | None = None,
+    plot_scale: dict[str, dict[int, float]] | None = None,
 ) -> None:
     """Write a chart-data export whose plot columns come from the engine."""
     rows: list[list[str]] = []
     for _ in range(extra_before):
         first = bars[0]
         rows.append(
-            [str(first.open_time - 3 * DAY), "100", "101", "99", "100", "10", "1", "0.5", "0.5", "100"]
+            [
+                str(first.open_time - 3 * DAY),
+                "100",
+                "101",
+                "99",
+                "100",
+                "10",
+                "1",
+                "0.5",
+                "0.5",
+                "100",
+            ]
         )
     for index, bar in enumerate(bars):
         if skip and index in skip:
             continue
         close = bar.close * (close_scale or {}).get(index, 1.0)
+        volume = bar.volume * (volume_scale or {}).get(index, 1.0)
         cells = [str(bar.open_time)]
-        cells += [f"{value:.12g}" for value in (bar.open, bar.high, bar.low, close, bar.volume)]
+        cells += [f"{value:.12g}" for value in (bar.open, bar.high, bar.low, close, volume)]
         for name in REQUIRED_PLOTS:
             if name == "ema_regime" and ema_override and index in ema_override:
                 cells.append(ema_override[index])
                 continue
             value = series[name][index]
+            if value is not None and plot_scale and name in plot_scale:
+                value *= plot_scale[name].get(index, 1.0)
             cells.append("#" if value is None else f"{value:.12g}")
         rows.append(cells)
     for _ in range(extra_after):
         last = bars[-1]
         rows.append(
-            [str(last.open_time + 3 * DAY), "100", "101", "99", "100", "10", "1", "0.5", "0.5", "100"]
+            [
+                str(last.open_time + 3 * DAY),
+                "100",
+                "101",
+                "99",
+                "100",
+                "10",
+                "1",
+                "0.5",
+                "0.5",
+                "100",
+            ]
         )
     buffer = io.StringIO()
     writer = csv.writer(buffer, lineterminator="\n")
@@ -338,10 +373,33 @@ def test_overall_is_worst_wins_and_empty_is_unknown() -> None:
     assert overall({"a": ParityStatus.EXACT, "b": ParityStatus.ENGINE_BUG}) is (
         ParityStatus.ENGINE_BUG
     )
-    assert overall(
-        {"a": ParityStatus.DATA_MISMATCH, "b": ParityStatus.EXACT_WITH_DOCUMENTED_PLATFORM_DIFFERENCE}
-    ) is ParityStatus.DATA_MISMATCH
+    assert (
+        overall(
+            {
+                "a": ParityStatus.DATA_MISMATCH,
+                "b": ParityStatus.EXACT_WITH_DOCUMENTED_PLATFORM_DIFFERENCE,
+            }
+        )
+        is ParityStatus.DATA_MISMATCH
+    )
     assert overall({"a": ParityStatus.EXACT, "b": ParityStatus.EXACT}) is ParityStatus.EXACT
+
+
+def test_worst_of_combines_any_status_set() -> None:
+    assert worst_of() is ParityStatus.UNKNOWN
+    assert worst_of(ParityStatus.EXACT) is ParityStatus.EXACT
+    assert (
+        worst_of(ParityStatus.EXACT, ParityStatus.EXACT_WITH_DOCUMENTED_PLATFORM_DIFFERENCE)
+        is ParityStatus.EXACT_WITH_DOCUMENTED_PLATFORM_DIFFERENCE
+    )
+    assert (
+        worst_of(ParityStatus.EXACT_WITH_DOCUMENTED_PLATFORM_DIFFERENCE, ParityStatus.DATA_MISMATCH)
+        is ParityStatus.DATA_MISMATCH
+    )
+    assert worst_of(ParityStatus.DATA_MISMATCH, ParityStatus.ENGINE_BUG) is (
+        ParityStatus.ENGINE_BUG
+    )
+    assert worst_of(ParityStatus.UNKNOWN, ParityStatus.EXACT) is ParityStatus.UNKNOWN
 
 
 # --------------------------------------------------------------------------
@@ -358,24 +416,110 @@ def test_every_platform_difference_carries_an_anchor() -> None:
 
 def test_rounding_entry_matches_a_rounded_export_only() -> None:
     engine = 400.123_456_7
-    rounded = find_documented_difference(
-        400.1, engine, bar_index=600, raw="400.1"
-    )
+    rounded = find_documented_difference(400.1, engine, bar_index=600, raw="400.1")
     assert rounded is not None and rounded.name == "tv_export_rounding"
-    assert (
-        find_documented_difference(399.0, engine, bar_index=600, raw="399.0") is None
-    )
+    assert find_documented_difference(399.0, engine, bar_index=600, raw="399.0") is None
 
 
 def test_na_entry_only_inside_the_warmup() -> None:
-    inside = find_documented_difference(
-        None, 1.0, bar_index=WARMUP_BARS - 1, raw="#"
-    )
+    inside = find_documented_difference(None, 1.0, bar_index=WARMUP_BARS - 1, raw="#")
     assert inside is not None and inside.name == "tv_na_vs_engine_null"
-    assert (
-        find_documented_difference(None, 1.0, bar_index=WARMUP_BARS, raw="#") is None
-    )
+    assert find_documented_difference(None, 1.0, bar_index=WARMUP_BARS, raw="#") is None
     assert find_documented_difference(None, None, bar_index=0, raw="#") is None
+
+
+def test_volume_feed_entry_documents_bar_volume_within_bound() -> None:
+    documented = find_documented_difference(
+        1000.5,
+        1000.0,
+        bar_index=600,
+        raw="",
+        context=DifferenceContext(field="volume", engine_index=600),
+    )
+    assert documented is not None and documented.name == "tv_volume_feed"
+    # the same field beyond the documented bound stays unexplained
+    assert (
+        find_documented_difference(
+            1002.0,
+            1000.0,
+            bar_index=600,
+            raw="",
+            context=DifferenceContext(field="volume", engine_index=600),
+        )
+        is None
+    )
+    # a non-volume OHLCV field is never documented by this entry
+    assert (
+        find_documented_difference(
+            1000.5,
+            1000.0,
+            bar_index=600,
+            raw="",
+            context=DifferenceContext(field="close", engine_index=600),
+        )
+        is None
+    )
+
+
+def test_volume_feed_entry_covers_contaminated_rvol_only() -> None:
+    inside = find_documented_difference(
+        1.0005,
+        1.0,
+        bar_index=600,
+        raw="",
+        context=DifferenceContext(
+            field="rvol", engine_index=570, rvol_contaminated=frozenset({570})
+        ),
+    )
+    assert inside is not None and inside.name == "tv_volume_feed"
+    outside = find_documented_difference(
+        1.0005,
+        1.0,
+        bar_index=600,
+        raw="",
+        context=DifferenceContext(
+            field="rvol", engine_index=590, rvol_contaminated=frozenset({570})
+        ),
+    )
+    assert outside is None
+
+
+def test_ema_seed_entry_only_near_window_start_and_within_bound() -> None:
+    near = find_documented_difference(
+        91584.5,
+        91584.0,
+        bar_index=600,
+        raw="",
+        context=DifferenceContext(field="ema_regime", engine_index=505),
+    )
+    assert near is not None and near.name == "ema_seed_history"
+    too_late = find_documented_difference(
+        91584.5,
+        91584.0,
+        bar_index=800,
+        raw="",
+        context=DifferenceContext(field="ema_regime", engine_index=WARMUP_BARS + 100),
+    )
+    assert too_late is None
+    too_big = find_documented_difference(
+        91586.0,
+        91584.0,
+        bar_index=600,
+        raw="",
+        context=DifferenceContext(field="ema_regime", engine_index=505),
+    )
+    assert too_big is None
+    # the entry explains this plot only
+    assert (
+        find_documented_difference(
+            1.000004,
+            1.0,
+            bar_index=600,
+            raw="",
+            context=DifferenceContext(field="cpos", engine_index=505),
+        )
+        is None
+    )
 
 
 # --------------------------------------------------------------------------
@@ -451,10 +595,10 @@ def test_unexplained_difference_is_engine_bug(scene: dict[str, Any]) -> None:
     assert plot.samples and plot.samples[0]["rel_diff"] == pytest.approx(0.01 / 1.01)
 
 
-def test_engine_failure_is_engine_bug(scene: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setitem(
-        PLOT_SPECS, "rvol", PlotSpec("bogus_indicator", {}, "bogus", "test-anchor")
-    )
+def test_engine_failure_is_engine_bug(
+    scene: dict[str, Any], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setitem(PLOT_SPECS, "rvol", PlotSpec("bogus_indicator", {}, "bogus", "test-anchor"))
     report = _compare(scene)
     assert report.status is ParityStatus.ENGINE_BUG
     plot = report.plots["rvol"]
@@ -483,6 +627,140 @@ def test_bar_diff_report_is_capped_at_twenty(scene: dict[str, Any]) -> None:
     assert len(report.bar_diff["samples"]) == 20
 
 
+def test_documented_volume_bar_keeps_the_comparison_running(scene: dict[str, Any]) -> None:
+    _write_export(scene["csv"], scene["bars"], scene["series"], volume_scale={560: 1.0005})
+    report = _compare(scene)
+    assert report.status is ParityStatus.EXACT_WITH_DOCUMENTED_PLATFORM_DIFFERENCE
+    assert report.passed is True
+    assert report.reason is None
+    assert report.bar_diff is not None
+    assert report.bar_diff["count"] == 1
+    assert report.bar_diff["documented"] == 1
+    assert report.bar_diff["unexplained"] == 0
+    assert report.bar_diff["samples"][0]["entry"] == "tv_volume_feed"
+    for plot in report.plots.values():
+        assert plot.status is ParityStatus.EXACT
+        assert plot.compared == BAR_COUNT - WARMUP_BARS
+
+
+def test_volume_difference_beyond_the_documented_bound_is_mismatch(
+    scene: dict[str, Any],
+) -> None:
+    _write_export(scene["csv"], scene["bars"], scene["series"], volume_scale={560: 1.002})
+    report = _compare(scene)
+    assert report.status is ParityStatus.DATA_MISMATCH
+    assert report.bar_diff is not None
+    assert report.bar_diff["documented"] == 0
+    assert report.bar_diff["unexplained"] == 1
+    assert "entry" not in report.bar_diff["samples"][0]
+
+
+def test_close_difference_within_the_volume_bound_is_never_documented(
+    scene: dict[str, Any],
+) -> None:
+    _write_export(scene["csv"], scene["bars"], scene["series"], close_scale={560: 1.0005})
+    report = _compare(scene)
+    assert report.status is ParityStatus.DATA_MISMATCH
+    assert report.bar_diff is not None
+    assert report.bar_diff["samples"][0]["field"] == "close"
+    assert report.bar_diff["unexplained"] == 1
+
+
+def test_rvol_inside_the_contaminated_window_is_documented(scene: dict[str, Any]) -> None:
+    contaminated = dict.fromkeys(range(560, 581), 1.0005)  # volume bar 560 + its 20-bar mean
+    _write_export(
+        scene["csv"],
+        scene["bars"],
+        scene["series"],
+        volume_scale={560: 1.0005},
+        plot_scale={"rvol": contaminated},
+    )
+    report = _compare(scene)
+    assert report.status is ParityStatus.EXACT_WITH_DOCUMENTED_PLATFORM_DIFFERENCE
+    rvol = report.plots["rvol"]
+    assert rvol.status is ParityStatus.EXACT_WITH_DOCUMENTED_PLATFORM_DIFFERENCE
+    assert rvol.documented == 21
+    assert rvol.unexplained == 0
+    assert report.plots["cpos"].status is ParityStatus.EXACT
+    assert report.plots["upper_wick"].status is ParityStatus.EXACT
+    assert report.plots["ema_regime"].status is ParityStatus.EXACT
+
+
+def test_rvol_outside_the_contaminated_window_is_engine_bug(scene: dict[str, Any]) -> None:
+    _write_export(
+        scene["csv"],
+        scene["bars"],
+        scene["series"],
+        plot_scale={"rvol": {590: 1.0005}},
+    )
+    report = _compare(scene)
+    assert report.status is ParityStatus.ENGINE_BUG
+    assert report.passed is False
+    rvol = report.plots["rvol"]
+    assert rvol.unexplained == 1
+    assert rvol.samples and rvol.samples[0]["rel_diff"] > REL_TOL
+
+
+def test_ema_seed_washout_is_documented_only_in_the_window_head(scene: dict[str, Any]) -> None:
+    scale = dict.fromkeys((500, 555, 599), 1.000004)
+    override = {
+        index: f"{scene['series']['ema_regime'][index] * factor:.12g}"
+        for index, factor in scale.items()
+    }
+    _write_export(scene["csv"], scene["bars"], scene["series"], ema_override=override)
+    report = _compare(scene)
+    assert report.status is ParityStatus.EXACT_WITH_DOCUMENTED_PLATFORM_DIFFERENCE
+    ema = report.plots["ema_regime"]
+    assert ema.documented == 3
+    assert ema.unexplained == 0
+
+
+def test_ema_difference_after_the_washout_window_is_engine_bug(scene: dict[str, Any]) -> None:
+    index = 600
+    value = scene["series"]["ema_regime"][index]
+    assert value is not None
+    _write_export(
+        scene["csv"],
+        scene["bars"],
+        scene["series"],
+        ema_override={index: f"{value * 1.000004:.12g}"},
+    )
+    report = _compare(scene)
+    assert report.status is ParityStatus.ENGINE_BUG
+    assert report.plots["ema_regime"].unexplained == 1
+
+
+def test_ema_difference_beyond_the_washout_bound_is_engine_bug(scene: dict[str, Any]) -> None:
+    index = 510
+    value = scene["series"]["ema_regime"][index]
+    assert value is not None
+    _write_export(
+        scene["csv"],
+        scene["bars"],
+        scene["series"],
+        ema_override={index: f"{value * 1.00002:.12g}"},
+    )
+    report = _compare(scene)
+    assert report.status is ParityStatus.ENGINE_BUG
+    assert report.plots["ema_regime"].unexplained == 1
+
+
+def test_worst_of_bar_and_plot_statuses_decides_the_run(scene: dict[str, Any]) -> None:
+    value = scene["series"]["ema_regime"][610]
+    assert value is not None
+    _write_export(
+        scene["csv"],
+        scene["bars"],
+        scene["series"],
+        volume_scale={560: 1.0005},
+        ema_override={610: f"{value * 1.01:.12g}"},
+    )
+    report = _compare(scene)
+    assert report.status is ParityStatus.ENGINE_BUG  # worst wins over the documented bar
+    assert report.bar_diff is not None
+    assert report.bar_diff["documented"] == 1
+
+
 def test_missing_reference_bar_inside_range_is_mismatch(scene: dict[str, Any]) -> None:
     _write_export(scene["csv"], scene["bars"], scene["series"], skip={550})
     report = _compare(scene)
@@ -503,9 +781,7 @@ def test_reference_bars_outside_the_range_warn_but_pass(scene: dict[str, Any]) -
 
 def test_missing_metadata_is_unknown(scene: dict[str, Any]) -> None:
     export = import_chart_csv(scene["csv"])
-    report = compare_layer1(
-        export, engine_bars=scene["bars"], metadata=None, provenance=PROVENANCE
-    )
+    report = compare_layer1(export, engine_bars=scene["bars"], metadata=None, provenance=PROVENANCE)
     assert report.status is ParityStatus.UNKNOWN
     assert report.passed is False
     assert report.plots == {}
@@ -612,7 +888,9 @@ def test_documented_difference_passes_the_gate(scene: dict[str, Any]) -> None:
     index = 600
     value = scene["series"]["ema_regime"][index]
     assert value is not None
-    _write_export(scene["csv"], scene["bars"], scene["series"], ema_override={index: f"{value:.4g}"})
+    _write_export(
+        scene["csv"], scene["bars"], scene["series"], ema_override={index: f"{value:.4g}"}
+    )
     run = run_parity(
         csv_path=scene["csv"],
         meta_path=scene["meta"],
@@ -621,6 +899,23 @@ def test_documented_difference_passes_the_gate(scene: dict[str, Any]) -> None:
         provenance=PROVENANCE,
     )
     assert run.exit_code == EXIT_PASS
+
+
+def test_documented_volume_difference_passes_the_gate(scene: dict[str, Any]) -> None:
+    _write_export(scene["csv"], scene["bars"], scene["series"], volume_scale={560: 1.0005})
+    run = run_parity(
+        csv_path=scene["csv"],
+        meta_path=scene["meta"],
+        report_path=scene["report"],
+        engine_bars=scene["bars"],
+        provenance=PROVENANCE,
+    )
+    assert run.exit_code == EXIT_PASS
+    assert run.report is not None
+    assert run.report.status is ParityStatus.EXACT_WITH_DOCUMENTED_PLATFORM_DIFFERENCE
+    written = json.loads(scene["report"].read_text(encoding="utf-8"))
+    assert written["bar_diff"]["documented"] == 1
+    assert written["bar_diff"]["unexplained"] == 0
 
 
 def test_data_mismatch_never_exits_green(scene: dict[str, Any]) -> None:

@@ -30,9 +30,13 @@ from engine.parity.metadata import (
     TradingViewRunMetadata,
     load_metadata,
 )
-from engine.parity.platform_differences import PLATFORM_DIFFERENCES, PlatformDifference
+from engine.parity.platform_differences import (
+    PLATFORM_DIFFERENCES,
+    DifferenceContext,
+    PlatformDifference,
+)
 from engine.parity.run import EXIT_FAIL, EXIT_PASS, GATE_PASSES, ParityRun, run_parity
-from engine.parity.status import ParityStatus, is_pass, overall
+from engine.parity.status import ParityStatus, is_pass, overall, worst_of
 
 __all__ = [
     "EXIT_FAIL",
@@ -44,6 +48,7 @@ __all__ = [
     "REL_TOL",
     "REQUIRED_FIELDS",
     "WARMUP_BARS",
+    "DifferenceContext",
     "ParityReport",
     "ParityRun",
     "ParityStatus",
@@ -61,4 +66,5 @@ __all__ = [
     "parse_time_ms",
     "run_parity",
     "significant_digits",
+    "worst_of",
 ]

@@ -3,17 +3,22 @@
 Alignment (design note 4.3): reference and engine bars pair by timestamp;
 reference bars outside the engine dataset are reported but never compared, a
 missing reference bar inside the dataset is a data mismatch. OHLCV is compared
-first at ``REL_TOL`` - a mismatch short-circuits to ``DATA_MISMATCH`` with a
+first at ``REL_TOL`` - a difference short-circuits to ``DATA_MISMATCH`` with a
 bar diff report (first ``SAMPLE_CAP`` differences), because no feature
-comparison over mismatched bars means anything. Plot values are compared only
-after the protocol warm-up (skip the first ``WARMUP_BARS`` bars of both sides);
-differences in the skipped region are recorded as informational observations
-with the same documented-difference table but never affect the status.
+comparison over mismatched bars means anything, *unless* every differing bar
+value is covered by the documented-difference table (design note 4.6: only the
+volume feed may be documented at bar level); then the bar evidence stays in the
+report, the contaminated rvol bars are handed to the plot comparison, and the
+run continues. Plot values are compared only after the protocol warm-up (skip
+the first ``WARMUP_BARS`` bars of both sides); differences in the skipped
+region are recorded as informational observations with the same
+documented-difference table but never affect the status.
 
-Statuses follow spec line 592; ``passed`` on the report is the spec's own rule
-(zero ENGINE_BUG, zero UNKNOWN) while the ``make parity`` gate additionally
-requires the run to have actually compared bars (D-019). The report carries no
-timestamps: same inputs -> identical document (PD-6).
+Statuses follow spec line 592: the final status is the worst of the plot
+statuses and the bar status (``worst_of``). ``passed`` on the report is the
+spec's own rule (zero ENGINE_BUG, zero UNKNOWN) while the ``make parity`` gate
+additionally requires the run to have actually compared bars (D-019). The
+report carries no timestamps: same inputs -> identical document (PD-6).
 """
 
 from __future__ import annotations
@@ -31,10 +36,11 @@ from engine.parity.constants import REL_TOL, WARMUP_BARS
 from engine.parity.importers import ReferenceExport
 from engine.parity.metadata import EXPECTED_BAR_MAGNIFIER, TradingViewRunMetadata
 from engine.parity.platform_differences import (
+    DifferenceContext,
     PlatformDifference,
     find_documented_difference,
 )
-from engine.parity.status import ParityStatus, is_pass, overall
+from engine.parity.status import ParityStatus, is_pass, worst_of
 from exchanges.base import Kline
 
 #: Samples kept per category in the report (design note 4.3: first 20 diffs).
@@ -123,6 +129,9 @@ def _classify_value(
     *,
     bar_index: int,
     raw: str,
+    field: str,
+    engine_index: int,
+    rvol_contaminated: frozenset[int] = frozenset(),
 ) -> tuple[bool, float | None, PlatformDifference | None]:
     """(equal within REL_TOL, relative difference, documented entry if differing)."""
     if reference is None or engine is None:
@@ -133,8 +142,15 @@ def _classify_value(
         relative = _relative_difference(reference, engine)
         if relative <= REL_TOL:
             return True, relative, None
-    return False, relative, find_documented_difference(
-        reference, engine, bar_index=bar_index, raw=raw
+    context = DifferenceContext(
+        engine_index=engine_index, field=field, rvol_contaminated=rvol_contaminated
+    )
+    return (
+        False,
+        relative,
+        find_documented_difference(
+            reference, engine, bar_index=bar_index, raw=raw, context=context
+        ),
     )
 
 
@@ -235,12 +251,19 @@ def _unknown_report(
 def _mismatch_report(
     bar_diffs: list[dict[str, Any]],
     *,
+    documented: int,
+    unexplained: int,
     reference: dict[str, Any],
     metadata: TradingViewRunMetadata | None,
     provenance: Mapping[str, Any],
     warnings: list[str],
 ) -> ParityReport:
-    """Spec line 590: OHLCV differs -> DATA_MISMATCH plus a bar diff report."""
+    """Spec line 590: an unexplained OHLCV difference -> DATA_MISMATCH plus a report.
+
+    Differences already covered by the documented-difference table stay in the
+    evidence (with their ``entry``) but only the unexplained ones force the
+    short-circuit (design note 4.6).
+    """
     plots = {
         name: PlotResult(
             name=name,
@@ -267,6 +290,8 @@ def _mismatch_report(
         warmup=None,
         bar_diff={
             "count": len(bar_diffs),
+            "documented": documented,
+            "unexplained": unexplained,
             "samples": bar_diffs[:SAMPLE_CAP],
             "report": f"first {min(len(bar_diffs), SAMPLE_CAP)} of {len(bar_diffs)} differences",
         },
@@ -293,9 +318,7 @@ def compare_layer1(
             provenance=None,
             warnings=warnings,
         )
-    missing = [
-        field for field in PROVENANCE_FIELDS if provenance.get(field) in (None, "")
-    ]
+    missing = [field for field in PROVENANCE_FIELDS if provenance.get(field) in (None, "")]
     if missing:
         return _unknown_report(
             "engine provenance is incomplete (PD-6): " + ", ".join(missing),
@@ -370,19 +393,26 @@ def compare_layer1(
         }
     )
     if before:
-        warnings.append(f"{before} reference bars predate the engine dataset (reported, not compared)")
+        warnings.append(
+            f"{before} reference bars predate the engine dataset (reported, not compared)"
+        )
     if after:
-        warnings.append(f"{after} reference bars postdate the engine dataset (reported, not compared)")
+        warnings.append(
+            f"{after} reference bars postdate the engine dataset (reported, not compared)"
+        )
     if outside_export:
         warnings.append(
-            f"{outside_export} engine bars lie outside the export range "
-            "(reported, not compared)"
+            f"{outside_export} engine bars lie outside the export range (reported, not compared)"
         )
 
     # Bar-level data first (design note 4.2): no feature comparison over
-    # mismatched bars means anything.
+    # mismatched bars means anything - unless every difference is covered by
+    # the documented-difference table (4.6: only the volume feed may be, at
+    # bar level), in which case the evidence stays in the report and the
+    # comparison continues.
     relative: float | None  # declared here: reused by the plot loops below
     bar_diffs: list[dict[str, Any]] = []
+    volume_diff_engine_indices: set[int] = set()
     for ref_index, engine_i in matched:
         ref_bar = reference.bars[ref_index]
         engine_bar = engine_bars[engine_i]
@@ -396,15 +426,25 @@ def compare_layer1(
         for field_name, reference_value, engine_value in fields:
             relative = _relative_difference(reference_value, engine_value)
             if relative > REL_TOL:
-                bar_diffs.append(
-                    {
-                        "time_ms": ref_bar.time_ms,
-                        "field": field_name,
-                        "reference": reference_value,
-                        "engine": engine_value,
-                        "rel_diff": relative,
-                    }
+                bar_diff: dict[str, Any] = {
+                    "time_ms": ref_bar.time_ms,
+                    "field": field_name,
+                    "reference": reference_value,
+                    "engine": engine_value,
+                    "rel_diff": relative,
+                }
+                entry = find_documented_difference(
+                    reference_value,
+                    engine_value,
+                    bar_index=ref_index,
+                    raw="",
+                    context=DifferenceContext(field=field_name, engine_index=engine_i),
                 )
+                if entry is not None:
+                    bar_diff["entry"] = entry.name
+                    if field_name == "volume":
+                        volume_diff_engine_indices.add(engine_i)
+                bar_diffs.append(bar_diff)
     for ref_index in missing_inside:
         bar_diffs.append(
             {
@@ -425,14 +465,27 @@ def compare_layer1(
                 "rel_diff": None,
             }
         )
-    if bar_diffs:
+    documented_bars = sum(1 for diff in bar_diffs if "entry" in diff)
+    unexplained_bars = len(bar_diffs) - documented_bars
+    if unexplained_bars:
         return _mismatch_report(
             bar_diffs,
+            documented=documented_bars,
+            unexplained=unexplained_bars,
             reference=reference_info,
             metadata=metadata,
             provenance=provenance,
             warnings=warnings,
         )
+    # rvol uses volume[t] as its numerator and volume[t] inside the next
+    # ``length`` sma windows, so a documented volume difference contaminates
+    # engine bars ``t .. t + length`` (design note 4.6).
+    rvol_length = int(PLOT_SPECS["rvol"].params.get("length", 0))
+    rvol_contaminated: frozenset[int] = frozenset(
+        index
+        for base in volume_diff_engine_indices
+        for index in range(base, base + rvol_length + 1)
+    )
 
     window = [
         (ref_index, engine_i)
@@ -454,6 +507,26 @@ def compare_layer1(
             warnings=warnings,
         )
 
+    # Bar status feeds the final worst-of (design note 4.6): a fully
+    # documented bar gate is EXACT_WITH..., no bar differences is EXACT.
+    bar_status = (
+        ParityStatus.EXACT_WITH_DOCUMENTED_PLATFORM_DIFFERENCE
+        if documented_bars
+        else ParityStatus.EXACT
+    )
+    bar_diff_document: dict[str, Any] | None = None
+    if bar_diffs:
+        bar_diff_document = {
+            "count": len(bar_diffs),
+            "documented": documented_bars,
+            "unexplained": unexplained_bars,
+            "samples": bar_diffs[:SAMPLE_CAP],
+            "report": f"first {min(len(bar_diffs), SAMPLE_CAP)} of {len(bar_diffs)} differences",
+            "status": "documented"
+            if bar_status is ParityStatus.EXACT_WITH_DOCUMENTED_PLATFORM_DIFFERENCE
+            else "unexplained",
+        }
+
     series, errors, resolved_params = compute_plots(engine_frame(engine_bars))
     provenance_doc = dict(provenance)
     provenance_doc["resolved_params"] = resolved_params
@@ -473,6 +546,9 @@ def compare_layer1(
                 series[name][engine_i],
                 bar_index=ref_index,
                 raw=ref_bar.plot_raw[name],
+                field=name,
+                engine_index=engine_i,
+                rvol_contaminated=rvol_contaminated,
             )
             if equal:
                 continue
@@ -534,6 +610,9 @@ def compare_layer1(
                 eng_value,
                 bar_index=ref_index,
                 raw=ref_bar.plot_raw[name],
+                field=name,
+                engine_index=engine_i,
+                rvol_contaminated=rvol_contaminated,
             )
             if equal:
                 matched_count += 1
@@ -574,7 +653,8 @@ def compare_layer1(
             anchor=plot_spec.anchor,
         )
 
-    status = overall({name: result.status for name, result in plots.items()})
+    plot_statuses = tuple(result.status for result in plots.values())
+    status = worst_of(*plot_statuses, bar_status)
     warmup = {
         "rows": len(warmup_rows),
         "note": (
@@ -595,7 +675,7 @@ def compare_layer1(
         run_metadata=metadata.to_document(),
         provenance=provenance_doc,
         warmup=warmup,
-        bar_diff=None,
+        bar_diff=bar_diff_document,
         warnings=warnings,
     )
 

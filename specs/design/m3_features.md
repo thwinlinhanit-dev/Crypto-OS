@@ -4,13 +4,14 @@ Companion to IMPLEMENTATION_SPEC_v1.1.1 Section 5 (feature library), Section
 14.1 (property tests), Section 14.2 (TradingView parity, layer 1), Section 11
 (`GET /v1/indicators`), Section 15 (milestone M3, T3.1-T3.2), and the reference
 study `specs/reference/rvol_climax_pro_v5.pine` (script version `v5`).
-Decisions recorded in docs/DECISIONS.md as D-015..D-019; questions OQ-13..OQ-15.
+Decisions recorded in docs/DECISIONS.md as D-015..D-021; questions OQ-13..OQ-15
+(OQ-15 resolved by D-021).
 
 ## 0. Acceptance-criteria mapping
 
 | AC (M3) | Where it lands |
 | --- | --- |
-| feature parity within tolerance on BTCUSDT 1D | `make parity` -> `scripts/parity.py` (Section 14.2 layer 1): `tests/test_parity.py` covers the tool; the AC run itself needs the owner's TradingView export at `fixtures/parity/BINANCE_BTCUSDT_1D.csv` (owner confirmed 2026-10-08 they will provide it) |
+| feature parity within tolerance on BTCUSDT 1D | `make parity` -> `scripts/parity.py` (Section 14.2 layer 1): the AC run against the owner's export (`fixtures/parity/BINANCE_BTCUSDT_1D.csv`, D-020) lands **inside M3** as `EXACT_WITH_DOCUMENTED_PLATFORM_DIFFERENCE`, zero unexplained differences (D-021, §4.6); `tests/test_parity.py` covers the tool and both new table entries |
 | truncation tests pass | `tests/test_features_truncation.py` - hypothesis property suite over **every** registered feature and library function (Section 14.1) |
 | T3.1 features per Section 5 | `engine/features/{primitives,regime}.py` + registry additions in `engine/features/indicators.py` |
 | T3.2 parity tool: CSV import, run metadata capture, status categories | `engine/parity/` + `scripts/parity.py` + `make parity` |
@@ -158,9 +159,19 @@ not recognise (no silent coercion, PD-10 for data):
   classified `UNKNOWN` (it cannot be compared, and "cannot be compared" must
   never read as "passed").
 
-OHLCV is compared first at `rel <= 1e-6`; a bar-level mismatch short-circuits
+OHLCV is compared first at `rel <= 1e-6`; a bar-level difference short-circuits
 to `DATA_MISMATCH` and writes a bar diff report (first 20 differences) because
-no feature comparison over mismatched bars means anything.
+no feature comparison over mismatched bars means anything - **unless every
+differing bar value is covered by the documented-difference table** (amendment
+after the first AC run, §4.6: only the volume feed may be documented at bar
+level, with `raw=""` so export rounding can never fire there). Then the bar
+evidence stays in the report (with its `entry` per sample and the
+documented/unexplained counts), the contaminated `rvol` bars are computed and
+handed to the plot comparison, and the run continues; the final status is the
+worst of the plot statuses and the bar status (`EXACT` when the bar gate is
+clean, `EXACT_WITH_DOCUMENTED_PLATFORM_DIFFERENCE` when it is fully
+documented). An unexplained structural diff (a bar missing on either side) is
+never documented and still short-circuits.
 
 **Bar alignment (implementation decision).** Reference and engine bars are
 matched by `open_time` (millisecond epoch). A reference bar outside the engine
@@ -181,15 +192,17 @@ never affect the status. An empty comparison window is `UNKNOWN`.
   `UNKNOWN`** (line 592).
 - Classification rules, in order:
   1. reference import failed / required metadata missing -> `UNKNOWN`;
-  2. bar OHLCV differs beyond tolerance -> `DATA_MISMATCH` (+ diff report);
+  2. a bar OHLCV difference beyond tolerance that the documented table does
+     not explain -> `DATA_MISMATCH` (+ diff report);
   3. engine raised -> `ENGINE_BUG` (an engine that cannot answer its own
      contract is a bug, never an unknown);
   4. plot differs and the difference matches an entry in the **documented
      platform-difference table** (`engine/parity/platform_differences.py`,
      each entry carrying the design-note anchor required by line 592) ->
-     `EXACT_WITH_DOCUMENTED_PLATFORM_DIFFERENCE`;
+      `EXACT_WITH_DOCUMENTED_PLATFORM_DIFFERENCE`;
   5. plot differs with no documented explanation -> `ENGINE_BUG`;
   6. otherwise -> `EXACT`.
+  The overall status is `worst_of(per-plot statuses..., bar status)`.
 - A mismatch is never automatically the engine's fault (line 592): the tool
   reports the numbers and the category, and a human decides whether a new
   platform-difference entry is warranted.
@@ -197,6 +210,9 @@ never affect the status. An empty comparison window is `UNKNOWN`.
   significant digits, so a value that differs only beyond the exported
   precision), `tv_na_vs_engine_null` (`na` in the export against a computed
   engine value at the same bar, only inside the first 500 bars).
+- Table entries added after the first AC run (§4.6, sanctioned by the
+  register's OQ-15): `tv_volume_feed` (bar volume and its contaminated
+  `rvol` window) and `ema_seed_history` (regime-EMA seed wash-out).
 
 ### 4.4 Run metadata (line 593)
 
@@ -228,6 +244,49 @@ Replaces the D-005 placeholder (`NOT_IMPLEMENTED ... M6`):
 - `make parity` stays the layer-1 entry point after M6 adds layer 2; D-005 is
   amended (D-018), not deleted.
 
+### 4.6 First AC run: two documented platform differences (post-run amendment)
+
+The first `make parity` against `fixtures/parity/BINANCE_BTCUSDT_1D.csv`
+returned `DATA_MISMATCH` on exactly **5 volume bars** (engine bars 445-447,
+658, 780; the first three inside the warm-up window). Classification before
+conclusion (line 592: failure never automatically means the engine is wrong):
+
+- the fixture source is `https://api.binance.com/api/v3/klines` recorded
+  2026-10-08; a live query of the same 5 days returns **exactly** the fixture
+  values, so the engine holds the exchange value verbatim and TradingView's
+  own aggregation is the outlier (max rel `1.9e-4`);
+- plot probe over the full comparison window: `cpos` and `upper_wick` EXACT
+  (max rel 0); `rvol` 42 unexplained bars, all at rel `<= 1.919e-4` and all
+  inside the 21-bar windows `{b .. b+20}` of the 2 in-window volume diffs
+  (`rvol = volume / sma(volume, 20)`, so a volume diff contaminates its own
+  bar and the next 20 sma windows); `ema_regime` 57 unexplained bars at rel
+  `<= 3.458e-6`, all at the window start, decaying below `1e-6` by ~bar 556 -
+  the engine's `ta.ema(close, 100)` seeds at the fixture's first bar
+  (2024-01-01) while TradingView seeds at the symbol's full history
+  (2020-09-14); the seed weight decays as `(1 - 2/101)^n`.
+
+Owner decision (classification, not tolerance): these are platform
+differences, added to the table as two narrow entries - never a widened
+`REL_TOL` (PD-3):
+
+- **`tv_volume_feed`** - a differing `volume` field (bar gate) or `rvol` plot
+  value within `VOLUME_FEED_REL_TOL = 1e-3` (observed max `1.9e-4`); the rvol
+  coverage is engine bars `b .. b + 20` of each documented volume diff at
+  `b`, handed to the plot loop via a frozen `DifferenceContext`
+  (`engine_index`, `field`, `rvol_contaminated`). A wider difference, another
+  field, or another plot stays unexplained.
+- **`ema_seed_history`** - `ema_regime` only, engine index in
+  `[500, 600)`, within `EMA_WASHOUT_REL_TOL = 1e-5` (observed max `3.5e-6`
+  at the window start).
+
+Both bounds are ceilings above the observed magnitudes with headroom, not
+inflated tolerances: any future difference beyond them is unexplained again
+and must be re-measured. After the amendment the AC run is
+`EXACT_WITH_DOCUMENTED_PLATFORM_DIFFERENCE` (bar gate 5/5 documented, rvol
+42 documented, ema 57 documented, zero unexplained anywhere; gate exit 0).
+The volume values are recorded in the report's `bar_diff` evidence even on
+the green path - documented, never hidden.
+
 ## 5. Test and evidence plan
 
 | Test file | Covers |
@@ -235,7 +294,7 @@ Replaces the D-005 placeholder (`NOT_IMPLEMENTED ... M6`):
 | `tests/test_features_m3.py` | hand-computed section 5 semantics for every new feature, registry/defaults contract (PD-11), regime-tag rules |
 | `tests/test_features_truncation.py` | hypothesis truncation invariance + future-edit invariance over all features |
 | `tests/test_features_m2.py` | untouched expectations, except the two tests that snapshot the M2 registry set (`macd` becomes a real indicator, so its "unknown name" probe moves to a name that stays unknown) |
-| `tests/test_parity.py` | CSV import (aliases, na, time formats, rejections), tolerance/skip-500 comparison, status classification table, metadata fail-closed, report provenance, CLI exit codes |
+| `tests/test_parity.py` | CSV import (aliases, na, time formats, rejections), tolerance/skip-500 comparison, status classification table, metadata fail-closed, report provenance, CLI exit codes, and both post-AC table entries (`tv_volume_feed` bar+rvol window, `ema_seed_history` window and bound, each pinned from both sides) |
 | evidence | `uv run ruff check .`, `uv run mypy .`, `uv run pytest`, `pnpm -r typecheck`, `pnpm --filter web build`; the AC parity run against the owner's export with the printed table |
 
 Browser evidence is not part of M3 (no chart surface changes; PD-9).

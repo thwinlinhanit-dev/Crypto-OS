@@ -1,0 +1,11 @@
+{
+  "script_version": "v5",
+  "symbol": "BINANCE:BTCUSDT",
+  "timeframe": "1D",
+  "date_range": "2020-09-14..2026-10-09",
+  "bar_magnifier": "OFF",
+  "commission": "0.10%",
+  "slippage": "0",
+  "fill_assumptions": "process_orders_on_close=true, calc_on_every_tick=false",
+  "export_date": "2026-10-09"
+}

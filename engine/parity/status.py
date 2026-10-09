@@ -42,11 +42,16 @@ def is_pass(status: ParityStatus) -> bool:
     return status not in (ParityStatus.ENGINE_BUG, ParityStatus.UNKNOWN)
 
 
+def worst_of(*statuses: ParityStatus) -> ParityStatus:
+    """Worst of the given statuses; nothing given is UNKNOWN (4.2 fail-closed)."""
+    if not statuses:
+        return ParityStatus.UNKNOWN
+    return min(statuses, key=_SEVERITY.index)
+
+
 def overall(per_plot: Mapping[str, ParityStatus]) -> ParityStatus:
     """Worst status across the compared plots; nothing compared is UNKNOWN.
 
     "cannot be compared" must never read as "passed" (design note 4.2).
     """
-    if not per_plot:
-        return ParityStatus.UNKNOWN
-    return min(per_plot.values(), key=_SEVERITY.index)
+    return worst_of(*per_plot.values())
