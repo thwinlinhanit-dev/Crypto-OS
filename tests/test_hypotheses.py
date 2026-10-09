@@ -21,6 +21,7 @@ from sqlalchemy import Connection, create_engine, text
 
 from apps.api.main import create_app
 from apps.api.settings import get_settings
+from tests.support import reset_research
 
 CRITERIA: dict[str, Any] = {"pass": ["grade B or better"], "kill": ["grade D twice"]}
 
@@ -44,12 +45,7 @@ def _hyp_id(client: TestClient) -> str:
 
 
 def _wipe(conn: Connection) -> None:
-    for statement in (
-        "DELETE FROM system.audit_log",
-        "TRUNCATE research.hypothesis",
-    ):
-        conn.execute(text(statement))
-    conn.commit()
+    reset_research(conn)
 
 
 @pytest.fixture()

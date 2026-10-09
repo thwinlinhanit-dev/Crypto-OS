@@ -30,13 +30,14 @@ from pydantic import BaseModel, Field
 from sqlalchemy import Connection, text
 
 from apps.api.db import connection_scope
+from apps.api.experiments import create_singleton_family, record_variant
 from apps.api.market import _identity, _load_window, _parse_params
 from engine.config.defaults import ParamError, load_defaults
 from engine.config.validation import load_evidence_grade
 from engine.data.bars import BAR_MS, UnknownTimeframeError, parse_timeframe
 from engine.data.instruments import Instrument
 from engine.errors import HoldoutLockedError, NotFoundError, ValidationError
-from engine.events.base import Event
+from engine.events.base import Event, params_hash
 from engine.events.outcomes import Outcome, compute_outcomes
 from engine.events.registry import resolve_detector
 from engine.scopes import (
@@ -358,6 +359,29 @@ async def post_stats(body: StatsRequest) -> StatsResultView:
     applied_end = int(scope_view.applied_to.timestamp() * 1000)
 
     with connection_scope() as conn:
+        # Ad-hoc runs never bypass recording (spec 8.4): a family_id the request
+        # names must exist; otherwise a singleton family id is minted here and
+        # written only once the run succeeds (a failed request leaves no rows).
+        # The stored result embeds the REQUEST's family identity only, so two
+        # identical requests stay byte-identical (the minted singleton id is an
+        # audit row that points at the result, never the other way round).
+        if body.family_id is not None:
+            family_row = conn.execute(
+                text(
+                    "SELECT family_id, variant_count FROM research.experiment_family"
+                    " WHERE family_id = :id"
+                ),
+                {"id": body.family_id},
+            ).first()
+            if family_row is None:
+                raise NotFoundError("family not found", {"family_id": str(body.family_id)})
+            result_family_id: str | None = str(body.family_id)
+            family_id = uuid.UUID(str(body.family_id))
+            variant_count = int(family_row.variant_count) + 1
+        else:
+            result_family_id = None
+            variant_count = 1
+            family_id = uuid.uuid4()
         if data_scope == HOLDOUT:
             _gate_holdout(conn, body.hypothesis_id)
         instruments: list[Instrument] = []
@@ -485,7 +509,8 @@ async def post_stats(body: StatsRequest) -> StatsResultView:
             grade_thresholds=thresholds,
             n_raw=n_raw,
             bar_ms=bar_ms,
-            family_id=body.family_id,
+            family_id=result_family_id,
+            variant_count=variant_count,
         )
         resolved_params = {
             "detector": dict(detector_params),
@@ -497,7 +522,7 @@ async def post_stats(body: StatsRequest) -> StatsResultView:
                 "market_event_k": stats_params["market_event_k"],
                 "cluster_models": stats_params["cluster_models"],
             },
-            "family_id": body.family_id,
+            "family_id": result_family_id,
         }
         ref_id = uuid.uuid4()
         conn.execute(
@@ -532,6 +557,21 @@ async def post_stats(body: StatsRequest) -> StatsResultView:
                 result=result,
                 resolved_params=resolved_params,
             )
+        if body.family_id is None:
+            create_singleton_family(
+                conn,
+                family_id=family_id,
+                hypothesis_ids=(
+                    [str(body.hypothesis_id)] if body.hypothesis_id is not None else []
+                ),
+            )
+        record_variant(
+            conn,
+            family_id=family_id,
+            stats_ref_id=ref_id,
+            params_hash_value=params_hash(resolved_params),
+            resolved_params=resolved_params,
+        )
         stored = conn.execute(
             text("SELECT * FROM research.stats_result WHERE ref_id = :ref"),
             {"ref": ref_id},

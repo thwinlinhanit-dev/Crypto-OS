@@ -41,7 +41,7 @@ from engine.data.bars import Timeframe
 from engine.data.instruments import build_instrument, upsert_instruments
 from engine.errors import ValidationError
 from exchanges.base import Kline
-from tests.support import BTC, DAY, T0, WIDE_BUDGET, FixtureAdapter
+from tests.support import BTC, DAY, T0, WIDE_BUDGET, FixtureAdapter, reset_research
 
 ETH = build_instrument(
     venue="BINANCE",
@@ -166,10 +166,9 @@ def conn() -> Iterator[Connection]:
         "DELETE FROM market.dataset_manifest",
         "DELETE FROM system.audit_log",
         "DELETE FROM market.instrument",
-        "TRUNCATE research.event, research.event_outcome, research.stats_result,"
-        " research.hypothesis, research.note",
     ):
         connection.execute(text(statement))
+    reset_research(connection)
     upsert_instruments(connection, [BTC, ETH, PERP, BYBIT])
     connection.commit()
     try:
@@ -184,7 +183,8 @@ def conn() -> Iterator[Connection]:
             "DELETE FROM system.audit_log",
             "DELETE FROM market.instrument",
             "TRUNCATE research.event, research.event_outcome, research.stats_result,"
-            " research.hypothesis, research.note",
+            " research.hypothesis, research.note, research.variant, research.experiment,"
+            " research.experiment_family",
         ):
             connection.execute(text(statement))
         connection.commit()
@@ -318,11 +318,21 @@ def test_post_stats_happy_path(client: TestClient, conn: Connection, seeded_dev:
     assert sum(result["per_symbol"].values()) == result["n_raw"]
     assert body["scope"]["clipped"] is False
     assert body["scope"]["flag"] is None
-    assert result["multiple_testing"] == {
-        "family_id": None,
-        "variant_count": 1,
-        "selection_method": "PRE_SPECIFIED",
-    }
+    # Every ad-hoc run is recorded: a singleton family + one variant (8.4).
+    block = result["multiple_testing"]
+    assert block["variant_count"] == 1
+    assert block["selection_method"] == "PRE_SPECIFIED"
+    assert block["family_id"] is None  # request carried none; the row is the audit trail
+    recorded = conn.execute(
+        text(
+            "SELECT f.variant_count AS variant_count FROM research.variant v"
+            " JOIN research.experiment_family f ON f.family_id = v.family_id"
+            " WHERE v.result_ref = :ref"
+        ),
+        {"ref": body["ref_id"]},
+    ).first()
+    assert recorded is not None, "the run must be recorded as a variant"
+    assert recorded.variant_count == 1
 
 
 def test_post_stats_reproducible(client: TestClient, conn: Connection, seeded_dev: str) -> None:

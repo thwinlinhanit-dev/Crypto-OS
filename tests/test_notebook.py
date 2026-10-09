@@ -17,15 +17,15 @@ from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import Connection, create_engine, text
+from sqlalchemy import Connection, create_engine
 
 from apps.api.main import create_app
 from apps.api.settings import get_settings
+from tests.support import reset_research
 
 
 def _wipe(conn: Connection) -> None:
-    conn.execute(text("TRUNCATE research.note"))
-    conn.commit()
+    reset_research(conn)
 
 
 @pytest.fixture()

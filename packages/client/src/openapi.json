@@ -684,6 +684,487 @@
         "title": "ExclusionView",
         "type": "object"
       },
+      "ExperimentCreate": {
+        "description": "``POST /v1/experiments`` body (PD-12: universe + dataset are explicit).",
+        "properties": {
+          "assessment": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assessment"
+          },
+          "conclusion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conclusion"
+          },
+          "data_scope": {
+            "default": "DEVELOPMENT",
+            "title": "Data Scope",
+            "type": "string"
+          },
+          "dataset_version": {
+            "title": "Dataset Version",
+            "type": "string"
+          },
+          "detector_refs": {
+            "additionalProperties": true,
+            "title": "Detector Refs",
+            "type": "object"
+          },
+          "family_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Family Id"
+          },
+          "hypothesis_id": {
+            "format": "uuid",
+            "title": "Hypothesis Id",
+            "type": "string"
+          },
+          "refs": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refs"
+          },
+          "resolved_params": {
+            "additionalProperties": true,
+            "title": "Resolved Params",
+            "type": "object"
+          },
+          "seed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seed"
+          },
+          "selection_method": {
+            "default": "PRE_SPECIFIED",
+            "title": "Selection Method",
+            "type": "string"
+          },
+          "timeframe": {
+            "title": "Timeframe",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "universe": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Universe",
+            "type": "array"
+          }
+        },
+        "required": [
+          "hypothesis_id",
+          "title",
+          "universe",
+          "timeframe",
+          "dataset_version",
+          "detector_refs",
+          "resolved_params"
+        ],
+        "title": "ExperimentCreate",
+        "type": "object"
+      },
+      "ExperimentPatch": {
+        "description": "``PATCH /v1/experiments/{id}`` body (only while unfrozen, spec 8.5).",
+        "properties": {
+          "assessment": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assessment"
+          },
+          "conclusion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conclusion"
+          },
+          "refs": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refs"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "title": "ExperimentPatch",
+        "type": "object"
+      },
+      "ExperimentView": {
+        "properties": {
+          "assessment": {
+            "additionalProperties": true,
+            "title": "Assessment",
+            "type": "object"
+          },
+          "code_version": {
+            "title": "Code Version",
+            "type": "string"
+          },
+          "conclusion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conclusion"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "data_scope": {
+            "title": "Data Scope",
+            "type": "string"
+          },
+          "dataset_schema_version": {
+            "title": "Dataset Schema Version",
+            "type": "string"
+          },
+          "dataset_version": {
+            "title": "Dataset Version",
+            "type": "string"
+          },
+          "detector_refs": {
+            "additionalProperties": true,
+            "title": "Detector Refs",
+            "type": "object"
+          },
+          "engine_version": {
+            "title": "Engine Version",
+            "type": "string"
+          },
+          "experiment_id": {
+            "format": "uuid",
+            "title": "Experiment Id",
+            "type": "string"
+          },
+          "family_id": {
+            "format": "uuid",
+            "title": "Family Id",
+            "type": "string"
+          },
+          "frozen": {
+            "title": "Frozen",
+            "type": "boolean"
+          },
+          "frozen_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Frozen At"
+          },
+          "hypothesis_id": {
+            "format": "uuid",
+            "title": "Hypothesis Id",
+            "type": "string"
+          },
+          "refs": {
+            "additionalProperties": true,
+            "title": "Refs",
+            "type": "object"
+          },
+          "resolved_params": {
+            "additionalProperties": true,
+            "title": "Resolved Params",
+            "type": "object"
+          },
+          "result_hashes": {
+            "additionalProperties": true,
+            "title": "Result Hashes",
+            "type": "object"
+          },
+          "seed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seed"
+          },
+          "selection_method": {
+            "title": "Selection Method",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "supersedes": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supersedes"
+          },
+          "timeframe": {
+            "title": "Timeframe",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "universe": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Universe",
+            "type": "array"
+          }
+        },
+        "required": [
+          "experiment_id",
+          "hypothesis_id",
+          "family_id",
+          "title",
+          "status",
+          "conclusion",
+          "assessment",
+          "universe",
+          "timeframe",
+          "data_scope",
+          "dataset_version",
+          "dataset_schema_version",
+          "engine_version",
+          "code_version",
+          "detector_refs",
+          "resolved_params",
+          "selection_method",
+          "seed",
+          "refs",
+          "result_hashes",
+          "frozen",
+          "frozen_at",
+          "supersedes",
+          "created_at"
+        ],
+        "title": "ExperimentView",
+        "type": "object"
+      },
+      "FamilyCreate": {
+        "description": "``POST /v1/families`` body (spec 10 columns).",
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "hypothesis_ids": {
+            "default": [],
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Hypothesis Ids",
+            "type": "array"
+          },
+          "search_space": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Search Space"
+          }
+        },
+        "required": [
+          "description"
+        ],
+        "title": "FamilyCreate",
+        "type": "object"
+      },
+      "FamilyPatch": {
+        "description": "``PATCH /v1/families/{id}`` body.",
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "hypothesis_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hypothesis Ids"
+          },
+          "search_space": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Search Space"
+          }
+        },
+        "title": "FamilyPatch",
+        "type": "object"
+      },
+      "FamilyView": {
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "family_id": {
+            "format": "uuid",
+            "title": "Family Id",
+            "type": "string"
+          },
+          "hypothesis_count": {
+            "title": "Hypothesis Count",
+            "type": "integer"
+          },
+          "hypothesis_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Hypothesis Ids",
+            "type": "array"
+          },
+          "search_space": {
+            "additionalProperties": true,
+            "title": "Search Space",
+            "type": "object"
+          },
+          "variant_count": {
+            "title": "Variant Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "family_id",
+          "description",
+          "hypothesis_ids",
+          "search_space",
+          "hypothesis_count",
+          "variant_count",
+          "created_at"
+        ],
+        "title": "FamilyView",
+        "type": "object"
+      },
       "GapView": {
         "properties": {
           "detected_at": {
@@ -1297,6 +1778,38 @@
           "timestamps"
         ],
         "title": "JobView",
+        "type": "object"
+      },
+      "LineageView": {
+        "description": "Read-only lineage (spec 8.5): nodes that exist, and what is not built yet.",
+        "properties": {
+          "experiment_id": {
+            "format": "uuid",
+            "title": "Experiment Id",
+            "type": "string"
+          },
+          "nodes": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Nodes",
+            "type": "array"
+          },
+          "not_implemented": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Not Implemented",
+            "type": "array"
+          }
+        },
+        "required": [
+          "experiment_id",
+          "nodes",
+          "not_implemented"
+        ],
+        "title": "LineageView",
         "type": "object"
       },
       "NoteCreate": {
@@ -2057,6 +2570,92 @@
         "title": "ValidationError",
         "type": "object"
       },
+      "VariantView": {
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "experiment_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Experiment Id"
+          },
+          "family_id": {
+            "format": "uuid",
+            "title": "Family Id",
+            "type": "string"
+          },
+          "params_hash": {
+            "title": "Params Hash",
+            "type": "string"
+          },
+          "resolved_params": {
+            "additionalProperties": true,
+            "title": "Resolved Params",
+            "type": "object"
+          },
+          "result_ref": {
+            "format": "uuid",
+            "title": "Result Ref",
+            "type": "string"
+          },
+          "selected": {
+            "title": "Selected",
+            "type": "boolean"
+          },
+          "variant_id": {
+            "format": "uuid",
+            "title": "Variant Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "variant_id",
+          "family_id",
+          "experiment_id",
+          "params_hash",
+          "resolved_params",
+          "result_ref",
+          "selected",
+          "created_at"
+        ],
+        "title": "VariantView",
+        "type": "object"
+      },
+      "VerifyView": {
+        "description": "``GET /v1/experiments/{id}/verify`` body (spec 8.5).",
+        "properties": {
+          "experiment_id": {
+            "format": "uuid",
+            "title": "Experiment Id",
+            "type": "string"
+          },
+          "results": {
+            "additionalProperties": true,
+            "title": "Results",
+            "type": "object"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "experiment_id",
+          "status",
+          "results"
+        ],
+        "title": "VerifyView",
+        "type": "object"
+      },
       "WindowView": {
         "description": "Resolved window knobs echoed so every served payload is reproducible.",
         "properties": {
@@ -2781,6 +3380,560 @@
         "tags": [
           "events",
           "events"
+        ]
+      }
+    },
+    "/v1/experiments": {
+      "get": {
+        "operationId": "list_experiments_v1_experiments_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ExperimentView"
+                  },
+                  "title": "Response List Experiments V1 Experiments Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Experiments",
+        "tags": [
+          "experiments",
+          "experiments"
+        ]
+      },
+      "post": {
+        "description": "Create one reproducible attempt; ``family_id`` omitted -> singleton family.",
+        "operationId": "create_experiment_v1_experiments_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExperimentCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Experiment",
+        "tags": [
+          "experiments",
+          "experiments"
+        ]
+      }
+    },
+    "/v1/experiments/{experiment_id}": {
+      "get": {
+        "operationId": "get_experiment_v1_experiments__experiment_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "experiment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Experiment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Experiment",
+        "tags": [
+          "experiments",
+          "experiments"
+        ]
+      },
+      "patch": {
+        "description": "PATCH only while unfrozen (spec 8.5: frozen experiments cannot be updated).",
+        "operationId": "patch_experiment_v1_experiments__experiment_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "experiment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Experiment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExperimentPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch Experiment",
+        "tags": [
+          "experiments",
+          "experiments"
+        ]
+      }
+    },
+    "/v1/experiments/{experiment_id}/freeze": {
+      "post": {
+        "description": "Freeze in one transaction: lock referenced results + hypothesis, store hashes.",
+        "operationId": "freeze_experiment_v1_experiments__experiment_id__freeze_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "experiment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Experiment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Freeze Experiment",
+        "tags": [
+          "experiments",
+          "experiments"
+        ]
+      }
+    },
+    "/v1/experiments/{experiment_id}/lineage": {
+      "get": {
+        "description": "Read-only lineage from stored ids (spec 8.5: every node links to its object).",
+        "operationId": "experiment_lineage_v1_experiments__experiment_id__lineage_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "experiment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Experiment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LineageView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Experiment Lineage",
+        "tags": [
+          "experiments",
+          "experiments"
+        ]
+      }
+    },
+    "/v1/experiments/{experiment_id}/verify": {
+      "get": {
+        "description": "Recompute stored result hashes -> INTACT or TAMPERED (spec 8.5).",
+        "operationId": "verify_experiment_v1_experiments__experiment_id__verify_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "experiment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Experiment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Verify Experiment",
+        "tags": [
+          "experiments",
+          "experiments"
+        ]
+      }
+    },
+    "/v1/families": {
+      "get": {
+        "description": "List families, newest first.",
+        "operationId": "list_families_v1_families_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/FamilyView"
+                  },
+                  "title": "Response List Families V1 Families Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Families",
+        "tags": [
+          "experiments",
+          "experiments"
+        ]
+      },
+      "post": {
+        "description": "Create an experiment family (the search record, spec 8.4).",
+        "operationId": "create_family_v1_families_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FamilyCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FamilyView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Family",
+        "tags": [
+          "experiments",
+          "experiments"
+        ]
+      }
+    },
+    "/v1/families/{family_id}": {
+      "delete": {
+        "description": "Delete an unreferenced family (409 once variants/experiments exist).",
+        "operationId": "delete_family_v1_families__family_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "family_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Family Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Family",
+        "tags": [
+          "experiments",
+          "experiments"
+        ]
+      },
+      "get": {
+        "operationId": "get_family_v1_families__family_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "family_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Family Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FamilyView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Family",
+        "tags": [
+          "experiments",
+          "experiments"
+        ]
+      },
+      "patch": {
+        "description": "Edit a family's description / search space / hypothesis links.",
+        "operationId": "patch_family_v1_families__family_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "family_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Family Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FamilyPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FamilyView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch Family",
+        "tags": [
+          "experiments",
+          "experiments"
+        ]
+      }
+    },
+    "/v1/families/{family_id}/variants": {
+      "get": {
+        "description": "Every variant recorded under one family, in insertion order (spec 8.4).",
+        "operationId": "list_family_variants_v1_families__family_id__variants_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "family_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Family Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/VariantView"
+                  },
+                  "title": "Response List Family Variants V1 Families  Family Id  Variants Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Family Variants",
+        "tags": [
+          "experiments",
+          "experiments"
         ]
       }
     },

@@ -100,3 +100,24 @@ class FixtureAdapter:
 
     async def aclose(self) -> None:
         return None
+
+
+#: Research tables, in one TRUNCATE: the M5b foreign keys (variant/experiment ->
+#: family, experiment -> hypothesis) require the referencing tables to be
+#: truncated together. Append-only tables use TRUNCATE because their row
+#: triggers reject DELETE outright (PD-13).
+RESEARCH_TABLES = (
+    "research.event, research.event_outcome, research.stats_result,"
+    " research.hypothesis, research.note, research.variant, research.experiment,"
+    " research.experiment_family"
+)
+
+
+def reset_research(conn: Any, *, audit: bool = True) -> None:
+    """Empty the research tables (and the audit log) for a clean test window."""
+    from sqlalchemy import text
+
+    if audit:
+        conn.execute(text("DELETE FROM system.audit_log"))
+    conn.execute(text(f"TRUNCATE {RESEARCH_TABLES}"))
+    conn.commit()

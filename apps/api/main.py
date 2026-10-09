@@ -19,6 +19,7 @@ from apps.api.db import database_reachable
 from apps.api.errors import install_error_handlers
 from apps.api.events import router as events_router
 from apps.api.evidence import router as evidence_router
+from apps.api.experiments import router as experiments_router
 from apps.api.hypotheses import router as hypotheses_router
 from apps.api.market import router as market_router
 from apps.api.notes import router as notes_router
@@ -95,6 +96,9 @@ def create_app() -> FastAPI:
     # M5 notebook (spec 10/11, design note m5_stats section 7): note CRUD.
     # Notes are not results (DELETE allowed, PD-13 does not apply).
     app.include_router(notes_router)
+    # M5b experiments (spec 8.4/8.5/11, design note m5b_experiments):
+    # families/variants, experiment CRUD, freeze + verify + lineage.
+    app.include_router(experiments_router)
     # M5 stats (spec section 11, design note m5_stats section 4):
     # POST /v1/stats + GET /v1/stats/{ref_id}, reads only (PD-1).
     app.include_router(stats_router)

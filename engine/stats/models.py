@@ -139,7 +139,6 @@ class Hypothesis(Base):
 class Note(Base):
     """A notebook note (spec 10/11; migration 0004). Notes are not results:
     DELETE is allowed (PD-13 covers result tables)."""
-
     __tablename__ = "note"
     # Tuple form: table kwargs (schema) ride along without tripping RUF012.
     __table_args__ = ({"schema": "research"},)
@@ -149,6 +148,112 @@ class Note(Base):
     body_md: Mapped[str] = mapped_column(Text(), nullable=False)
     experiment_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     chart_state: Mapped[dict[str, Any] | None] = mapped_column(JSONB(), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+
+class ExperimentFamily(Base):
+    """The search that produced candidate experiments (spec 8.4/10; migration 0005)."""
+
+    __tablename__ = "experiment_family"
+    # Tuple form: table kwargs (schema) ride along without tripping RUF012.
+    __table_args__ = ({"schema": "research"},)
+
+    family_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    hypothesis_ids: Mapped[list[Any]] = mapped_column(JSONB(), nullable=False)
+    description: Mapped[str] = mapped_column(Text(), nullable=False)
+    search_space: Mapped[dict[str, Any]] = mapped_column(
+        JSONB(), nullable=False, default=dict, server_default="{}"
+    )
+    hypothesis_count: Mapped[int] = mapped_column(
+        Integer(), nullable=False, default=0, server_default="0"
+    )
+    variant_count: Mapped[int] = mapped_column(
+        Integer(), nullable=False, default=0, server_default="0"
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+
+class Variant(Base):
+    """One evaluated variant under a family (spec 8.4; append-only, migration 0005).
+
+    Every evaluated variant is recorded here; only the ``selected`` flag may
+    ever change (the DB trigger enforces the rest - PD-13).
+    """
+
+    __tablename__ = "variant"
+    # Tuple form: table kwargs (schema) ride along without tripping RUF012.
+    __table_args__ = ({"schema": "research"},)
+
+    variant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    family_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), nullable=False, index=True
+    )
+    experiment_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    params_hash: Mapped[str] = mapped_column(Text(), nullable=False)
+    resolved_params: Mapped[dict[str, Any]] = mapped_column(
+        JSONB(), nullable=False, default=dict, server_default="{}"
+    )
+    result_ref: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    selected: Mapped[bool] = mapped_column(
+        Boolean(), nullable=False, default=False, server_default="false"
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+
+class Experiment(Base):
+    """One reproducible attempt (spec 8.4/8.5/10; migration 0005).
+
+    Frozen rows reject every UPDATE and DELETE (trigger backstop); PATCH is
+    409 once frozen and follow-ups carry ``supersedes`` (spec 8.5).
+    """
+
+    __tablename__ = "experiment"
+    # Tuple form: table kwargs (schema) ride along without tripping RUF012.
+    __table_args__ = ({"schema": "research"},)
+
+    experiment_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    hypothesis_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    family_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    title: Mapped[str] = mapped_column(Text(), nullable=False)
+    status: Mapped[str] = mapped_column(Text(), nullable=False)
+    conclusion: Mapped[str | None] = mapped_column(Text(), nullable=True)
+    assessment: Mapped[dict[str, Any]] = mapped_column(
+        JSONB(), nullable=False, default=dict, server_default="{}"
+    )
+    universe: Mapped[list[Any]] = mapped_column(JSONB(), nullable=False)
+    timeframe: Mapped[str] = mapped_column(Text(), nullable=False)
+    data_scope: Mapped[str] = mapped_column(Text(), nullable=False)
+    dataset_version: Mapped[str] = mapped_column(Text(), nullable=False)
+    dataset_schema_version: Mapped[str] = mapped_column(Text(), nullable=False)
+    engine_version: Mapped[str] = mapped_column(Text(), nullable=False)
+    code_version: Mapped[str] = mapped_column(Text(), nullable=False)
+    detector_refs: Mapped[dict[str, Any]] = mapped_column(JSONB(), nullable=False)
+    resolved_params: Mapped[dict[str, Any]] = mapped_column(JSONB(), nullable=False)
+    selection_method: Mapped[str] = mapped_column(Text(), nullable=False)
+    seed: Mapped[int | None] = mapped_column(Integer(), nullable=True)
+    refs: Mapped[dict[str, Any]] = mapped_column(
+        JSONB(), nullable=False, default=dict, server_default="{}"
+    )
+    result_hashes: Mapped[dict[str, Any]] = mapped_column(
+        JSONB(), nullable=False, default=dict, server_default="{}"
+    )
+    frozen: Mapped[bool] = mapped_column(
+        Boolean(), nullable=False, default=False, server_default="false", index=True
+    )
+    frozen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    supersedes: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

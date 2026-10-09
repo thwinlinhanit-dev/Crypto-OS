@@ -22,6 +22,15 @@ export type EventsView = components["schemas"]["EventsView"];
 export type StatsRequest = components["schemas"]["StatsRequest"];
 export type StatsResultView = components["schemas"]["StatsResultView"];
 export type EvidenceView = components["schemas"]["EvidenceView"];
+export type FamilyCreate = components["schemas"]["FamilyCreate"];
+export type FamilyPatch = components["schemas"]["FamilyPatch"];
+export type FamilyView = components["schemas"]["FamilyView"];
+export type VariantView = components["schemas"]["VariantView"];
+export type ExperimentCreate = components["schemas"]["ExperimentCreate"];
+export type ExperimentPatch = components["schemas"]["ExperimentPatch"];
+export type ExperimentView = components["schemas"]["ExperimentView"];
+export type LineageView = components["schemas"]["LineageView"];
+export type VerifyView = components["schemas"]["VerifyView"];
 export type HypothesisView = components["schemas"]["HypothesisView"];
 export type HypothesisCreate = components["schemas"]["HypothesisCreate"];
 export type HypothesisPatch = components["schemas"]["HypothesisPatch"];
@@ -220,6 +229,123 @@ export async function openHoldout(
     baseUrl,
     {},
   )) as HypothesisView;
+}
+
+export async function postFamily(
+  body: FamilyCreate,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<FamilyView> {
+  return (await postJson("/v1/families", baseUrl, body)) as FamilyView;
+}
+
+export async function getFamilies(baseUrl: string = DEFAULT_API_BASE): Promise<FamilyView[]> {
+  return (await readJson("/v1/families", baseUrl)) as FamilyView[];
+}
+
+export async function getFamily(
+  familyId: string,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<FamilyView> {
+  return (await readJson(`/v1/families/${encodeURIComponent(familyId)}`, baseUrl)) as FamilyView;
+}
+
+export async function patchFamily(
+  familyId: string,
+  body: FamilyPatch,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<FamilyView> {
+  return (await callJson(`/v1/families/${encodeURIComponent(familyId)}`, baseUrl, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  })) as FamilyView;
+}
+
+export async function deleteFamily(
+  familyId: string,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<void> {
+  const response = await fetch(`${baseUrl}/v1/families/${encodeURIComponent(familyId)}`, {
+    method: "DELETE",
+    cache: "no-store",
+  });
+  if (!response.ok) throw new Error(`HTTP_${response.status}: ${familyId}`);
+}
+
+export async function getFamilyVariants(
+  familyId: string,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<VariantView[]> {
+  return (await readJson(
+    `/v1/families/${encodeURIComponent(familyId)}/variants`,
+    baseUrl,
+  )) as VariantView[];
+}
+
+export async function postExperiment(
+  body: ExperimentCreate,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<ExperimentView> {
+  return (await postJson("/v1/experiments", baseUrl, body)) as ExperimentView;
+}
+
+export async function getExperiments(
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<ExperimentView[]> {
+  return (await readJson("/v1/experiments", baseUrl)) as ExperimentView[];
+}
+
+export async function getExperiment(
+  experimentId: string,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<ExperimentView> {
+  return (await readJson(
+    `/v1/experiments/${encodeURIComponent(experimentId)}`,
+    baseUrl,
+  )) as ExperimentView;
+}
+
+export async function patchExperiment(
+  experimentId: string,
+  body: ExperimentPatch,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<ExperimentView> {
+  return (await callJson(`/v1/experiments/${encodeURIComponent(experimentId)}`, baseUrl, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  })) as ExperimentView;
+}
+
+export async function freezeExperiment(
+  experimentId: string,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<ExperimentView> {
+  return (await postJson(
+    `/v1/experiments/${encodeURIComponent(experimentId)}/freeze`,
+    baseUrl,
+    {},
+  )) as ExperimentView;
+}
+
+export async function verifyExperiment(
+  experimentId: string,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<VerifyView> {
+  return (await readJson(
+    `/v1/experiments/${encodeURIComponent(experimentId)}/verify`,
+    baseUrl,
+  )) as VerifyView;
+}
+
+export async function getExperimentLineage(
+  experimentId: string,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<LineageView> {
+  return (await readJson(
+    `/v1/experiments/${encodeURIComponent(experimentId)}/lineage`,
+    baseUrl,
+  )) as LineageView;
 }
 
 export async function postNote(

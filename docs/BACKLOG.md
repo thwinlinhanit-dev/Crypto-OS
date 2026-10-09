@@ -33,12 +33,13 @@ built now and what would have to be true to pick it up.
 - **Event studies as async jobs** - `POST /v1/event-studies` with job plumbing;
   M5 computes synchronously inside the request. To pick it up: job/worker flow
   from M1 plus M5b's table work.
-- **Experiment families / variants / sweep runner** - the multiple-testing
-  banner ships with the M5b shape (`variant_count: 1`, `PRE_SPECIFIED`); real
-  `variant_count`, `selection_method` and FDR/White's Reality Check/SPA wait for
-  M5b records.
-- **Experiment freeze / verify / lineage** - M5b: frozen experiments must lock
-  referenced results and verify sha256 hashes (spec 8.5).
+- **Experiment families / variants / sweep runner** - real `variant_count`,
+  `selection_method` and FDR/White's Reality Check/SPA arrived with M5b
+  (tables, CRUD API, ad-hoc recording); the async sweep runner itself stays
+  parked below.
+- **Experiment freeze / verify / lineage** - arrived with M5b: frozen
+  experiments lock referenced results, verify recomputes sha256 hashes, and
+  `GET /v1/experiments/{id}/lineage` serves the read-only chain (spec 8.5).
 - **`CUSTOM` cluster model** - block definition lives in an experiment config
   that does not exist before M5b; M5 returns 422 for it rather than inventing a
   rule (PD-4).
@@ -51,3 +52,21 @@ built now and what would have to be true to pick it up.
 - **Notebook hypotheses/graveyard UI** - the API exists (T5.4); the Research
   section gains the hypothesis and Graveyard pages with the experiment views
   in M5b/P0.
+- **Async sweep runner** - `POST /v1/sweeps` with job plumbing (the engine that
+  runs a matrix of evaluations belongs with the M6 backtest simulator); the
+  M5b tables + `selected` flag are ready for it. To pick it up: M6 job/worker
+  flow plus the M5b family/variant rows.
+
+## M5b park list (design note `specs/design/m5b_experiments.md` section 7)
+
+- **T5b.4 Copilot/MCP experiment tools** - the AI service does not exist before
+  M9 (PD-9). To pick it up: M9's Copilot/MCP surface plus the M5b endpoints.
+- **Experiments page UI** - shipped with M5b (T5b.3):
+  `apps/web/app/research/experiments/page.tsx` (list + detail with freeze,
+  verify and lineage). The Research section still has no Hypotheses or
+  Graveyard page (those APIs exist; the pages are P0 once the section
+  layout is set).
+- **Strategy/backtest/validation/conclusion lineage nodes** -
+  `refs.backtests`, `refs.validations`, `refs.baselines` and the matching
+  lineage stages need the M6/M7 tables; `GET /v1/experiments/{id}/lineage`
+  names them under `not_implemented` in the meantime.

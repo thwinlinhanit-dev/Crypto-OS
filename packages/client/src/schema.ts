@@ -188,6 +188,177 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/experiments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Experiments */
+        get: operations["list_experiments_v1_experiments_get"];
+        put?: never;
+        /**
+         * Create Experiment
+         * @description Create one reproducible attempt; ``family_id`` omitted -> singleton family.
+         */
+        post: operations["create_experiment_v1_experiments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/experiments/{experiment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Experiment */
+        get: operations["get_experiment_v1_experiments__experiment_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Patch Experiment
+         * @description PATCH only while unfrozen (spec 8.5: frozen experiments cannot be updated).
+         */
+        patch: operations["patch_experiment_v1_experiments__experiment_id__patch"];
+        trace?: never;
+    };
+    "/v1/experiments/{experiment_id}/freeze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Freeze Experiment
+         * @description Freeze in one transaction: lock referenced results + hypothesis, store hashes.
+         */
+        post: operations["freeze_experiment_v1_experiments__experiment_id__freeze_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/experiments/{experiment_id}/lineage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Experiment Lineage
+         * @description Read-only lineage from stored ids (spec 8.5: every node links to its object).
+         */
+        get: operations["experiment_lineage_v1_experiments__experiment_id__lineage_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/experiments/{experiment_id}/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Verify Experiment
+         * @description Recompute stored result hashes -> INTACT or TAMPERED (spec 8.5).
+         */
+        get: operations["verify_experiment_v1_experiments__experiment_id__verify_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/families": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Families
+         * @description List families, newest first.
+         */
+        get: operations["list_families_v1_families_get"];
+        put?: never;
+        /**
+         * Create Family
+         * @description Create an experiment family (the search record, spec 8.4).
+         */
+        post: operations["create_family_v1_families_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/families/{family_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Family */
+        get: operations["get_family_v1_families__family_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Family
+         * @description Delete an unreferenced family (409 once variants/experiments exist).
+         */
+        delete: operations["delete_family_v1_families__family_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Patch Family
+         * @description Edit a family's description / search space / hypothesis links.
+         */
+        patch: operations["patch_family_v1_families__family_id__patch"];
+        trace?: never;
+    };
+    "/v1/families/{family_id}/variants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Family Variants
+         * @description Every variant recorded under one family, in insertion order (spec 8.4).
+         */
+        get: operations["list_family_variants_v1_families__family_id__variants_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/hypotheses": {
         parameters: {
             query?: never;
@@ -755,6 +926,200 @@ export interface components {
             /** Status */
             status: string;
         };
+        /**
+         * ExperimentCreate
+         * @description ``POST /v1/experiments`` body (PD-12: universe + dataset are explicit).
+         */
+        ExperimentCreate: {
+            /** Assessment */
+            assessment?: {
+                [key: string]: unknown;
+            } | null;
+            /** Conclusion */
+            conclusion?: string | null;
+            /**
+             * Data Scope
+             * @default DEVELOPMENT
+             */
+            data_scope: string;
+            /** Dataset Version */
+            dataset_version: string;
+            /** Detector Refs */
+            detector_refs: {
+                [key: string]: unknown;
+            };
+            /** Family Id */
+            family_id?: string | null;
+            /**
+             * Hypothesis Id
+             * Format: uuid
+             */
+            hypothesis_id: string;
+            /** Refs */
+            refs?: {
+                [key: string]: unknown;
+            } | null;
+            /** Resolved Params */
+            resolved_params: {
+                [key: string]: unknown;
+            };
+            /** Seed */
+            seed?: number | null;
+            /**
+             * Selection Method
+             * @default PRE_SPECIFIED
+             */
+            selection_method: string;
+            /** Timeframe */
+            timeframe: string;
+            /** Title */
+            title: string;
+            /** Universe */
+            universe: string[];
+        };
+        /**
+         * ExperimentPatch
+         * @description ``PATCH /v1/experiments/{id}`` body (only while unfrozen, spec 8.5).
+         */
+        ExperimentPatch: {
+            /** Assessment */
+            assessment?: {
+                [key: string]: unknown;
+            } | null;
+            /** Conclusion */
+            conclusion?: string | null;
+            /** Refs */
+            refs?: {
+                [key: string]: unknown;
+            } | null;
+            /** Status */
+            status?: string | null;
+            /** Title */
+            title?: string | null;
+        };
+        /** ExperimentView */
+        ExperimentView: {
+            /** Assessment */
+            assessment: {
+                [key: string]: unknown;
+            };
+            /** Code Version */
+            code_version: string;
+            /** Conclusion */
+            conclusion: string | null;
+            /** Created At */
+            created_at: string;
+            /** Data Scope */
+            data_scope: string;
+            /** Dataset Schema Version */
+            dataset_schema_version: string;
+            /** Dataset Version */
+            dataset_version: string;
+            /** Detector Refs */
+            detector_refs: {
+                [key: string]: unknown;
+            };
+            /** Engine Version */
+            engine_version: string;
+            /**
+             * Experiment Id
+             * Format: uuid
+             */
+            experiment_id: string;
+            /**
+             * Family Id
+             * Format: uuid
+             */
+            family_id: string;
+            /** Frozen */
+            frozen: boolean;
+            /** Frozen At */
+            frozen_at: string | null;
+            /**
+             * Hypothesis Id
+             * Format: uuid
+             */
+            hypothesis_id: string;
+            /** Refs */
+            refs: {
+                [key: string]: unknown;
+            };
+            /** Resolved Params */
+            resolved_params: {
+                [key: string]: unknown;
+            };
+            /** Result Hashes */
+            result_hashes: {
+                [key: string]: unknown;
+            };
+            /** Seed */
+            seed: number | null;
+            /** Selection Method */
+            selection_method: string;
+            /** Status */
+            status: string;
+            /** Supersedes */
+            supersedes: string | null;
+            /** Timeframe */
+            timeframe: string;
+            /** Title */
+            title: string;
+            /** Universe */
+            universe: string[];
+        };
+        /**
+         * FamilyCreate
+         * @description ``POST /v1/families`` body (spec 10 columns).
+         */
+        FamilyCreate: {
+            /** Description */
+            description: string;
+            /**
+             * Hypothesis Ids
+             * @default []
+             */
+            hypothesis_ids: string[];
+            /** Search Space */
+            search_space?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /**
+         * FamilyPatch
+         * @description ``PATCH /v1/families/{id}`` body.
+         */
+        FamilyPatch: {
+            /** Description */
+            description?: string | null;
+            /** Hypothesis Ids */
+            hypothesis_ids?: string[] | null;
+            /** Search Space */
+            search_space?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /** FamilyView */
+        FamilyView: {
+            /** Created At */
+            created_at: string;
+            /** Description */
+            description: string;
+            /**
+             * Family Id
+             * Format: uuid
+             */
+            family_id: string;
+            /** Hypothesis Count */
+            hypothesis_count: number;
+            /** Hypothesis Ids */
+            hypothesis_ids: string[];
+            /** Search Space */
+            search_space: {
+                [key: string]: unknown;
+            };
+            /** Variant Count */
+            variant_count: number;
+        };
         /** GapView */
         GapView: {
             /**
@@ -1006,6 +1371,23 @@ export interface components {
             /** Status */
             status: string;
             timestamps: components["schemas"]["JobTimestamps"];
+        };
+        /**
+         * LineageView
+         * @description Read-only lineage (spec 8.5): nodes that exist, and what is not built yet.
+         */
+        LineageView: {
+            /**
+             * Experiment Id
+             * Format: uuid
+             */
+            experiment_id: string;
+            /** Nodes */
+            nodes: {
+                [key: string]: unknown;
+            }[];
+            /** Not Implemented */
+            not_implemented: string[];
         };
         /**
          * NoteCreate
@@ -1301,6 +1683,53 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** VariantView */
+        VariantView: {
+            /** Created At */
+            created_at: string;
+            /** Experiment Id */
+            experiment_id: string | null;
+            /**
+             * Family Id
+             * Format: uuid
+             */
+            family_id: string;
+            /** Params Hash */
+            params_hash: string;
+            /** Resolved Params */
+            resolved_params: {
+                [key: string]: unknown;
+            };
+            /**
+             * Result Ref
+             * Format: uuid
+             */
+            result_ref: string;
+            /** Selected */
+            selected: boolean;
+            /**
+             * Variant Id
+             * Format: uuid
+             */
+            variant_id: string;
+        };
+        /**
+         * VerifyView
+         * @description ``GET /v1/experiments/{id}/verify`` body (spec 8.5).
+         */
+        VerifyView: {
+            /**
+             * Experiment Id
+             * Format: uuid
+             */
+            experiment_id: string;
+            /** Results */
+            results: {
+                [key: string]: unknown;
+            };
+            /** Status */
+            status: string;
         };
         /**
          * WindowView
@@ -1602,6 +2031,399 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EvidenceView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_experiments_v1_experiments_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExperimentView"][];
+                };
+            };
+        };
+    };
+    create_experiment_v1_experiments_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExperimentCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExperimentView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_experiment_v1_experiments__experiment_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                experiment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExperimentView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_experiment_v1_experiments__experiment_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                experiment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExperimentPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExperimentView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    freeze_experiment_v1_experiments__experiment_id__freeze_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                experiment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExperimentView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    experiment_lineage_v1_experiments__experiment_id__lineage_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                experiment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LineageView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    verify_experiment_v1_experiments__experiment_id__verify_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                experiment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VerifyView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_families_v1_families_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FamilyView"][];
+                };
+            };
+        };
+    };
+    create_family_v1_families_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FamilyCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FamilyView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_family_v1_families__family_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                family_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FamilyView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_family_v1_families__family_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                family_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_family_v1_families__family_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                family_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FamilyPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FamilyView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_family_variants_v1_families__family_id__variants_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                family_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VariantView"][];
                 };
             };
             /** @description Validation Error */

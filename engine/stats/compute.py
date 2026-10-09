@@ -87,6 +87,8 @@ def compute_stats(
     n_raw: int,
     bar_ms: int,
     family_id: str | None = None,
+    variant_count: int = 1,
+    selection_method: str = MULTIPLE_TESTING_SELECTION,
 ) -> dict[str, Any]:
     """Compute the stored StatsResult ``result`` JSON (pure, deterministic)."""
     horizons = _require_horizons(params)
@@ -101,6 +103,11 @@ def compute_stats(
         raise ValidationError("event_filter must be a mapping", {"filter": event_filter})
     if family_id is not None and not isinstance(family_id, str):
         raise ValidationError("family_id must be a string or null", {"family_id": family_id})
+    _require_int("variant_count", variant_count, minimum=1)
+    if not isinstance(selection_method, str) or not selection_method:
+        raise ValidationError(
+            "selection_method must be a non-empty string", {"selection_method": selection_method}
+        )
 
     ordered = sorted(observations, key=lambda o: (o.origin_ms, o.instrument_id, o.event_id))
     wanted = {"IS", "OOS"} if data_scope == DEVELOPMENT else {"HOLDOUT"}
@@ -191,8 +198,8 @@ def compute_stats(
         "horizons": entries,
         "multiple_testing": {
             "family_id": family_id,
-            "variant_count": 1,
-            "selection_method": MULTIPLE_TESTING_SELECTION,
+            "variant_count": variant_count,
+            "selection_method": selection_method,
         },
     }
 

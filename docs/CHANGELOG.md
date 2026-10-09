@@ -3,6 +3,77 @@
 Format follows [Keep a Changelog](https://keepachangelog.com/); version tags start at M0
 (the spec defines no release numbering yet).
 
+## [M5b] - 2026-10-10 - Experiments, families, freeze/verify, lineage
+
+### Added
+- Experiment tables (T5b.1, spec §10): migration `0005_m5b_experiments`
+  (`research.experiment_family`, `research.variant`, `research.experiment`) plus
+  ORM rows in `engine/stats/models.py`. Triggers enforce the design note:
+  family rejects DELETE once referenced; variant is append-only except the
+  `selected` flag (D-034); experiment rejects UPDATE/DELETE once `frozen`
+  (spec §8.5).
+- Families/variants API (T5b.1): `POST/GET/PATCH/DELETE /v1/families`,
+  `GET /v1/families/{id}/variants` (`apps/api/experiments.py`), fail-closed
+  404/409/422 per PD-4/PD-10/PD-12.
+- Experiments API (T5b.1/T5b.2): `POST/GET/PATCH /v1/experiments` (unfrozen
+  rows patchable; 409 once frozen), singleton family minted when `family_id`
+  is omitted, every create requires a registered `market.dataset_manifest`
+  row (422 otherwise), status/selection-method/data-scope vocabularies as DB
+  CHECKs (D-033).
+- Ad-hoc stats recording (spec §8.4): `POST /v1/stats` now appends one
+  `research.variant` row and bumps the family's `variant_count` in the same
+  transaction; the stored `result["multiple_testing"]` carries the *request's*
+  family identity only (null for an ad-hoc run) so byte-identical `result`
+  JSON survives (D-036). A singleton family row is minted up front and
+  written only after the run succeeds — a failed request leaves no rows.
+- Freeze + verify (T5b.2, spec §8.5): `POST /v1/experiments/{id}/freeze`
+  runs one transaction — resolves every `refs.stats` row (422 missing),
+  stores `sha256(canonical JSON of result)` in `result_hashes`, sets
+  `locked = true` on results and the referenced hypothesis, sets
+  `frozen = true, frozen_at`, and writes a `system.audit_log` row
+  (D-037). `GET /v1/experiments/{id}/verify` recomputes each hash and
+  answers INTACT/TAMPERED with per-ref detail (422 when unfrozen).
+- Lineage (T5b.3): `GET /v1/experiments/{id}/lineage` returns the read-only
+  chain `dataset → features → detector → stats → hypothesis → experiment →
+  stats_result` from stored ids, every node carrying a `ref` link and an
+  `OK`/`MISSING` status, plus `not_implemented` naming `strategy, backtest,
+  validation, conclusion` (M6/M7 tables do not exist — PD-9).
+- Tests: `tests/test_experiments.py` (15 tests) covering family CRUD and
+  delete-while-referenced 409, variant append-only except `selected`,
+  experiment create/422s, PATCH rules, freeze locking + double-freeze 409 +
+  missing-ref 422, verify INTACT/TAMPERED (tamper applied with triggers
+  bypassed via `session_replication_role = replica`), lineage links,
+  singleton family recording, and multiple-testing count growth. Suite now
+  523 total (522 passed + 1 skipped vs M5's 507).
+- Client: `openapi.json` + `schema.ts` regenerated from the app object
+  (PD-6); `packages/client/src/api.ts` gains the family/experiment wrappers
+  and `index.ts` exports them (`postFamily` … `getExperimentLineage`) plus
+  the `Family*`/`Experiment*`/`Variant*`/`Lineage*`/`Verify*` view types;
+  client tsc passes.
+- Decisions D-033..D-037 recorded in `docs/DECISIONS.md`; design note
+  `specs/design/m5b_experiments.md` is the module contract; OQ-21 open for
+  the owner (status list + REJECTED conclusion requirement).
+- Experiments page + lineage view (T5b.3, spec UI 563):
+  `apps/web/app/research/experiments/page.tsx` — list (title, status,
+  family, frozen) with click-through detail: provenance dl (hypothesis,
+  dataset_version link to the manifest viewer, detector@version, universe,
+  timeframe/data_scope, selection_method, seed, engine/code versions),
+  multiple-testing banner (spec 8.4 wording), results table (grade/n_eff/
+  scope per stored result), family-variants table, Freeze button with a
+  confirm dialog explaining irreversibility, Verify-integrity button
+  (INTACT/TAMPERED), and the read-only lineage chain with per-node
+  `ref` links plus the `not_implemented` footer. Nav gains the Experiments
+  entry; `globals.css` gains the M5b styles.
+- Browser verification: the page renders at `/research/experiments`; every
+  endpoint it consumes (`/v1/experiments`, `/v1/families/{id}`,
+  `/v1/families/{id}/variants`, `/v1/stats/{ref}`, `/v1/hypotheses/{id}`,
+  `/v1/experiments/{id}/verify`, `/v1/experiments/{id}/lineage`) was
+  exercised live against a real PostgreSQL cluster (hypothesis → family →
+  stats → experiment → freeze → verify INTACT → lineage 7/7 OK); the
+  in-browser click-through could not run because Chrome's real profile was
+  locked by a running instance (environmental; `next build` + `tsc` pass
+  and all payloads are confirmed live).
+
 ## [M5] - 2026-10-10 - Stats, scopes, evidence, hypotheses, notebook
 
 ### Added

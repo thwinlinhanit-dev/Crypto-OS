@@ -27,7 +27,7 @@ from apps.api.settings import get_settings
 from engine.data.bars import Timeframe
 from engine.data.instruments import upsert_instruments
 from exchanges.base import Kline
-from tests.support import BTC, DAY, T0, WIDE_BUDGET, FixtureAdapter
+from tests.support import BTC, DAY, T0, WIDE_BUDGET, FixtureAdapter, reset_research
 from tests.test_api_stats import SMALL_PARAMS
 
 DAY_COUNT = 120
@@ -101,10 +101,9 @@ def conn() -> Iterator[Connection]:
         "DELETE FROM market.dataset_manifest",
         "DELETE FROM system.audit_log",
         "DELETE FROM market.instrument",
-        "TRUNCATE research.event, research.event_outcome, research.stats_result,"
-        " research.hypothesis, research.note",
     ):
         connection.execute(text(statement))
+    reset_research(connection)
     upsert_instruments(connection, [BTC])
     connection.commit()
     try:
@@ -118,11 +117,9 @@ def conn() -> Iterator[Connection]:
             "DELETE FROM market.dataset_manifest",
             "DELETE FROM system.audit_log",
             "DELETE FROM market.instrument",
-            "TRUNCATE research.event, research.event_outcome, research.stats_result,"
-            " research.hypothesis, research.note",
         ):
             connection.execute(text(statement))
-        connection.commit()
+        reset_research(connection)
         connection.close()
         engine.dispose()
 
