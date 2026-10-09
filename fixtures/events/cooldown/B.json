@@ -1,0 +1,12 @@
+{
+  "id": "B",
+  "description": "raw at bars 1 and 7: five free bars between raw occurrences -> second raw emits (gap=5 >= cooldown)",
+  "cooldown": 5,
+  "streams": [
+    {
+      "name": "CONT",
+      "raw": [0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+      "expected_emit": [0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0]
+    }
+  ]
+}

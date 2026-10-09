@@ -1,0 +1,12 @@
+{
+  "id": "A",
+  "description": "raw run of three then a later raw: cooldown counts RAW occurrences; the current bar's barssince=0 is not yet visible (Pine nz(barssince(raw)[1],999))",
+  "cooldown": 5,
+  "streams": [
+    {
+      "name": "CONT",
+      "raw": [0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0],
+      "expected_emit": [0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0]
+    }
+  ]
+}

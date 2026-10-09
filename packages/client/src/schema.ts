@@ -4,7 +4,7 @@
  */
 
 export interface paths {
-    "/v1/candles": {
+    "/v1/instruments": {
         parameters: {
             query?: never;
             header?: never;
@@ -12,70 +12,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Candles
-         * @description Closed bars for one (instrument, timeframe) window (spec section 11).
+         * Instruments
+         * @description The instrument registry (PD-12: scopes name these explicitly).
          */
-        get: operations["candles_v1_candles_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/config/defaults": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Config Defaults
-         * @description Documented defaults (PD-11): the file the API resolves parameters against.
-         */
-        get: operations["config_defaults_v1_config_defaults_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/data/gaps": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Data Gaps
-         * @description Every stored exclusion interval (section 4.6: reports list all of them).
-         */
-        get: operations["data_gaps_v1_data_gaps_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/data/health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Data Health
-         * @description Latest quality per (instrument, timeframe) + the exclusions still active.
-         */
-        get: operations["data_health_v1_data_health_get"];
+        get: operations["instruments_v1_instruments_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -124,6 +64,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/data/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Data Health
+         * @description Latest quality per (instrument, timeframe) + the exclusions still active.
+         */
+        get: operations["data_health_v1_data_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/data/gaps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Data Gaps
+         * @description Every stored exclusion interval (section 4.6: reports list all of them).
+         */
+        get: operations["data_gaps_v1_data_gaps_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/jobs/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Job View
+         * @description One queued/running/finished job (spec section 11).
+         */
+        get: operations["job_view_v1_jobs__job_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/datasets/{dataset_version}": {
         parameters: {
             query?: never;
@@ -136,6 +136,26 @@ export interface paths {
          * @description The stored manifest: source files, hashes, row counts, version fields (AC2).
          */
         get: operations["dataset_view_v1_datasets__dataset_version__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/candles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Candles
+         * @description Closed bars for one (instrument, timeframe) window (spec section 11).
+         */
+        get: operations["candles_v1_candles_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -167,7 +187,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/instruments": {
+    "/v1/events": {
         parameters: {
             query?: never;
             header?: never;
@@ -175,30 +195,14 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Instruments
-         * @description The instrument registry (PD-12: scopes name these explicitly).
+         * Events
+         * @description Closed-bar events for one (instrument, timeframe) window (section 6.2).
+         *
+         *     Detector/version/params resolve through the registry and
+         *     ``config/defaults.yaml`` (PD-11); the window resolution is exactly the
+         *     candles path so provenance matches.
          */
-        get: operations["instruments_v1_instruments_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/jobs/{job_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Job View
-         * @description One queued/running/finished job (spec section 11).
-         */
-        get: operations["job_view_v1_jobs__job_id__get"];
+        get: operations["events_v1_events_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -224,6 +228,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/config/defaults": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Config Defaults
+         * @description Documented defaults (PD-11): the file the API resolves parameters against.
+         */
+        get: operations["config_defaults_v1_config_defaults_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -233,62 +257,66 @@ export interface components {
          * @description ``quality`` block of the section 11 candle response.
          */
         CandleQualityView: {
+            /** State */
+            state: string;
             /** Completeness */
             completeness: number;
             /** Exclusions */
             exclusions: components["schemas"]["ExclusionView"][];
-            /** State */
-            state: string;
         };
         /**
          * CandlesView
          * @description Section 11 candle window, columnar, plus the ``window`` echo (D-007 style).
          */
         CandlesView: {
-            /** C */
-            c: number[];
             /** Dataset Version */
             dataset_version: string;
+            quality: components["schemas"]["CandleQualityView"];
+            window: components["schemas"]["WindowView"];
+            /** T */
+            t: string[];
+            /** O */
+            o: number[];
             /** H */
             h: number[];
             /** L */
             l: number[];
-            /** O */
-            o: number[];
-            quality: components["schemas"]["CandleQualityView"];
-            /** T */
-            t: string[];
+            /** C */
+            c: number[];
             /** V */
             v: number[];
-            window: components["schemas"]["WindowView"];
         };
         /**
          * DatasetManifestView
          * @description GET /v1/datasets/{version}: 'what exactly did this use?' (AC2).
          */
         DatasetManifestView: {
-            /** Bar Semantics Version */
-            bar_semantics_version: string;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** Dataset Schema Version */
-            dataset_schema_version: string;
             /** Dataset Version */
             dataset_version: string;
+            /** Venue */
+            venue: string;
+            /** Market Type */
+            market_type: string;
+            /** Instruments */
+            instruments: string[];
+            /** Timeframes */
+            timeframes: string[];
+            /**
+             * Start Time
+             * Format: date-time
+             */
+            start_time: string;
             /**
              * End Time
              * Format: date-time
              */
             end_time: string;
-            /** Instrument Metadata Version */
-            instrument_metadata_version: string;
-            /** Instruments */
-            instruments: string[];
-            /** Market Type */
-            market_type: string;
+            /** Source Files */
+            source_files: components["schemas"]["SourceFileView"][];
+            /** Row Counts */
+            row_counts: {
+                [key: string]: number;
+            };
             /** Missing Ranges */
             missing_ranges: {
                 [key: string]: unknown;
@@ -297,35 +325,117 @@ export interface components {
             quality_summary: {
                 [key: string]: unknown;
             };
-            /** Row Counts */
-            row_counts: {
-                [key: string]: number;
-            };
-            /** Source Files */
-            source_files: components["schemas"]["SourceFileView"][];
-            /**
-             * Start Time
-             * Format: date-time
-             */
-            start_time: string;
-            /** Timeframes */
-            timeframes: string[];
+            /** Dataset Schema Version */
+            dataset_schema_version: string;
+            /** Bar Semantics Version */
+            bar_semantics_version: string;
             /** Timezone Policy Version */
             timezone_policy_version: string;
-            /** Venue */
-            venue: string;
+            /** Instrument Metadata Version */
+            instrument_metadata_version: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /**
          * DefaultsResponse
          * @description GET /v1/config/defaults body: where parameters resolve from (PD-11).
          */
         DefaultsResponse: {
+            /** Source */
+            source: string;
             /** Defaults */
             defaults: {
                 [key: string]: unknown;
             };
-            /** Source */
-            source: string;
+        };
+        /**
+         * EventEnvelopeView
+         * @description Section 6.2 event envelope as served by the API.
+         */
+        EventEnvelopeView: {
+            /** Event Id */
+            event_id: string;
+            /** Detector Id */
+            detector_id: string;
+            /** Event Type */
+            event_type: string;
+            /** Version */
+            version: string;
+            /** Params Hash */
+            params_hash: string;
+            /** Instrument Id */
+            instrument_id: string;
+            /** Timeframe */
+            timeframe: string;
+            /**
+             * Event Time
+             * Format: date-time
+             */
+            event_time: string;
+            /** Direction */
+            direction: string;
+            /** Ref Price */
+            ref_price: number;
+            /** Invalidation Price */
+            invalidation_price: number;
+            /** Regime */
+            regime: {
+                [key: string]: unknown;
+            };
+            /** Features */
+            features: {
+                [key: string]: unknown;
+            };
+            /** Trigger */
+            trigger: {
+                [key: string]: unknown;
+            };
+            /** Lookback Gap */
+            lookback_gap: boolean;
+            /** Dataset Version */
+            dataset_version: string;
+            /** Engine Version */
+            engine_version: string;
+            /** Data Quality */
+            data_quality: {
+                [key: string]: unknown;
+            };
+            /** Resolved Params */
+            resolved_params: {
+                [key: string]: unknown;
+            };
+            /** Provenance */
+            provenance: {
+                [key: string]: string;
+            };
+        };
+        /**
+         * EventsView
+         * @description ``GET /v1/events`` body: resolved request echo plus envelopes.
+         */
+        EventsView: {
+            /** Detector */
+            detector: string;
+            /** Version */
+            version: string;
+            /**
+             * Instrument Id
+             * Format: uuid
+             */
+            instrument_id: string;
+            /** Tf */
+            tf: string;
+            /** Dataset Version */
+            dataset_version: string;
+            /** Window */
+            window: {
+                [key: string]: unknown;
+            };
+            /** Events */
+            events: components["schemas"]["EventEnvelopeView"][];
         };
         /**
          * ExclusionView
@@ -333,20 +443,20 @@ export interface components {
          */
         ExclusionView: {
             /**
-             * Exclusion End
-             * Format: date-time
+             * Gap Id
+             * Format: uuid
              */
-            exclusion_end: string;
+            gap_id: string;
             /**
              * Exclusion Start
              * Format: date-time
              */
             exclusion_start: string;
             /**
-             * Gap Id
-             * Format: uuid
+             * Exclusion End
+             * Format: date-time
              */
-            gap_id: string;
+            exclusion_end: string;
             /** Kind */
             kind: string;
             /** Status */
@@ -354,21 +464,6 @@ export interface components {
         };
         /** GapView */
         GapView: {
-            /**
-             * Detected At
-             * Format: date-time
-             */
-            detected_at: string;
-            /**
-             * Exclusion End
-             * Format: date-time
-             */
-            exclusion_end: string;
-            /**
-             * Exclusion Start
-             * Format: date-time
-             */
-            exclusion_start: string;
             /**
              * Gap Id
              * Format: uuid
@@ -379,18 +474,33 @@ export interface components {
              * Format: uuid
              */
             instrument_id: string;
+            /** Timeframe */
+            timeframe: string;
+            /**
+             * Exclusion Start
+             * Format: date-time
+             */
+            exclusion_start: string;
+            /**
+             * Exclusion End
+             * Format: date-time
+             */
+            exclusion_end: string;
+            /** Status */
+            status: string;
             /** Kind */
             kind: string;
+            /** Source */
+            source: string;
+            /**
+             * Detected At
+             * Format: date-time
+             */
+            detected_at: string;
             /** Repaired At */
             repaired_at: string | null;
             /** Repaired Dataset Version */
             repaired_dataset_version: string | null;
-            /** Source */
-            source: string;
-            /** Status */
-            status: string;
-            /** Timeframe */
-            timeframe: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -402,86 +512,86 @@ export interface components {
          * @description GET /v1/data/health: latest quality per series + exclusions still active.
          */
         HealthView: {
-            /** Exclusions */
-            exclusions: components["schemas"]["GapView"][];
             /** Series */
             series: components["schemas"]["QualityView"][];
+            /** Exclusions */
+            exclusions: components["schemas"]["GapView"][];
         };
         /**
          * IndicatorsView
          * @description ``GET /v1/indicators`` body (design D-011).
          */
         IndicatorsView: {
-            /** Dataset Version */
-            dataset_version: string;
-            /**
-             * Instrument Id
-             * Format: uuid
-             */
-            instrument_id: string;
             /** Name */
             name: string;
             /** Params */
             params: {
                 [key: string]: unknown;
             };
-            /** Series */
-            series: components["schemas"]["SeriesView"][];
-            /** T */
-            t: string[];
+            /**
+             * Instrument Id
+             * Format: uuid
+             */
+            instrument_id: string;
             /** Tf */
             tf: string;
+            /** Dataset Version */
+            dataset_version: string;
             window: components["schemas"]["WindowView"];
+            /** T */
+            t: string[];
+            /** Series */
+            series: components["schemas"]["SeriesView"][];
         };
         /**
          * IngestRequest
          * @description POST /v1/data/ingest body (spec section 11; times are ISO-8601 UTC).
          */
         IngestRequest: {
+            /** Venue */
+            venue: string;
+            /** Market Type */
+            market_type: string;
+            /** Instrument Ids */
+            instrument_ids: string[];
+            /** Timeframes */
+            timeframes: string[];
             /**
              * From
              * Format: date-time
              */
             from: string;
-            /** Instrument Ids */
-            instrument_ids: string[];
-            /** Market Type */
-            market_type: string;
-            /** Storage Budget Gb */
-            storage_budget_gb?: number | null;
-            /** Timeframes */
-            timeframes: string[];
             /**
              * To
              * Format: date-time
              */
             to: string;
-            /** Venue */
-            venue: string;
+            /** Storage Budget Gb */
+            storage_budget_gb?: number | null;
         };
         /** InstrumentView */
         InstrumentView: {
-            /** Asset */
-            asset: string;
             /**
              * Instrument Id
              * Format: uuid
              */
             instrument_id: string;
-            /** Listed At */
-            listed_at: string | null;
-            /** Lot Step */
-            lot_step: string | null;
-            /** Market Type */
-            market_type: string;
-            /** Native Symbol */
-            native_symbol: string;
-            /** Quote */
-            quote: string;
-            /** Tick Size */
-            tick_size: string | null;
             /** Venue */
             venue: string;
+            /** Market Type */
+            market_type: string;
+            /** Asset */
+            asset: string;
+            /** Quote */
+            quote: string;
+            /** Native Symbol */
+            native_symbol: string;
+            /** Tick Size */
+            tick_size: string | null;
+            /** Lot Step */
+            lot_step: string | null;
+            /** Listed At */
+            listed_at: string | null;
         };
         /**
          * JobQueued
@@ -506,18 +616,16 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
-            /** Finished At */
-            finished_at: string | null;
             /** Started At */
             started_at: string | null;
+            /** Finished At */
+            finished_at: string | null;
         };
         /**
          * JobView
          * @description GET /v1/jobs/{id} payload (spec section 11).
          */
         JobView: {
-            /** Error */
-            error: string | null;
             /**
              * Job Id
              * Format: uuid
@@ -525,42 +633,44 @@ export interface components {
             job_id: string;
             /** Kind */
             kind: string;
-            /** Logs */
-            logs: string[];
-            /** Params */
-            params: {
-                [key: string]: unknown;
-            };
+            /** Status */
+            status: string;
             /** Progress */
             progress: number;
             /** Result Ref */
             result_ref: string | null;
-            /** Status */
-            status: string;
+            /** Params */
+            params: {
+                [key: string]: unknown;
+            };
+            /** Logs */
+            logs: string[];
+            /** Error */
+            error: string | null;
             timestamps: components["schemas"]["JobTimestamps"];
         };
         /** QualityView */
         QualityView: {
-            /** Completeness */
-            completeness: number;
-            /**
-             * Computed At
-             * Format: date-time
-             */
-            computed_at: string;
-            /** Detail */
-            detail: {
-                [key: string]: unknown;
-            };
             /**
              * Instrument Id
              * Format: uuid
              */
             instrument_id: string;
-            /** State */
-            state: string;
             /** Timeframe */
             timeframe: string;
+            /** State */
+            state: string;
+            /** Completeness */
+            completeness: number;
+            /** Detail */
+            detail: {
+                [key: string]: unknown;
+            };
+            /**
+             * Computed At
+             * Format: date-time
+             */
+            computed_at: string;
         };
         /**
          * RepairRequest
@@ -587,10 +697,10 @@ export interface components {
         };
         /** SourceFileView */
         SourceFileView: {
-            /** Content Sha256 */
-            content_sha256: string;
             /** Path */
             path: string;
+            /** Content Sha256 */
+            content_sha256: string;
             /** Rows */
             rows: number;
         };
@@ -599,57 +709,57 @@ export interface components {
          * @description GET /v1/status body (spec section 11, 'System').
          */
         StatusResponse: {
-            /** Api Version */
-            api_version: string;
-            /** Code Version */
-            code_version: string;
-            /**
-             * Database
-             * @enum {string}
-             */
-            database: "up" | "down";
-            /** Dataset Schema Version */
-            dataset_schema_version: string;
-            /** Engine Version */
-            engine_version: string;
             /** Service */
             service: string;
-            /** Service Version */
-            service_version: string;
-            /** Spec */
-            spec: string;
             /**
              * Status
              * @enum {string}
              */
             status: "ok" | "degraded";
+            /** Api Version */
+            api_version: string;
+            /** Service Version */
+            service_version: string;
+            /** Engine Version */
+            engine_version: string;
+            /** Code Version */
+            code_version: string;
+            /** Dataset Schema Version */
+            dataset_schema_version: string;
+            /**
+             * Database
+             * @enum {string}
+             */
+            database: "up" | "down";
+            /** Spec */
+            spec: string;
         };
         /** ValidationError */
         ValidationError: {
-            /** Context */
-            ctx?: Record<string, never>;
-            /** Input */
-            input?: unknown;
             /** Location */
             loc: (string | number)[];
             /** Message */
             msg: string;
             /** Error Type */
             type: string;
+            /** Input */
+            input?: unknown;
+            /** Context */
+            ctx?: Record<string, never>;
         };
         /**
          * WindowView
          * @description Resolved window knobs echoed so every served payload is reproducible.
          */
         WindowView: {
-            /** As Of */
-            as_of?: string | null;
             /** From */
             from?: string | null;
-            /** Limit */
-            limit: number;
             /** To */
             to?: string | null;
+            /** Limit */
+            limit: number;
+            /** As Of */
+            as_of?: string | null;
         };
     };
     responses: never;
@@ -660,101 +770,12 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    candles_v1_candles_get: {
-        parameters: {
-            query: {
-                instrument_id: string;
-                tf: string;
-                from?: string | null;
-                to?: string | null;
-                limit?: number | null;
-                as_of?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CandlesView"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    config_defaults_v1_config_defaults_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DefaultsResponse"];
-                };
-            };
-        };
-    };
-    data_gaps_v1_data_gaps_get: {
+    instruments_v1_instruments_get: {
         parameters: {
             query?: {
-                instrument_id?: string | null;
-                timeframe?: string | null;
-                status?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GapView"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    data_health_v1_data_health_get: {
-        parameters: {
-            query?: {
+                venue?: string | null;
                 market_type?: string | null;
-                instrument_id?: string | null;
-                timeframe?: string | null;
+                asset?: string | null;
             };
             header?: never;
             path?: never;
@@ -768,7 +789,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HealthView"];
+                    "application/json": components["schemas"]["InstrumentView"][];
                 };
             };
             /** @description Validation Error */
@@ -848,6 +869,103 @@ export interface operations {
             };
         };
     };
+    data_health_v1_data_health_get: {
+        parameters: {
+            query?: {
+                market_type?: string | null;
+                instrument_id?: string | null;
+                timeframe?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HealthView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    data_gaps_v1_data_gaps_get: {
+        parameters: {
+            query?: {
+                instrument_id?: string | null;
+                timeframe?: string | null;
+                status?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GapView"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    job_view_v1_jobs__job_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     dataset_view_v1_datasets__dataset_version__get: {
         parameters: {
             query?: never;
@@ -866,6 +984,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DatasetManifestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    candles_v1_candles_get: {
+        parameters: {
+            query: {
+                instrument_id: string;
+                tf: string;
+                from?: string | null;
+                to?: string | null;
+                limit?: number | null;
+                as_of?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CandlesView"];
                 };
             };
             /** @description Validation Error */
@@ -917,12 +1071,19 @@ export interface operations {
             };
         };
     };
-    instruments_v1_instruments_get: {
+    events_v1_events_get: {
         parameters: {
-            query?: {
-                venue?: string | null;
-                market_type?: string | null;
-                asset?: string | null;
+            query: {
+                instrument_id: string;
+                tf: string;
+                detector?: string;
+                version?: string | null;
+                event_type?: string | null;
+                params?: string | null;
+                from?: string | null;
+                to?: string | null;
+                limit?: number | null;
+                as_of?: string | null;
             };
             header?: never;
             path?: never;
@@ -936,38 +1097,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["InstrumentView"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    job_view_v1_jobs__job_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                job_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["JobView"];
+                    "application/json": components["schemas"]["EventsView"];
                 };
             };
             /** @description Validation Error */
@@ -997,6 +1127,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StatusResponse"];
+                };
+            };
+        };
+    };
+    config_defaults_v1_config_defaults_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DefaultsResponse"];
                 };
             };
         };

@@ -1,0 +1,12 @@
+{
+  "id": "D",
+  "description": "raw run of 10 consecutive bars emits exactly once (the first); the next raw after 5 free bars emits",
+  "cooldown": 5,
+  "streams": [
+    {
+      "name": "CONT",
+      "raw": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0],
+      "expected_emit": [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+    }
+  ]
+}

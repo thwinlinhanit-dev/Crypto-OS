@@ -1,0 +1,17 @@
+{
+  "id": "F",
+  "description": "independent cooldown state per event type: a CONT raw at bar 1 must not suppress a CAPIT raw at bar 3",
+  "cooldown": 5,
+  "streams": [
+    {
+      "name": "CONT",
+      "raw": [0, 1, 0, 0, 0, 0, 0, 0],
+      "expected_emit": [0, 1, 0, 0, 0, 0, 0, 0]
+    },
+    {
+      "name": "CAPIT",
+      "raw": [0, 0, 0, 1, 0, 0, 0, 0],
+      "expected_emit": [0, 0, 0, 1, 0, 0, 0, 0]
+    }
+  ]
+}

@@ -28,11 +28,13 @@ export interface ChartLayoutState {
   emaLength: number;
   rsiLength: number;
   atrLength: number;
+  eventsEnabled: boolean;
   subPanes: SubPaneState[];
   setInstrument: (instrumentId: string) => void;
   setTimeframe: (timeframe: string) => void;
   toggleOverlay: (id: OverlayId) => void;
   setLength: (field: "smaLength" | "emaLength" | "rsiLength" | "atrLength", value: number) => void;
+  toggleEvents: () => void;
   togglePane: (id: SubPaneId) => void;
   setPaneCollapsed: (id: SubPaneId, collapsed: boolean) => void;
   movePane: (id: SubPaneId, delta: number) => void;
@@ -47,6 +49,7 @@ const DEFAULTS = {
   emaLength: 20,
   rsiLength: 14,
   atrLength: 14,
+  eventsEnabled: true,
   subPanes: [
     { id: "volume", enabled: true, collapsed: false },
     { id: "rsi", enabled: false, collapsed: false },
@@ -55,7 +58,7 @@ const DEFAULTS = {
 
 function defaults(): Pick<
   ChartLayoutState,
-  "instrumentId" | "timeframe" | "overlays" | "smaLength" | "emaLength" | "rsiLength" | "atrLength" | "subPanes"
+  "instrumentId" | "timeframe" | "overlays" | "smaLength" | "emaLength" | "rsiLength" | "atrLength" | "eventsEnabled" | "subPanes"
 > {
   return {
     ...DEFAULTS,
@@ -87,6 +90,7 @@ export const useChartLayout = create<ChartLayoutState>()(
             set({ atrLength: value });
         }
       },
+      toggleEvents: () => set((state) => ({ eventsEnabled: !state.eventsEnabled })),
       togglePane: (id) =>
         set((state) => ({
           subPanes: state.subPanes.map((pane) =>

@@ -3,6 +3,55 @@
 Format follows [Keep a Changelog](https://keepachangelog.com/); version tags start at M0
 (the spec defines no release numbering yet).
 
+## [M4] - 2026-10-09 - Event engine
+
+### Added
+- Detector framework (T4.1): `engine/events/base.py` (frozen `Event` envelope with
+  section 6.2 fields, OBSERVED/CALCULATED provenance, content-addressed `event_id`
+  over the identity fields only - D-023, `Detector` protocol with `resolve`/`derived`/
+  `detect`), `engine/events/cooldown.py` (shared 6.7 gate - D-022), and
+  `engine/events/registry.py` (autoload of `engine/events/detectors/`, fail-closed
+  `resolve_detector` raising `ValidationError` for unknown ids/versions and for the
+  six SPEC_REQUIRED names - PD-4/PD-10, `detect_with` one-call path).
+- Cooldown golden fixtures A-G (`fixtures/events/cooldown/*.json`) proving: the `[1]`
+  lag never suppresses the raw bar itself (A), independent per-stream state (F),
+  `cooldown=0` gating off (G), seed 999 on the first-ever raw (E).
+- `RVOL_CLIMAX` v5.0 detector (T4.2): `engine/events/detectors/rvol_climax.py`
+  pinned line-by-line to `specs/reference/rvol_climax_pro_v5.pine` (75-146) - lagged
+  `volMA`/`hiN`/`loN`/`swingLo`, non-lagged `emaR`, exact float comparisons, the four
+  raw rules, `failed_bounce`/`legacy_v1` fail modes, six archetype labels, 3.0*ATR
+  invalidation, per-stream cooldown, lookback/exclusion gap. Detector golden fixture
+  `fixtures/events/rvol_climax_v5/golden.json` (CONT@10/CAPIT@15/FAIL@20/TOP@25).
+- Outcomes (T4.3): `engine/events/outcomes.py` - default horizons
+  `[1,2,3,5,10,15,20,30,40,50]`, full-horizon `fwd_ret_*` without stop truncation,
+  stop-first excursion window with earliest-bar tie-break, direction-adjusted
+  `mfe_R`/`mae_R`, incomplete horizons null and never partially counted.
+- `GET /v1/events` (T4.4): `apps/api/events.py` on-demand compute (no event table in
+  M4 - D-024) with request-or-defaults params (PD-11), fail-closed 422/404/501,
+  section 6.2 envelopes; client `getEvents` + `EventEnvelopeView`/`EventsViews`.
+- Chart event layer (T4.4): `apps/web/app/chart/events.ts` (section 12 marker styles,
+  `applyEventMarkers` via lightweight-charts v5 `createSeriesMarkers` plugin,
+  hover-card builder, `computeClimaxDots` placeholder - OQ-17), header "Events on/off"
+  toggle (`eventsEnabled`, default ON), marker effect in `panes.tsx`, and the DOM
+  hover card in `page.tsx` showing type/time/direction/ref/invalidation/rvol/cpos/
+  archetype/trigger checklist (PD-5: numbers from the envelope, never recomputed).
+- Truncation invariance (T4.5): `tests/test_events_truncation.py` - hypothesis
+  properties: detection on a prefix equals restriction of the full result (PD-2), and
+  outcomes on a prefix match for complete horizons with nulls elsewhere.
+- h=10 parity AC (T4.5): `tests/test_events_parity_h10.py` compares
+  `(n, sum(fwd_ret_pct[10]), win_count)` per signal type against the owner's TradingView
+  study table (`study_horizon=10`, reference defaults) on the D-020 parity range;
+  skips with a clear reason when no table export exists (OQ-16). CI gate remains the
+  detector golden fixture.
+- Detector spec: `specs/events/RVOL_CLIMAX.md` (status READY, all 14 template gates
+  checked); the six SPEC_REQUIRED names stay unimplemented (PD-4).
+- Web marker tests: `apps/web/app/chart/events.test.ts` (vitest 5) - exact section 12
+  styling, `eventToMarker` mapping/edge cases, plugin create/reuse behavior: 7 passed.
+- Tests: 405 total (404 passed + 1 skipped vs M3's 344): 11 cooldown + 30 detector
+  golden + 15 outcomes + 13 API + 2 truncation properties + 1 parity (skip-guarded)
+  in the new files, plus the vitest 7.
+- Decisions D-022..D-024 and open questions OQ-16/OQ-17 recorded in `docs/DECISIONS.md`.
+
 ## [M3] - 2026-10-09 - Feature library + parity layer 1
 
 ### Added
@@ -38,22 +87,38 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); version tags sta
   the owner's TradingView export exists at `fixtures/parity/BINANCE_BTCUSDT_1D.csv`
   with its `.meta.json` sidecar; the report's `pass` field stays spec-literal
   (14.2 line 592: zero `ENGINE_BUG`, zero `UNKNOWN`).
-- Tests: 330 total (+77 vs M2's 253): 43 parity + 20 feature-contract + 3 truncation
+- Tests: 344 total (+91 vs M2's 253): 57 parity + 20 feature-contract + 3 truncation
   properties in the new files, plus 11 across the existing suites (including a
   `code_version` regression that caught `REPO_ROOT` resolving one directory above the
   checkout - `engine/versions.py` `parents[2]` -> `parents[1]`).
+- AC parity run (amendment after the first run, design note 4.6): the owner's export
+  (`fixtures/parity/BINANCE_BTCUSDT_1D.csv`, extracted from TradingView's own buffers
+  over CDP - D-020 - plus the nine-field `.meta.json` sidecar) initially classified
+  `DATA_MISMATCH` on 5 volume bars (rel 2e-6..1.9e-4). Live `api.binance.com` klines
+  for those days return exactly the fixture values, so two narrow table entries were
+  added (OQ-15 -> D-021): `tv_volume_feed` (bar volume and its 21-bar `rvol`
+  contamination window, bound 1e-3, context plumbing via a frozen
+  `DifferenceContext`) and `ema_seed_history` (regime-EMA seed wash-out in engine
+  bars [500, 600), bound 1e-5); the bar gate now continues when every difference is
+  documented (evidence stays in `bar_diff` with per-sample `entry` and
+  documented/unexplained counts), and the overall status is
+  `worst_of(plot statuses..., bar status)` (`status.worst_of` added). The AC run is
+  now `EXACT_WITH_DOCUMENTED_PLATFORM_DIFFERENCE`, zero unexplained anywhere
+  (bar 5/5, rvol 42, ema 57, cpos/upper_wick EXACT), gate exit 0.
 
 ### Decisions
 - D-015 registry scope, D-016 pivot tie rule, D-017 regime tags descriptive only,
-  D-018 `make parity` amends D-005, D-019 gate exit code vs report `pass`;
-  open questions OQ-13 (highest/lowest warm-up value), OQ-14 (pivot ties vs Pine),
-  OQ-15 (documented platform differences pending the real export).
+  D-018 `make parity` amends D-005, D-019 gate exit code vs report `pass`,
+  D-020 AC export extracted from TradingView buffers via CDP,
+  D-021 first AC run classified `EXACT_WITH_DOCUMENTED_PLATFORM_DIFFERENCE`
+  (table entries `tv_volume_feed` + `ema_seed_history`);
+  open questions OQ-13 (highest/lowest warm-up value), OQ-14 (pivot ties vs Pine);
+  OQ-15 resolved by D-021.
 
 ### Notes
-- The AC parity run itself still needs the owner's export (design note section 0);
-  `make parity` exercises the full happy path today against a synthetic export written
-  outside the repository (1011 bars, 511 compared, all `EXACT`, exit 0) and the
-  `NO_REFERENCE_EXPORT` path against the default location (exit non-zero).
+- The AC parity run lands inside M3: `make parity` against the owner's export prints
+  the per-plot table above, exits 0, and writes `reports/parity/layer1_report.json`
+  with the documented-difference evidence (D-020, D-021; design note 4.6).
 
 ## [M2] - 2026-10-08 - Chart workspace
 

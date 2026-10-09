@@ -24,6 +24,7 @@ import type { ExclusionView } from "@cryptosos/client";
 
 import type { CandlePoint, SeriesPoint } from "./data";
 import { HISTORY_EDGE, HISTORY_FIT_RATIO, isoToSeconds } from "./data";
+import { applyEventMarkers, type EventMarkerSpec, type EventMarkersHandle } from "./events";
 
 /**
  * One lightweight-charts pane (design section 6/7). Every pane is its own
@@ -66,6 +67,7 @@ export interface ChartPaneProps {
   lines: PaneLine[];
   priceLevels?: { price: number; title: string }[];
   exclusions: ExclusionView[];
+  eventMarkers?: EventMarkerSpec[];
   restore: number;
   publishRange: boolean;
   handles: PaneHandles;
@@ -204,6 +206,7 @@ export default function ChartPane({
   lines,
   priceLevels,
   exclusions,
+  eventMarkers,
   restore,
   publishRange,
   handles,
@@ -363,6 +366,19 @@ export default function ChartPane({
 
     anchorRef.current = seriesRef.current.get(CANDLE_KEY) ?? seriesRef.current.get(HIST_KEY) ?? seriesRef.current.values().next().value;
   }, [candles, seriesKey, lines, candleBars, histogram]);
+
+  // Event markers (M4 T4.4): lightweight-charts v5 createSeriesMarkers plugin
+  // on the candle series; recreated when the series instance is rebuilt.
+  const markersRef = useRef<EventMarkersHandle | null>(null);
+  useEffect(() => {
+    markersRef.current = null;
+  }, [seriesKey]);
+  useEffect(() => {
+    if (!candleBars || !eventMarkers) return;
+    const series = seriesRef.current.get(CANDLE_KEY);
+    if (!series) return;
+    markersRef.current = applyEventMarkers(series, markersRef.current, eventMarkers);
+  }, [candleBars, eventMarkers, seriesKey]);
 
   // Static price levels (RSI 70/30) attach once per line-series instance.
   const levelsAttached = useRef(new WeakSet<ISeriesApi<SeriesType>>());

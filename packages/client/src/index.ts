@@ -9,6 +9,7 @@ export {
   getJob,
   getCandles,
   getIndicators,
+  getEvents,
   postIngest,
   postRepair,
 } from "./api";
@@ -17,6 +18,8 @@ export type {
   CandleQualityView,
   DefaultsResponse,
   DatasetManifestView,
+  EventEnvelopeView,
+  EventsView,
   ExclusionView,
   GapView,
   HealthView,

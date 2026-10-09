@@ -1,0 +1,12 @@
+{
+  "id": "C",
+  "description": "raw at bars 1 and 6: only four free bars -> second raw is suppressed",
+  "cooldown": 5,
+  "streams": [
+    {
+      "name": "CONT",
+      "raw": [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+      "expected_emit": [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    }
+  ]
+}

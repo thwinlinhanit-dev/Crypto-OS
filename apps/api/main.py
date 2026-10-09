@@ -17,6 +17,7 @@ from pydantic import BaseModel
 from apps.api.data import router as data_router
 from apps.api.db import database_reachable
 from apps.api.errors import install_error_handlers
+from apps.api.events import router as events_router
 from apps.api.market import router as market_router
 from apps.api.settings import get_settings
 from engine.versions import (
@@ -77,6 +78,9 @@ def create_app() -> FastAPI:
     # M2 market reads (spec section 11, design note m2_chart section 3):
     # GET /v1/candles and GET /v1/indicators, reads only (PD-1).
     app.include_router(market_router)
+    # M4 event reads (spec section 11, design note m4_events section 6):
+    # GET /v1/events, on-demand compute, reads only (PD-1).
+    app.include_router(events_router)
 
     @app.get(f"/{API_VERSION}/status", response_model=StatusResponse, tags=["system"])
     async def status() -> StatusResponse:

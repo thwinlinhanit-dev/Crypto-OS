@@ -1,0 +1,12 @@
+{
+  "id": "G",
+  "description": "cooldown=0: every raw bar emits",
+  "cooldown": 0,
+  "streams": [
+    {
+      "name": "CONT",
+      "raw": [0, 1, 0, 1, 1, 0, 1],
+      "expected_emit": [0, 1, 0, 1, 1, 0, 1]
+    }
+  ]
+}

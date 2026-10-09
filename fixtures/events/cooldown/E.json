@@ -1,0 +1,18 @@
+{
+  "id": "E",
+  "description": "first-ever raw emits (gap seeded to 999); a raw after a silence of >=999 bars also emits",
+  "cooldown": 5,
+  "streams": [
+    {
+      "name": "CONT",
+      "raw": [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "expected_emit": [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    {
+      "name": "E_late",
+      "raw": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+      "expected_emit": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+      "note": "E_late stands alone: first raw at bar 15 is first-ever for this stream (gap=999)"
+    }
+  ]
+}

@@ -17,6 +17,8 @@ export type JobView = components["schemas"]["JobView"];
 export type JobQueued = components["schemas"]["JobQueued"];
 export type IngestRequest = components["schemas"]["IngestRequest"];
 export type RepairRequest = components["schemas"]["RepairRequest"];
+export type EventEnvelopeView = components["schemas"]["EventEnvelopeView"];
+export type EventsView = components["schemas"]["EventsView"];
 
 /** Where the API listens by default; override per environment. */
 export const DEFAULT_API_BASE = "http://127.0.0.1:8000";
@@ -117,6 +119,13 @@ export async function getIndicators(
   baseUrl: string = DEFAULT_API_BASE,
 ): Promise<IndicatorsView> {
   return (await readJson(`/v1/indicators${queryString(query)}`, baseUrl)) as IndicatorsView;
+}
+
+export async function getEvents(
+  query: Query,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<EventsView> {
+  return (await readJson(`/v1/events${queryString(query)}`, baseUrl)) as EventsView;
 }
 
 export async function postIngest(

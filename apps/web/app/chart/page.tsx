@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { IRange, UTCTimestamp } from "lightweight-charts";
-import type { ExclusionView } from "@cryptosos/client";
+import type { ExclusionView, EventsView } from "@cryptosos/client";
+import { getEvents } from "@cryptosos/client";
 
 import ChartPane, { type PaneHandles, type PaneLine } from "./panes";
 import CommandPalette, { type PaletteAction } from "./palette";
@@ -18,6 +19,8 @@ import {
   useRegistry,
   type IndicatorRequest,
 } from "./data";
+import { eventToMarker, envelopeToHoverCard, findEventAtTime, type EventMarkerSpec } from "./events";
+import { API_BASE } from "@/lib/api";
 
 /**
  * Chart workspace (spec sections 12, M2 design note): header controls,
@@ -111,6 +114,23 @@ export default function ChartPage() {
   );
 
   const data = useChartWindows(instrumentId, layout.timeframe, specs);
+
+  // Events layer (T4.4): on-demand detector run, default ON once data exists.
+  const eventsQuery = useQuery({
+    queryKey: ["events", instrumentId, layout.timeframe],
+    queryFn: () =>
+      getEvents({ instrument_id: instrumentId ?? "", tf: layout.timeframe }, API_BASE),
+    enabled: layout.eventsEnabled && instrumentId != null,
+    staleTime: 60_000,
+    retry: 1,
+  });
+
+  const eventMarkers = useMemo<EventMarkerSpec[]>(() => {
+    if (!layout.eventsEnabled) return [];
+    return (eventsQuery.data?.events ?? [])
+      .map(eventToMarker)
+      .filter((spec): spec is EventMarkerSpec => spec != null);
+  }, [layout.eventsEnabled, eventsQuery.data]);
 
   const handlesRef = useRef<PaneHandles>({});
   const rangeRef = useRef<IRange<number> | null>(null);
@@ -289,6 +309,8 @@ export default function ChartPage() {
   }, [instruments, layout, router]);
 
   const hoverRow = hoverTime != null ? data.hover.get(hoverTime) : undefined;
+  const hoverEvent = hoverTime != null ? findEventAtTime(eventMarkers, hoverTime) : null;
+  const hoverEventCard = hoverEvent ? envelopeToHoverCard(hoverEvent) : null;
   const qualityTooltip = quality
     ? [
         `${quality.state} · ${(quality.completeness * 100).toFixed(1)}% complete`,
@@ -310,6 +332,7 @@ export default function ChartPage() {
           candleBars
           lines={mainLines}
           exclusions={exclusions}
+          eventMarkers={layout.eventsEnabled ? eventMarkers : undefined}
           restore={data.restore}
           publishRange
           handles={handlesRef.current}
@@ -373,6 +396,31 @@ export default function ChartPage() {
           </>
         )}
       </div>
+      {hoverEventCard && (
+        <div className="event-hover-card" role="status" aria-label="Event details">
+          <div className="event-card-header">
+            <b>{hoverEventCard.eventType}</b> · {hoverEventCard.direction} · {formatTime(Math.floor(Date.parse(hoverEventCard.time) / 1000))}
+          </div>
+          <div className="event-card-row">
+            <span>Ref <b>{fmtPrice(hoverEventCard.refPrice)}</b></span>
+            <span>Inval <b>{fmtPrice(hoverEventCard.invalidationPrice)}</b></span>
+            <span>RVOL <b>{fmtMetric(hoverEventCard.rvol)}</b></span>
+            <span>CPOS <b>{fmtMetric(hoverEventCard.cpos)}</b></span>
+            {hoverEventCard.archetype && <span>Arch <b>{hoverEventCard.archetype}</b></span>}
+          </div>
+          {hoverEventCard.triggerRules.length > 0 && (
+            <div className="event-card-rules">
+              {hoverEventCard.triggerRules.map((rule) => (
+                <div key={rule.name} className={`event-rule ${rule.passed ? "passed" : "failed"}`}>
+                  {rule.passed ? "✓" : "✗"} {rule.name}{" "}
+                  {rule.value != null && <span className="muted">= {fmtMetric(rule.value)}</span>}
+                  {rule.threshold != null && <span className="muted"> / {fmtMetric(rule.threshold)}</span>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </>
   );
 
@@ -411,6 +459,14 @@ export default function ChartPage() {
               </option>
             ))}
           </select>
+          <button
+            type="button"
+            className="btn"
+            aria-pressed={layout.eventsEnabled}
+            onClick={() => layout.toggleEvents()}
+          >
+            Events {layout.eventsEnabled ? "on" : "off"}
+          </button>
           <button
             type="button"
             className="btn"
