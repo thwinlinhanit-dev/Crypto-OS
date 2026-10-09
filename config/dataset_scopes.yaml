@@ -1,7 +1,33 @@
 # config/dataset_scopes.yaml — data-scope definitions (spec section 10, data_scope
 # values DEVELOPMENT / HOLDOUT; section 16 OD-8 owns the split point).
 #
-# No keys yet: the DEVELOPMENT/HOLDOUT boundary is an owner decision (OD-8) and
-# PD-4 forbids inventing it. Sections that need it must fail loudly until then.
+# Boundaries are FROZEN once (spec 8.1), computed from the dataset family's
+# calendar axis S = [earliest first-bar open_time, latest closed bar at freeze
+# time] over the fixture universe (BTCUSDT, ETHUSDT, SOLUSDT x 1D/4H/1H):
+#
+#   S_start = 2024-01-01T00:00:00Z   S_end = 2026-10-08T00:00:00Z   span = 1011 days
+#   holdout_start = S_start + 0.80 x span = 2026-03-19T19:12Z -> floored 2026-03-19
+#   oos_start     = S_start + 0.56 x span = 2025-07-20T03:50Z -> floored 2025-07-20
+#
+# Rounding: each boundary is floored to the UTC calendar day containing the raw
+# instant (never a later day). Boundaries never move after freeze: new data
+# after the freeze belongs to HOLDOUT automatically. Changing the universe or
+# dataset family requires a NEW entry here plus a DECISIONS record (D-025/D-026;
+# OD-8 default 80/20 confirmed in DECISIONS — owner confirmation requested).
 
-scopes: {}
+default_family: binance_spot_usdt_default
+
+scopes:
+  binance_spot_usdt_default:
+    universe:
+      - "BINANCE:BTCUSDT"
+      - "BINANCE:ETHUSDT"
+      - "BINANCE:SOLUSDT"
+    timeframes: ["1D", "4H", "1H"]
+    s_start: "2024-01-01T00:00:00Z"
+    s_end: "2026-10-08T00:00:00Z"
+    span_days: 1011
+    oos_start: "2025-07-20T00:00:00Z"
+    holdout_start: "2026-03-19T00:00:00Z"
+    frozen_at: "2026-10-09T00:00:00Z"
+    frozen_by: "agent:m5"

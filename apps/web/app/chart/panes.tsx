@@ -74,6 +74,7 @@ export interface ChartPaneProps {
   rangeRef: MutableRefObject<IRange<number> | null>;
   viewRangeRef: MutableRefObject<IRange<number> | null>;
   onHover: (time: number | null) => void;
+  onSelectTime?: (time: number | null) => void;
   onNearLeftEdge: () => void;
 }
 
@@ -213,6 +214,7 @@ export default function ChartPane({
   rangeRef,
   viewRangeRef,
   onHover,
+  onSelectTime,
   onNearLeftEdge,
 }: ChartPaneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -220,10 +222,12 @@ export default function ChartPane({
   const seriesRef = useRef(new Map<string, ISeriesApi<SeriesType>>());
   const anchorRef = useRef<ISeriesApi<SeriesType> | undefined>(undefined);
   const onHoverRef = useRef(onHover);
+  const onSelectRef = useRef(onSelectTime);
   const onEdgeRef = useRef(onNearLeftEdge);
   const countRef = useRef(candles.length);
   const [chartReady, setChartReady] = useState<IChartApi | null>(null);
   onHoverRef.current = onHover;
+  onSelectRef.current = onSelectTime;
   onEdgeRef.current = onNearLeftEdge;
   useEffect(() => {
     countRef.current = candles.length;
@@ -242,6 +246,14 @@ export default function ChartPane({
       onHoverRef.current(typeof time === "number" ? time : null);
     };
     chart.subscribeCrosshairMove(moveHandler);
+
+    // A click reports the bar under the pointer: the chart page maps it to
+    // the event marker on that bar (open the Evidence panel, spec UI 558).
+    const selectHandler = (param: MouseEventParams) => {
+      const time = param.time;
+      onSelectRef.current?.(typeof time === "number" ? time : null);
+    };
+    chart.subscribeClick(selectHandler);
 
     if (publishRange) {
       chart.timeScale().subscribeVisibleLogicalRangeChange((range) => {
@@ -262,6 +274,8 @@ export default function ChartPane({
     setChartReady(chart);
 
     return () => {
+      chart.unsubscribeClick(selectHandler);
+      chart.unsubscribeCrosshairMove(moveHandler);
       chart.remove();
       chartRef.current = null;
       seriesRef.current.clear();

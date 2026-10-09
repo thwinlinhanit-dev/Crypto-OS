@@ -87,7 +87,7 @@ features:
 
 detectors:
   rvol_climax_v5:
-    # IMPLEMENTATION_SPEC section 6.3 — Detector RVOL_CLIMAX v5.0
+    # IMPLEMENTATION_SPEC section 6.3 - Detector RVOL_CLIMAX v5.0
     vol_len: 20
     climax_mult: 3.0
     top_mult: 2.0
@@ -103,3 +103,23 @@ detectors:
     atr_len: 14
     fail_mode: "failed_bounce" # alternative "legacy_v1" (see docs/DECISIONS.md OQ-2)
     lookback_bars: 100
+
+stats:
+  # IMPLEMENTATION_SPEC section 8.2 - StatsResult computation defaults.
+  # Keys with a null default are DERIVED at request resolution from a rule the
+  # spec states (not invented); the resolver fills them before merge:
+  #   embargo_bars: section 8.1 step 2 "E = embargo_bars (default = H)"
+  #                 with H = max horizon in view.
+  #   market_event_k: section 8.2 "k = max(3, 10% of universe)".
+  #   cluster_models: section 8.2 detector default ASSUMPTION, read from
+  #                 cluster_models_by_detector below when the request omits it.
+  horizons: [1, 2, 3, 5, 10, 15, 20, 30, 40, 50] # section 6.4 frozen list
+  bootstrap_resamples: 5000 # section 8.2 "seeded cluster-bootstrap 95% CI (5000 resamples)"
+  bootstrap_seed: 1 # section 8.2 "seed stored" - fixed seed = reproducible (PD-6)
+  embargo_bars: null # derived: default = H (section 8.1)
+  market_event_k: null # derived: default = max(3, 10% of universe) (section 8.2)
+  cluster_models: null # derived: detector default from cluster_models_by_detector
+  cluster_models_by_detector:
+    # The detector's documented default cluster_model ASSUMPTION (section 6.3
+    # detector spec; "SYMBOL_GAP + CALENDAR_WEEK" on rvol_climax.py).
+    RVOL_CLIMAX: [SYMBOL_GAP, CALENDAR_WEEK]

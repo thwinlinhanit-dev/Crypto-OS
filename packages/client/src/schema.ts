@@ -4,7 +4,7 @@
  */
 
 export interface paths {
-    "/v1/instruments": {
+    "/v1/candles": {
         parameters: {
             query?: never;
             header?: never;
@@ -12,10 +12,70 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Instruments
-         * @description The instrument registry (PD-12: scopes name these explicitly).
+         * Candles
+         * @description Closed bars for one (instrument, timeframe) window (spec section 11).
          */
-        get: operations["instruments_v1_instruments_get"];
+        get: operations["candles_v1_candles_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/config/defaults": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Config Defaults
+         * @description Documented defaults (PD-11): the file the API resolves parameters against.
+         */
+        get: operations["config_defaults_v1_config_defaults_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/data/gaps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Data Gaps
+         * @description Every stored exclusion interval (section 4.6: reports list all of them).
+         */
+        get: operations["data_gaps_v1_data_gaps_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/data/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Data Health
+         * @description Latest quality per (instrument, timeframe) + the exclusions still active.
+         */
+        get: operations["data_health_v1_data_health_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -64,66 +124,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/data/health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Data Health
-         * @description Latest quality per (instrument, timeframe) + the exclusions still active.
-         */
-        get: operations["data_health_v1_data_health_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/data/gaps": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Data Gaps
-         * @description Every stored exclusion interval (section 4.6: reports list all of them).
-         */
-        get: operations["data_gaps_v1_data_gaps_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/jobs/{job_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Job View
-         * @description One queued/running/finished job (spec section 11).
-         */
-        get: operations["job_view_v1_jobs__job_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/v1/datasets/{dataset_version}": {
         parameters: {
             query?: never;
@@ -136,49 +136,6 @@ export interface paths {
          * @description The stored manifest: source files, hashes, row counts, version fields (AC2).
          */
         get: operations["dataset_view_v1_datasets__dataset_version__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/candles": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Candles
-         * @description Closed bars for one (instrument, timeframe) window (spec section 11).
-         */
-        get: operations["candles_v1_candles_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/indicators": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Indicators
-         * @description Server-computed indicator over the same window as /v1/candles (D-011).
-         *
-         *     Name and params fail fast (422) before any I/O: unknown names,
-         *     undocumented keys and missing documented defaults are never guessed.
-         */
-        get: operations["indicators_v1_indicators_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -211,6 +168,252 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/events/{event_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Event Evidence
+         * @description Evidence payload for one stored (or recomputed) event.
+         */
+        get: operations["event_evidence_v1_events__event_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hypotheses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Hypotheses
+         * @description List hypotheses; ``?status=REJECTED`` is the Graveyard view (spec 8.4).
+         */
+        get: operations["list_hypotheses_v1_hypotheses_get"];
+        put?: never;
+        /**
+         * Create Hypothesis
+         * @description Pre-register a hypothesis: criteria frozen with timestamp (spec 8.4).
+         */
+        post: operations["create_hypothesis_v1_hypotheses_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hypotheses/{hyp_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Hypothesis
+         * @description One hypothesis by id (404 unknown).
+         */
+        get: operations["get_hypothesis_v1_hypotheses__hyp_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Patch Hypothesis
+         * @description Edit title/statement/status/autopsy. Criteria are pre-registered (422).
+         */
+        patch: operations["patch_hypothesis_v1_hypotheses__hyp_id__patch"];
+        trace?: never;
+    };
+    "/v1/hypotheses/{hyp_id}/open-holdout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Open Holdout
+         * @description Open the holdout exactly once (atomic; second call is 409, spec 8.1).
+         */
+        post: operations["open_holdout_v1_hypotheses__hyp_id__open_holdout_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/indicators": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Indicators
+         * @description Server-computed indicator over the same window as /v1/candles (D-011).
+         *
+         *     Name and params fail fast (422) before any I/O: unknown names,
+         *     undocumented keys and missing documented defaults are never guessed.
+         */
+        get: operations["indicators_v1_indicators_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/instruments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Instruments
+         * @description The instrument registry (PD-12: scopes name these explicitly).
+         */
+        get: operations["instruments_v1_instruments_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/jobs/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Job View
+         * @description One queued/running/finished job (spec section 11).
+         */
+        get: operations["job_view_v1_jobs__job_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Notes
+         * @description List notes, newest first.
+         */
+        get: operations["list_notes_v1_notes_get"];
+        put?: never;
+        /**
+         * Create Note
+         * @description Create a notebook note (the Evidence panel's Save to Notebook lands here).
+         */
+        post: operations["create_note_v1_notes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/notes/{note_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Note
+         * @description One note by id (404 unknown).
+         */
+        get: operations["get_note_v1_notes__note_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Note
+         * @description Delete a note (notes are not results, PD-13 does not apply).
+         */
+        delete: operations["delete_note_v1_notes__note_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Patch Note
+         * @description Edit a note's title, body, chart state or experiment link.
+         */
+        patch: operations["patch_note_v1_notes__note_id__patch"];
+        trace?: never;
+    };
+    "/v1/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Post Stats
+         * @description Run an event study and store the StatsResult (spec 8.2, 11).
+         */
+        post: operations["post_stats_v1_stats_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stats/{ref_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Stats
+         * @description Return the stored StatsResult row verbatim (spec 11; 404 unknown).
+         *
+         *     The scope echo is rebuilt from the stored filter: the row is immutable, so
+         *     the recomputed echo matches the POST response exactly.
+         */
+        get: operations["get_stats_v1_stats__ref_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/status": {
         parameters: {
             query?: never;
@@ -228,95 +431,98 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/config/defaults": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Config Defaults
-         * @description Documented defaults (PD-11): the file the API resolves parameters against.
-         */
-        get: operations["config_defaults_v1_config_defaults_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /**
+         * AnalogueView
+         * @description One nearest-in-time peer event.
+         */
+        AnalogueView: {
+            /** Event Id */
+            event_id: string;
+            /** Fwd R 10 */
+            fwd_r_10: number | null;
+            /** Instrument */
+            instrument: string;
+            /**
+             * Time
+             * Format: date-time
+             */
+            time: string;
+        };
+        /**
          * CandleQualityView
          * @description ``quality`` block of the section 11 candle response.
          */
         CandleQualityView: {
-            /** State */
-            state: string;
             /** Completeness */
             completeness: number;
             /** Exclusions */
             exclusions: components["schemas"]["ExclusionView"][];
+            /** State */
+            state: string;
         };
         /**
          * CandlesView
          * @description Section 11 candle window, columnar, plus the ``window`` echo (D-007 style).
          */
         CandlesView: {
+            /** C */
+            c: number[];
             /** Dataset Version */
             dataset_version: string;
-            quality: components["schemas"]["CandleQualityView"];
-            window: components["schemas"]["WindowView"];
-            /** T */
-            t: string[];
-            /** O */
-            o: number[];
             /** H */
             h: number[];
             /** L */
             l: number[];
-            /** C */
-            c: number[];
+            /** O */
+            o: number[];
+            quality: components["schemas"]["CandleQualityView"];
+            /** T */
+            t: string[];
             /** V */
             v: number[];
+            window: components["schemas"]["WindowView"];
+        };
+        /**
+         * DataQualityView
+         * @description Guardian state for the event's instrument/timeframe.
+         */
+        DataQualityView: {
+            /** Completeness */
+            completeness: number;
+            /** State */
+            state: string;
         };
         /**
          * DatasetManifestView
          * @description GET /v1/datasets/{version}: 'what exactly did this use?' (AC2).
          */
         DatasetManifestView: {
-            /** Dataset Version */
-            dataset_version: string;
-            /** Venue */
-            venue: string;
-            /** Market Type */
-            market_type: string;
-            /** Instruments */
-            instruments: string[];
-            /** Timeframes */
-            timeframes: string[];
+            /** Bar Semantics Version */
+            bar_semantics_version: string;
             /**
-             * Start Time
+             * Created At
              * Format: date-time
              */
-            start_time: string;
+            created_at: string;
+            /** Dataset Schema Version */
+            dataset_schema_version: string;
+            /** Dataset Version */
+            dataset_version: string;
             /**
              * End Time
              * Format: date-time
              */
             end_time: string;
-            /** Source Files */
-            source_files: components["schemas"]["SourceFileView"][];
-            /** Row Counts */
-            row_counts: {
-                [key: string]: number;
-            };
+            /** Instrument Metadata Version */
+            instrument_metadata_version: string;
+            /** Instruments */
+            instruments: string[];
+            /** Market Type */
+            market_type: string;
             /** Missing Ranges */
             missing_ranges: {
                 [key: string]: unknown;
@@ -325,102 +531,108 @@ export interface components {
             quality_summary: {
                 [key: string]: unknown;
             };
-            /** Dataset Schema Version */
-            dataset_schema_version: string;
-            /** Bar Semantics Version */
-            bar_semantics_version: string;
-            /** Timezone Policy Version */
-            timezone_policy_version: string;
-            /** Instrument Metadata Version */
-            instrument_metadata_version: string;
+            /** Row Counts */
+            row_counts: {
+                [key: string]: number;
+            };
+            /** Source Files */
+            source_files: components["schemas"]["SourceFileView"][];
             /**
-             * Created At
+             * Start Time
              * Format: date-time
              */
-            created_at: string;
+            start_time: string;
+            /** Timeframes */
+            timeframes: string[];
+            /** Timezone Policy Version */
+            timezone_policy_version: string;
+            /** Venue */
+            venue: string;
         };
         /**
          * DefaultsResponse
          * @description GET /v1/config/defaults body: where parameters resolve from (PD-11).
          */
         DefaultsResponse: {
-            /** Source */
-            source: string;
             /** Defaults */
             defaults: {
                 [key: string]: unknown;
             };
+            /** Source */
+            source: string;
         };
         /**
          * EventEnvelopeView
          * @description Section 6.2 event envelope as served by the API.
          */
         EventEnvelopeView: {
-            /** Event Id */
-            event_id: string;
+            /** Data Quality */
+            data_quality: {
+                [key: string]: unknown;
+            };
+            /** Dataset Version */
+            dataset_version: string;
             /** Detector Id */
             detector_id: string;
-            /** Event Type */
-            event_type: string;
-            /** Version */
-            version: string;
-            /** Params Hash */
-            params_hash: string;
-            /** Instrument Id */
-            instrument_id: string;
-            /** Timeframe */
-            timeframe: string;
+            /** Direction */
+            direction: string;
+            /** Engine Version */
+            engine_version: string;
+            /** Event Id */
+            event_id: string;
             /**
              * Event Time
              * Format: date-time
              */
             event_time: string;
-            /** Direction */
-            direction: string;
-            /** Ref Price */
-            ref_price: number;
-            /** Invalidation Price */
-            invalidation_price: number;
-            /** Regime */
-            regime: {
-                [key: string]: unknown;
-            };
+            /** Event Type */
+            event_type: string;
             /** Features */
             features: {
                 [key: string]: unknown;
             };
-            /** Trigger */
-            trigger: {
-                [key: string]: unknown;
-            };
+            /** Instrument Id */
+            instrument_id: string;
+            /** Invalidation Price */
+            invalidation_price: number;
             /** Lookback Gap */
             lookback_gap: boolean;
-            /** Dataset Version */
-            dataset_version: string;
-            /** Engine Version */
-            engine_version: string;
-            /** Data Quality */
-            data_quality: {
+            /** Params Hash */
+            params_hash: string;
+            /** Provenance */
+            provenance: {
+                [key: string]: string;
+            };
+            /** Ref Price */
+            ref_price: number;
+            /** Regime */
+            regime: {
                 [key: string]: unknown;
             };
             /** Resolved Params */
             resolved_params: {
                 [key: string]: unknown;
             };
-            /** Provenance */
-            provenance: {
-                [key: string]: string;
+            /** Timeframe */
+            timeframe: string;
+            /** Trigger */
+            trigger: {
+                [key: string]: unknown;
             };
+            /** Version */
+            version: string;
         };
         /**
          * EventsView
          * @description ``GET /v1/events`` body: resolved request echo plus envelopes.
          */
         EventsView: {
+            /** Dataset Version */
+            dataset_version: string;
             /** Detector */
             detector: string;
-            /** Version */
-            version: string;
+            /** Events */
+            events: components["schemas"]["EventEnvelopeView"][];
             /**
              * Instrument Id
              * Format: uuid
@@ -428,14 +640,95 @@ export interface components {
             instrument_id: string;
             /** Tf */
             tf: string;
-            /** Dataset Version */
-            dataset_version: string;
+            /** Version */
+            version: string;
             /** Window */
             window: {
                 [key: string]: unknown;
             };
-            /** Events */
-            events: components["schemas"]["EventEnvelopeView"][];
+        };
+        /**
+         * EvidenceEventView
+         * @description The ``event`` block (spec 532-536 keys).
+         */
+        EvidenceEventView: {
+            /** Detector */
+            detector: string;
+            /** Direction */
+            direction: string;
+            /** Id */
+            id: string;
+            /** Instrument */
+            instrument: string;
+            /** Invalidation */
+            invalidation: number;
+            /** Lookback Gap */
+            lookback_gap: boolean;
+            /**
+             * R Basis
+             * @default atr
+             */
+            r_basis: string;
+            /** Ref Price */
+            ref_price: number;
+            /** Tf */
+            tf: string;
+            /**
+             * Time
+             * Format: date-time
+             */
+            time: string;
+            /** Type */
+            type: string;
+            /** Version */
+            version: string;
+        };
+        /**
+         * EvidenceStatsView
+         * @description The ``stats`` block: grade triple plus horizons and multiple-testing.
+         */
+        EvidenceStatsView: {
+            /** Data Scope */
+            data_scope: string;
+            /** Grade */
+            grade: string | null;
+            /** Grade Reason */
+            grade_reason?: string | null;
+            /** Horizons */
+            horizons: {
+                [key: string]: unknown;
+            }[];
+            /** Model Sensitive */
+            model_sensitive: boolean | null;
+            /** Multiple Testing */
+            multiple_testing: {
+                [key: string]: unknown;
+            };
+            /** N Eff */
+            n_eff: number;
+            /** N Raw */
+            n_raw: number;
+            /** Ref Id */
+            ref_id: string;
+        };
+        /**
+         * EvidenceView
+         * @description ``GET /v1/events/{id}`` body (spec 532-544).
+         */
+        EvidenceView: {
+            /** Analogues */
+            analogues: components["schemas"]["AnalogueView"][];
+            /** Context */
+            context: {
+                [key: string]: unknown;
+            };
+            data_quality: components["schemas"]["DataQualityView"];
+            /** Dataset Version */
+            dataset_version: string;
+            event: components["schemas"]["EvidenceEventView"];
+            stats: components["schemas"]["EvidenceStatsView"];
+            /** Trigger */
+            trigger: components["schemas"]["TriggerRowView"][];
         };
         /**
          * ExclusionView
@@ -443,20 +736,20 @@ export interface components {
          */
         ExclusionView: {
             /**
-             * Gap Id
-             * Format: uuid
+             * Exclusion End
+             * Format: date-time
              */
-            gap_id: string;
+            exclusion_end: string;
             /**
              * Exclusion Start
              * Format: date-time
              */
             exclusion_start: string;
             /**
-             * Exclusion End
-             * Format: date-time
+             * Gap Id
+             * Format: uuid
              */
-            exclusion_end: string;
+            gap_id: string;
             /** Kind */
             kind: string;
             /** Status */
@@ -465,6 +758,21 @@ export interface components {
         /** GapView */
         GapView: {
             /**
+             * Detected At
+             * Format: date-time
+             */
+            detected_at: string;
+            /**
+             * Exclusion End
+             * Format: date-time
+             */
+            exclusion_end: string;
+            /**
+             * Exclusion Start
+             * Format: date-time
+             */
+            exclusion_start: string;
+            /**
              * Gap Id
              * Format: uuid
              */
@@ -474,33 +782,18 @@ export interface components {
              * Format: uuid
              */
             instrument_id: string;
-            /** Timeframe */
-            timeframe: string;
-            /**
-             * Exclusion Start
-             * Format: date-time
-             */
-            exclusion_start: string;
-            /**
-             * Exclusion End
-             * Format: date-time
-             */
-            exclusion_end: string;
-            /** Status */
-            status: string;
             /** Kind */
             kind: string;
-            /** Source */
-            source: string;
-            /**
-             * Detected At
-             * Format: date-time
-             */
-            detected_at: string;
             /** Repaired At */
             repaired_at: string | null;
             /** Repaired Dataset Version */
             repaired_dataset_version: string | null;
+            /** Source */
+            source: string;
+            /** Status */
+            status: string;
+            /** Timeframe */
+            timeframe: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -512,86 +805,151 @@ export interface components {
          * @description GET /v1/data/health: latest quality per series + exclusions still active.
          */
         HealthView: {
-            /** Series */
-            series: components["schemas"]["QualityView"][];
             /** Exclusions */
             exclusions: components["schemas"]["GapView"][];
+            /** Series */
+            series: components["schemas"]["QualityView"][];
+        };
+        /**
+         * HypothesisCreate
+         * @description ``POST /v1/hypotheses`` body: criteria frozen at creation (8.4).
+         */
+        HypothesisCreate: {
+            /** Criteria */
+            criteria: {
+                [key: string]: unknown;
+            };
+            /** Statement */
+            statement: string;
+            /** Title */
+            title: string;
+        };
+        /**
+         * HypothesisPatch
+         * @description ``PATCH /v1/hypotheses/{id}`` body: criteria may never appear here.
+         */
+        HypothesisPatch: {
+            /** Autopsy */
+            autopsy?: string | null;
+            /** Criteria */
+            criteria?: {
+                [key: string]: unknown;
+            } | null;
+            /** Statement */
+            statement?: string | null;
+            /** Status */
+            status?: string | null;
+            /** Title */
+            title?: string | null;
+        };
+        /**
+         * HypothesisView
+         * @description One hypothesis row as served (spec 10 columns).
+         */
+        HypothesisView: {
+            /** Autopsy */
+            autopsy: string | null;
+            /** Criteria */
+            criteria: {
+                [key: string]: unknown;
+            };
+            /** Holdout Opened At */
+            holdout_opened_at: string | null;
+            /** Holdout Result */
+            holdout_result: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Hyp Id
+             * Format: uuid
+             */
+            hyp_id: string;
+            /** Locked */
+            locked: boolean;
+            /** Preregistered At */
+            preregistered_at: string;
+            /** Statement */
+            statement: string;
+            /** Status */
+            status: string;
+            /** Title */
+            title: string;
         };
         /**
          * IndicatorsView
          * @description ``GET /v1/indicators`` body (design D-011).
          */
         IndicatorsView: {
+            /** Dataset Version */
+            dataset_version: string;
+            /**
+             * Instrument Id
+             * Format: uuid
+             */
+            instrument_id: string;
             /** Name */
             name: string;
             /** Params */
             params: {
                 [key: string]: unknown;
             };
-            /**
-             * Instrument Id
-             * Format: uuid
-             */
-            instrument_id: string;
-            /** Tf */
-            tf: string;
-            /** Dataset Version */
-            dataset_version: string;
-            window: components["schemas"]["WindowView"];
-            /** T */
-            t: string[];
             /** Series */
             series: components["schemas"]["SeriesView"][];
+            /** T */
+            t: string[];
+            /** Tf */
+            tf: string;
+            window: components["schemas"]["WindowView"];
         };
         /**
          * IngestRequest
          * @description POST /v1/data/ingest body (spec section 11; times are ISO-8601 UTC).
          */
         IngestRequest: {
-            /** Venue */
-            venue: string;
-            /** Market Type */
-            market_type: string;
-            /** Instrument Ids */
-            instrument_ids: string[];
-            /** Timeframes */
-            timeframes: string[];
             /**
              * From
              * Format: date-time
              */
             from: string;
+            /** Instrument Ids */
+            instrument_ids: string[];
+            /** Market Type */
+            market_type: string;
+            /** Storage Budget Gb */
+            storage_budget_gb?: number | null;
+            /** Timeframes */
+            timeframes: string[];
             /**
              * To
              * Format: date-time
              */
             to: string;
-            /** Storage Budget Gb */
-            storage_budget_gb?: number | null;
+            /** Venue */
+            venue: string;
         };
         /** InstrumentView */
         InstrumentView: {
+            /** Asset */
+            asset: string;
             /**
              * Instrument Id
              * Format: uuid
              */
             instrument_id: string;
-            /** Venue */
-            venue: string;
-            /** Market Type */
-            market_type: string;
-            /** Asset */
-            asset: string;
-            /** Quote */
-            quote: string;
-            /** Native Symbol */
-            native_symbol: string;
-            /** Tick Size */
-            tick_size: string | null;
-            /** Lot Step */
-            lot_step: string | null;
             /** Listed At */
             listed_at: string | null;
+            /** Lot Step */
+            lot_step: string | null;
+            /** Market Type */
+            market_type: string;
+            /** Native Symbol */
+            native_symbol: string;
+            /** Quote */
+            quote: string;
+            /** Tick Size */
+            tick_size: string | null;
+            /** Venue */
+            venue: string;
         };
         /**
          * JobQueued
@@ -616,16 +974,18 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
-            /** Started At */
-            started_at: string | null;
             /** Finished At */
             finished_at: string | null;
+            /** Started At */
+            started_at: string | null;
         };
         /**
          * JobView
          * @description GET /v1/jobs/{id} payload (spec section 11).
          */
         JobView: {
+            /** Error */
+            error: string | null;
             /**
              * Job Id
              * Format: uuid
@@ -633,44 +993,97 @@ export interface components {
             job_id: string;
             /** Kind */
             kind: string;
-            /** Status */
-            status: string;
-            /** Progress */
-            progress: number;
-            /** Result Ref */
-            result_ref: string | null;
+            /** Logs */
+            logs: string[];
             /** Params */
             params: {
                 [key: string]: unknown;
             };
-            /** Logs */
-            logs: string[];
-            /** Error */
-            error: string | null;
+            /** Progress */
+            progress: number;
+            /** Result Ref */
+            result_ref: string | null;
+            /** Status */
+            status: string;
             timestamps: components["schemas"]["JobTimestamps"];
+        };
+        /**
+         * NoteCreate
+         * @description ``POST /v1/notes`` body (``experiment_id`` stays NULL until M5b).
+         */
+        NoteCreate: {
+            /** Body Md */
+            body_md: string;
+            /** Chart State */
+            chart_state?: {
+                [key: string]: unknown;
+            } | null;
+            /** Experiment Id */
+            experiment_id?: string | null;
+            /** Title */
+            title: string;
+        };
+        /**
+         * NotePatch
+         * @description ``PATCH /v1/notes/{id}`` body: every field optional.
+         */
+        NotePatch: {
+            /** Body Md */
+            body_md?: string | null;
+            /** Chart State */
+            chart_state?: {
+                [key: string]: unknown;
+            } | null;
+            /** Experiment Id */
+            experiment_id?: string | null;
+            /** Title */
+            title?: string | null;
+        };
+        /**
+         * NoteView
+         * @description One note row as served (spec 10 columns).
+         */
+        NoteView: {
+            /** Body Md */
+            body_md: string;
+            /** Chart State */
+            chart_state: {
+                [key: string]: unknown;
+            } | null;
+            /** Created At */
+            created_at: string;
+            /** Experiment Id */
+            experiment_id: string | null;
+            /**
+             * Note Id
+             * Format: uuid
+             */
+            note_id: string;
+            /** Title */
+            title: string;
         };
         /** QualityView */
         QualityView: {
-            /**
-             * Instrument Id
-             * Format: uuid
-             */
-            instrument_id: string;
-            /** Timeframe */
-            timeframe: string;
-            /** State */
-            state: string;
             /** Completeness */
             completeness: number;
-            /** Detail */
-            detail: {
-                [key: string]: unknown;
-            };
             /**
              * Computed At
              * Format: date-time
              */
             computed_at: string;
+            /** Detail */
+            detail: {
+                [key: string]: unknown;
+            };
+            /**
+             * Instrument Id
+             * Format: uuid
+             */
+            instrument_id: string;
+            /** State */
+            state: string;
+            /** Timeframe */
+            timeframe: string;
         };
         /**
          * RepairRequest
@@ -686,6 +1099,30 @@ export interface components {
             storage_budget_gb?: number | null;
         };
         /**
+         * ScopeView
+         * @description Requested vs applied window (spec 8.1: clipped requests are flagged, never silent).
+         */
+        ScopeView: {
+            /**
+             * Applied From
+             * Format: date-time
+             */
+            applied_from: string;
+            /**
+             * Applied To
+             * Format: date-time
+             */
+            applied_to: string;
+            /** Clipped */
+            clipped: boolean;
+            /** Flag */
+            flag: string | null;
+            /** Requested From */
+            requested_from: string | null;
+            /** Requested To */
+            requested_to: string | null;
+        };
+        /**
          * SeriesView
          * @description One keyed indicator output; warm-up entries are ``null`` (section 5).
          */
@@ -697,69 +1134,187 @@ export interface components {
         };
         /** SourceFileView */
         SourceFileView: {
-            /** Path */
-            path: string;
             /** Content Sha256 */
             content_sha256: string;
+            /** Path */
+            path: string;
             /** Rows */
             rows: number;
+        };
+        /**
+         * StatsFilter
+         * @description Event selection for the run. ``timeframe`` is required: every analysis
+         *     in 8.1 uses one instrument timeframe (gap math needs ``bar_ms``).
+         */
+        StatsFilter: {
+            /**
+             * Detector
+             * @default RVOL_CLIMAX
+             */
+            detector: string;
+            /** Direction */
+            direction?: string | null;
+            /** Event Type */
+            event_type?: string | null;
+            /** From */
+            from?: string | null;
+            /** Params */
+            params?: string | null;
+            /** Timeframe */
+            timeframe: string;
+            /** To */
+            to?: string | null;
+            /** Version */
+            version?: string | null;
+        };
+        /**
+         * StatsRequest
+         * @description ``POST /v1/stats`` body (spec line 516 + hypothesis_id for the HOLDOUT gate).
+         */
+        StatsRequest: {
+            /** Bootstrap Seed */
+            bootstrap_seed?: number | null;
+            /** Cluster Models */
+            cluster_models?: string[] | null;
+            /**
+             * Data Scope
+             * @default DEVELOPMENT
+             */
+            data_scope: string;
+            /** Family Id */
+            family_id?: string | null;
+            filter: components["schemas"]["StatsFilter"];
+            /** Hypothesis Id */
+            hypothesis_id?: string | null;
+            /** Instrument Ids */
+            instrument_ids: string[];
+        };
+        /**
+         * StatsResultView
+         * @description ``POST /v1/stats`` / ``GET /v1/stats/{ref_id}`` body: the stored row.
+         */
+        StatsResultView: {
+            /** Boundaries */
+            boundaries: {
+                [key: string]: string;
+            };
+            /** Code Version */
+            code_version: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Data Scope */
+            data_scope: string;
+            /** Dataset Schema Version */
+            dataset_schema_version: string;
+            /** Dataset Version */
+            dataset_version: string;
+            /** Engine Version */
+            engine_version: string;
+            /** Filter */
+            filter: {
+                [key: string]: unknown;
+            };
+            /** Grade */
+            grade: string | null;
+            /** Model Sensitive */
+            model_sensitive: boolean | null;
+            /** N Eff */
+            n_eff: number;
+            /**
+             * Ref Id
+             * Format: uuid
+             */
+            ref_id: string;
+            /** Resolved Params */
+            resolved_params: {
+                [key: string]: unknown;
+            };
+            /** Result */
+            result: {
+                [key: string]: unknown;
+            };
+            scope: components["schemas"]["ScopeView"];
+            /** Seed */
+            seed: number | null;
         };
         /**
          * StatusResponse
          * @description GET /v1/status body (spec section 11, 'System').
          */
         StatusResponse: {
-            /** Service */
-            service: string;
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "ok" | "degraded";
             /** Api Version */
             api_version: string;
-            /** Service Version */
-            service_version: string;
-            /** Engine Version */
-            engine_version: string;
             /** Code Version */
             code_version: string;
-            /** Dataset Schema Version */
-            dataset_schema_version: string;
             /**
              * Database
              * @enum {string}
              */
             database: "up" | "down";
+            /** Dataset Schema Version */
+            dataset_schema_version: string;
+            /** Engine Version */
+            engine_version: string;
+            /** Service */
+            service: string;
+            /** Service Version */
+            service_version: string;
             /** Spec */
             spec: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ok" | "degraded";
+        };
+        /**
+         * TriggerRowView
+         * @description One checklist row: the stored trigger block plus its provenance.
+         */
+        TriggerRowView: {
+            /** Name */
+            name: string;
+            /** Passed */
+            passed: boolean;
+            /**
+             * Provenance
+             * @default CALCULATED
+             */
+            provenance: string;
+            /** Threshold */
+            threshold?: unknown | null;
+            /** Value */
+            value?: unknown | null;
         };
         /** ValidationError */
         ValidationError: {
+            /** Context */
+            ctx?: Record<string, never>;
+            /** Input */
+            input?: unknown;
             /** Location */
             loc: (string | number)[];
             /** Message */
             msg: string;
             /** Error Type */
             type: string;
-            /** Input */
-            input?: unknown;
-            /** Context */
-            ctx?: Record<string, never>;
         };
         /**
          * WindowView
          * @description Resolved window knobs echoed so every served payload is reproducible.
          */
         WindowView: {
-            /** From */
-            from?: string | null;
-            /** To */
-            to?: string | null;
-            /** Limit */
-            limit: number;
             /** As Of */
             as_of?: string | null;
+            /** From */
+            from?: string | null;
+            /** Limit */
+            limit: number;
+            /** To */
+            to?: string | null;
         };
     };
     responses: never;
@@ -770,12 +1325,15 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    instruments_v1_instruments_get: {
+    candles_v1_candles_get: {
         parameters: {
-            query?: {
-                venue?: string | null;
-                market_type?: string | null;
-                asset?: string | null;
+            query: {
+                instrument_id: string;
+                tf: string;
+                from?: string | null;
+                to?: string | null;
+                limit?: number | null;
+                as_of?: string | null;
             };
             header?: never;
             path?: never;
@@ -789,7 +1347,93 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["InstrumentView"][];
+                    "application/json": components["schemas"]["CandlesView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    config_defaults_v1_config_defaults_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DefaultsResponse"];
+                };
+            };
+        };
+    };
+    data_gaps_v1_data_gaps_get: {
+        parameters: {
+            query?: {
+                instrument_id?: string | null;
+                timeframe?: string | null;
+                status?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GapView"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    data_health_v1_data_health_get: {
+        parameters: {
+            query?: {
+                market_type?: string | null;
+                instrument_id?: string | null;
+                timeframe?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HealthView"];
                 };
             };
             /** @description Validation Error */
@@ -869,103 +1513,6 @@ export interface operations {
             };
         };
     };
-    data_health_v1_data_health_get: {
-        parameters: {
-            query?: {
-                market_type?: string | null;
-                instrument_id?: string | null;
-                timeframe?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HealthView"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    data_gaps_v1_data_gaps_get: {
-        parameters: {
-            query?: {
-                instrument_id?: string | null;
-                timeframe?: string | null;
-                status?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GapView"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    job_view_v1_jobs__job_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                job_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["JobView"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     dataset_view_v1_datasets__dataset_version__get: {
         parameters: {
             query?: never;
@@ -984,80 +1531,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DatasetManifestView"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    candles_v1_candles_get: {
-        parameters: {
-            query: {
-                instrument_id: string;
-                tf: string;
-                from?: string | null;
-                to?: string | null;
-                limit?: number | null;
-                as_of?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CandlesView"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    indicators_v1_indicators_get: {
-        parameters: {
-            query: {
-                instrument_id: string;
-                tf: string;
-                name: string;
-                params?: string | null;
-                from?: string | null;
-                to?: string | null;
-                limit?: number | null;
-                as_of?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["IndicatorsView"];
                 };
             };
             /** @description Validation Error */
@@ -1111,6 +1584,514 @@ export interface operations {
             };
         };
     };
+    event_evidence_v1_events__event_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvidenceView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_hypotheses_v1_hypotheses_get: {
+        parameters: {
+            query?: {
+                status?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HypothesisView"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_hypothesis_v1_hypotheses_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HypothesisCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HypothesisView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_hypothesis_v1_hypotheses__hyp_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hyp_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HypothesisView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_hypothesis_v1_hypotheses__hyp_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hyp_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HypothesisPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HypothesisView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    open_holdout_v1_hypotheses__hyp_id__open_holdout_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hyp_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HypothesisView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    indicators_v1_indicators_get: {
+        parameters: {
+            query: {
+                instrument_id: string;
+                tf: string;
+                name: string;
+                params?: string | null;
+                from?: string | null;
+                to?: string | null;
+                limit?: number | null;
+                as_of?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IndicatorsView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    instruments_v1_instruments_get: {
+        parameters: {
+            query?: {
+                venue?: string | null;
+                market_type?: string | null;
+                asset?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InstrumentView"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    job_view_v1_jobs__job_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_notes_v1_notes_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoteView"][];
+                };
+            };
+        };
+    };
+    create_note_v1_notes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NoteCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoteView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_note_v1_notes__note_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                note_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoteView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_note_v1_notes__note_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                note_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_note_v1_notes__note_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                note_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotePatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoteView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_stats_v1_stats_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StatsRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StatsResultView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_stats_v1_stats__ref_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ref_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StatsResultView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     status_v1_status_get: {
         parameters: {
             query?: never;
@@ -1127,26 +2108,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StatusResponse"];
-                };
-            };
-        };
-    };
-    config_defaults_v1_config_defaults_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DefaultsResponse"];
                 };
             };
         };

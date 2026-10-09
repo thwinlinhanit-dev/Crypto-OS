@@ -20,6 +20,7 @@ import {
   type IndicatorRequest,
 } from "./data";
 import { eventToMarker, envelopeToHoverCard, findEventAtTime, type EventMarkerSpec } from "./events";
+import { EvidencePanel } from "./evidence";
 import { API_BASE } from "@/lib/api";
 
 /**
@@ -179,6 +180,17 @@ export default function ChartPage() {
   }, [hoverTime, anchors]);
 
   const handleHover = useCallback((time: number | null) => setHoverTime(time), []);
+  // Clicking a bar with an event marker opens the Evidence panel (UI 558);
+  // the M4 hover card stays hover-only.
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const handleSelectTime = useCallback(
+    (time: number | null) => {
+      if (time == null) return;
+      const match = eventMarkers.find((spec) => spec.time === time);
+      setSelectedEventId(match ? match.eventId : null);
+    },
+    [eventMarkers],
+  );
 
   const retryAll = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: ["candles"] });
@@ -339,6 +351,7 @@ export default function ChartPage() {
           rangeRef={rangeRef}
           viewRangeRef={viewRangeRef}
           onHover={handleHover}
+          onSelectTime={handleSelectTime}
           onNearLeftEdge={data.loadOlder}
         />
         {layout.subPanes.map((pane) => {
@@ -419,6 +432,15 @@ export default function ChartPage() {
               ))}
             </div>
           )}
+        </div>
+      )}
+      {selectedEventId && (
+        <div className="evidence-dock">
+          <EvidencePanel
+            eventId={selectedEventId}
+            onClose={() => setSelectedEventId(null)}
+            onSelectEvent={setSelectedEventId}
+          />
         </div>
       )}
     </>

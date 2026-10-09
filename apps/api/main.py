@@ -18,8 +18,12 @@ from apps.api.data import router as data_router
 from apps.api.db import database_reachable
 from apps.api.errors import install_error_handlers
 from apps.api.events import router as events_router
+from apps.api.evidence import router as evidence_router
+from apps.api.hypotheses import router as hypotheses_router
 from apps.api.market import router as market_router
+from apps.api.notes import router as notes_router
 from apps.api.settings import get_settings
+from apps.api.stats import router as stats_router
 from engine.versions import (
     DATASET_SCHEMA_VERSION,
     ENGINE_VERSION,
@@ -81,6 +85,19 @@ def create_app() -> FastAPI:
     # M4 event reads (spec section 11, design note m4_events section 6):
     # GET /v1/events, on-demand compute, reads only (PD-1).
     app.include_router(events_router)
+    # M5 evidence (spec section 11 line 532, design note m5_stats section 5):
+    # GET /v1/events/{id}, reads only (PD-1).
+    app.include_router(evidence_router)
+    # M5 hypotheses (spec 8.4/11, design note m5_stats section 6): registry
+    # CRUD plus the one-time holdout opening. Writes are registry rows only;
+    # no order surface exists (PD-1).
+    app.include_router(hypotheses_router)
+    # M5 notebook (spec 10/11, design note m5_stats section 7): note CRUD.
+    # Notes are not results (DELETE allowed, PD-13 does not apply).
+    app.include_router(notes_router)
+    # M5 stats (spec section 11, design note m5_stats section 4):
+    # POST /v1/stats + GET /v1/stats/{ref_id}, reads only (PD-1).
+    app.include_router(stats_router)
 
     @app.get(f"/{API_VERSION}/status", response_model=StatusResponse, tags=["system"])
     async def status() -> StatusResponse:

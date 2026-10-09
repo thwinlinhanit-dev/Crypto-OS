@@ -6,6 +6,10 @@ import { usePathname } from "next/navigation";
 const LINKS = [
   { href: "/", label: "Overview" },
   { href: "/chart", label: "Chart" },
+  { href: "/events", label: "Events" },
+  // Spec nav 549 lists Research (Notebook, Hypotheses, Graveyard); M5 ships
+  // the Notebook page only (PD-9: no pages for unbuilt modules).
+  { href: "/research/notebook", label: "Research" },
   { href: "/data", label: "Data Health" },
 ];
 

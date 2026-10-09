@@ -1,10 +1,38 @@
 # config/validation.yaml — validation thresholds (spec section 8.3 evidence grade,
 # section 9 walk-forward settings).
 #
-# Empty on purpose: the thresholds are owner inputs (Section 16) and PD-4 forbids
-# inventing numbers. Nothing in the engine reads a value from here until the owner
-# supplies it; a consumer must treat an empty section as configuration missing.
+# evidence_grade is TRANSCRIBED from spec section 8.3 ("EVIDENCE GRADE
+# (deterministic; thresholds in config)") — the spec states these numbers,
+# this file is where the engine reads them (D-029). Changing any threshold
+# needs a DECISIONS entry (section 9.3 rule applied to every threshold here).
+#
+# walk_forward / monte_carlo stay empty: section 9.3 puts their thresholds in
+# this file too, but no spec section has supplied numbers yet — a consumer
+# treats an empty section as configuration missing (PD-4: nothing invented).
 
-evidence_grade: {}
+evidence_grade:
+  # Grade CI(median R) is taken at this outcome horizon (D-031, owner
+  # confirmed 2026-10-09): the spec's canonical evidence horizon — the
+  # Evidence payload example carries h:10, analogues expose fwd_r_10, and
+  # section 6.4 pins h=10 as the Pine-study parity horizon.
+  anchor_horizon: 10
+  # Section 8.2: Wilson 95% for win rate; cluster-bootstrap 95% CI.
+  ci_level: 0.95
+  # Tier thresholds, verbatim from section 8.3:
+  A:
+    min_n_eff: 100
+    symbols_agree: 0.60 # ">=60% symbols agree"
+  B:
+    min_n_eff: 50
+  C:
+    min_n_eff: 30
+  # Which tiers require which CI condition (8.3 wording): A and B require
+  # "CI(median R) excludes 0"; C requires "CI includes 0".
+  ci_excludes_zero: [A, B]
+  ci_includes_zero: [C]
+  # Tier D is the residual ("otherwise") and carries the fixed label 8.3
+  # prescribes for it.
+  d_label: "Insufficient evidence"
+
 walk_forward: {}
 monte_carlo: {}

@@ -43,6 +43,12 @@ class ImmutableResultError(EngineError):
     http_status = 409
 
 
+class HoldoutLockedError(EngineError):
+    """Holdout opened twice or consumed twice (spec 8.1, one run per hypothesis)."""
+
+    code = "HOLDOUT_LOCKED"
+    http_status = 409
+
 class DataIncompleteError(EngineError):
     """Data exists but the requested window is not fully covered."""
 

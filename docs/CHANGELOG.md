@@ -3,6 +3,60 @@
 Format follows [Keep a Changelog](https://keepachangelog.com/); version tags start at M0
 (the spec defines no release numbering yet).
 
+## [M5] - 2026-10-10 - Stats, scopes, evidence, hypotheses, notebook
+
+### Added
+- Dataset scopes (T5.1): `config/dataset_scopes.yaml` frozen entry for
+  `binance_spot_usdt_default` (BTC/ETH/SOL x 1D/4H/1H, 80/20 holdout split per
+  OD-8/D-025, boundaries floored to the UTC day containing the raw instant -
+  D-026), `engine/scopes.py` (frozen boundaries, `clip_window` flagged
+  `SCOPE_CLIPPED`, spec-order embargo/purge, `segment_of`), and
+  `tests/test_scopes_invariants.py` (24 tests; hypothesis properties on
+  clip/embargo/purge + the production freeze is asserted read-only).
+- Evidence-grade config (T5.2a): `config/validation.yaml` `evidence_grade`
+  thresholds transcribed from spec 8.3 (A/B/C tiers, anchor horizon 10 -
+  D-031, z-scale CI level, D label) with `engine/config/validation.py`
+  `load_evidence_grade` failing closed on an incomplete section (PD-4).
+- Stats module (T5.2b): `engine/stats/ci.py` (type-7 percentiles, Wilson 95% on
+  raw `(n, wins)`, seeded cluster bootstrap with shared draws per draw-set -
+  D-032), `engine/stats/clusters.py` (SYMBOL_GAP, CALENDAR_DAY, CALENDAR_WEEK,
+  MARKET_EVENT; CUSTOM is a documented M5 422), `engine/stats/grade.py`
+  (A-D ladder with pinned interpretations - D-028, HOLDOUT grade null -
+  D-030), `engine/stats/compute.py` (pure `compute_stats` producing the stored
+  result JSON: n_raw/n_eff, per-model matrix, headline model = lowest grade,
+  per-horizon pooled + IS/OOS blocks, percentiles, histogram, cross-asset
+  share, multiple-testing block), and `engine/stats/persist.py` (idempotent
+  INSERT-only event/outcome persistence).
+- Research tables (T5.2c): migration 0004 `research.hypothesis` (locked-row
+  trigger), `research.note`, `research.event` / `research.event_outcome`
+  (insert-only; content-addressed facts) + ORM rows in
+  `engine/stats/models.py`.
+- Stats API (T5.2d): `POST /v1/stats` + `GET /v1/stats/{ref_id}`
+  (`apps/api/stats.py`) - PD-11 param resolution (`resolve_stats_params`:
+  embargo = max horizon, market-event k = max(3, 10% universe), detector
+  cluster defaults), scope clipping flagged, HOLDOUT gate (422 missing
+  hypothesis, 409 unopened, one run per hypothesis, audit row), stored row
+  with full provenance.
+- Evidence payload (T5.3): `GET /v1/events/{id}` (`apps/api/evidence.py`) with
+  cache-miss recompute over the scope grid, matching-stats selection,
+  analogues (5 most recent same detector@version+type peers, `fwd_r_10`), and
+  404 fail-closed.
+- Hypothesis registry + notebook (T5.4/T5.5): `apps/api/hypotheses.py`
+  (pre-registered immutable criteria, status enum, REJECTED autopsy,
+  VALIDATED 422 until M5b, open-holdout-once with atomic guard) and
+  `apps/api/notes.py` (CRUD; notes are not results).
+- UI: `EvidenceGradeBadge` (the only grade-wording renderer, always showing
+  grade + n_eff + CI + data_scope), chart Evidence panel on marker click
+  (spec UI 558), Events Explorer page (filter bar, live stats, histogram,
+  IS/OOS toggle, CSV export with dataset_version + data_scope), Research
+  notebook page, nav + CSS.
+- Tests: 507 total (506 passed + 1 skipped vs M4's 405): 46 stats compute,
+  13 stats API, 6 evidence, 8 hypotheses, 3 notebook (3 web), plus
+  `tests/test_grade_wording.py` (3 tests) gating the 8.3 wording rules; vitest
+  10 passed.
+- Decisions D-025..D-032 recorded in `docs/DECISIONS.md`; design note
+  `specs/design/m5_stats.md` is the module contract.
+
 ## [M4] - 2026-10-09 - Event engine
 
 ### Added

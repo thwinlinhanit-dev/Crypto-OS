@@ -1,1020 +1,126 @@
 {
-  "openapi": "3.1.0",
-  "info": {
-    "title": "CryptoOS API",
-    "description": "Read-only research API. No order-execution surface exists in v1 (PD-1). Errors use the envelope {error:{code,message,detail}}.",
-    "version": "0.1.0"
-  },
-  "paths": {
-    "/v1/instruments": {
-      "get": {
-        "tags": [
-          "data",
-          "data"
-        ],
-        "summary": "Instruments",
-        "description": "The instrument registry (PD-12: scopes name these explicitly).",
-        "operationId": "instruments_v1_instruments_get",
-        "parameters": [
-          {
-            "name": "venue",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Venue"
-            }
-          },
-          {
-            "name": "market_type",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Market Type"
-            }
-          },
-          {
-            "name": "asset",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Asset"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/InstrumentView"
-                  },
-                  "title": "Response Instruments V1 Instruments Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/data/ingest": {
-      "post": {
-        "tags": [
-          "data",
-          "data"
-        ],
-        "summary": "Data Ingest",
-        "description": "Queue an ingest/backfill job; execution happens in the background task.",
-        "operationId": "data_ingest_v1_data_ingest_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/IngestRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "202": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JobQueued"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/data/repair": {
-      "post": {
-        "tags": [
-          "data",
-          "data"
-        ],
-        "summary": "Data Repair",
-        "description": "Queue a refetch of one stored gap (section 4.6: refetch, re-assess, re-derive).",
-        "operationId": "data_repair_v1_data_repair_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RepairRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "202": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JobQueued"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/data/health": {
-      "get": {
-        "tags": [
-          "data",
-          "data"
-        ],
-        "summary": "Data Health",
-        "description": "Latest quality per (instrument, timeframe) + the exclusions still active.",
-        "operationId": "data_health_v1_data_health_get",
-        "parameters": [
-          {
-            "name": "market_type",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Market Type"
-            }
-          },
-          {
-            "name": "instrument_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "format": "uuid"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Instrument Id"
-            }
-          },
-          {
-            "name": "timeframe",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Timeframe"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HealthView"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/data/gaps": {
-      "get": {
-        "tags": [
-          "data",
-          "data"
-        ],
-        "summary": "Data Gaps",
-        "description": "Every stored exclusion interval (section 4.6: reports list all of them).",
-        "operationId": "data_gaps_v1_data_gaps_get",
-        "parameters": [
-          {
-            "name": "instrument_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "format": "uuid"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Instrument Id"
-            }
-          },
-          {
-            "name": "timeframe",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Timeframe"
-            }
-          },
-          {
-            "name": "status",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Status"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/GapView"
-                  },
-                  "title": "Response Data Gaps V1 Data Gaps Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/jobs/{job_id}": {
-      "get": {
-        "tags": [
-          "data",
-          "data"
-        ],
-        "summary": "Job View",
-        "description": "One queued/running/finished job (spec section 11).",
-        "operationId": "job_view_v1_jobs__job_id__get",
-        "parameters": [
-          {
-            "name": "job_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Job Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JobView"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/datasets/{dataset_version}": {
-      "get": {
-        "tags": [
-          "data",
-          "data"
-        ],
-        "summary": "Dataset View",
-        "description": "The stored manifest: source files, hashes, row counts, version fields (AC2).",
-        "operationId": "dataset_view_v1_datasets__dataset_version__get",
-        "parameters": [
-          {
-            "name": "dataset_version",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Dataset Version"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DatasetManifestView"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/candles": {
-      "get": {
-        "tags": [
-          "market",
-          "market"
-        ],
-        "summary": "Candles",
-        "description": "Closed bars for one (instrument, timeframe) window (spec section 11).",
-        "operationId": "candles_v1_candles_get",
-        "parameters": [
-          {
-            "name": "instrument_id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Instrument Id"
-            }
-          },
-          {
-            "name": "tf",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Tf"
-            }
-          },
-          {
-            "name": "from",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "From"
-            }
-          },
-          {
-            "name": "to",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "To"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "as_of",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "As Of"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CandlesView"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/indicators": {
-      "get": {
-        "tags": [
-          "market",
-          "market"
-        ],
-        "summary": "Indicators",
-        "description": "Server-computed indicator over the same window as /v1/candles (D-011).\n\nName and params fail fast (422) before any I/O: unknown names,\nundocumented keys and missing documented defaults are never guessed.",
-        "operationId": "indicators_v1_indicators_get",
-        "parameters": [
-          {
-            "name": "instrument_id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Instrument Id"
-            }
-          },
-          {
-            "name": "tf",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Tf"
-            }
-          },
-          {
-            "name": "name",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Name"
-            }
-          },
-          {
-            "name": "params",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Params"
-            }
-          },
-          {
-            "name": "from",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "From"
-            }
-          },
-          {
-            "name": "to",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "To"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "as_of",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "As Of"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IndicatorsView"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/events": {
-      "get": {
-        "tags": [
-          "events",
-          "events"
-        ],
-        "summary": "Events",
-        "description": "Closed-bar events for one (instrument, timeframe) window (section 6.2).\n\nDetector/version/params resolve through the registry and\n``config/defaults.yaml`` (PD-11); the window resolution is exactly the\ncandles path so provenance matches.",
-        "operationId": "events_v1_events_get",
-        "parameters": [
-          {
-            "name": "instrument_id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Instrument Id"
-            }
-          },
-          {
-            "name": "tf",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Tf"
-            }
-          },
-          {
-            "name": "detector",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "default": "RVOL_CLIMAX",
-              "title": "Detector"
-            }
-          },
-          {
-            "name": "version",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Version"
-            }
-          },
-          {
-            "name": "event_type",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Event Type"
-            }
-          },
-          {
-            "name": "params",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Params"
-            }
-          },
-          {
-            "name": "from",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "From"
-            }
-          },
-          {
-            "name": "to",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "To"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "as_of",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "As Of"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EventsView"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/status": {
-      "get": {
-        "tags": [
-          "system"
-        ],
-        "summary": "Status",
-        "operationId": "status_v1_status_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StatusResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/config/defaults": {
-      "get": {
-        "tags": [
-          "system"
-        ],
-        "summary": "Config Defaults",
-        "description": "Documented defaults (PD-11): the file the API resolves parameters against.",
-        "operationId": "config_defaults_v1_config_defaults_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DefaultsResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
   "components": {
     "schemas": {
-      "CandleQualityView": {
+      "AnalogueView": {
+        "description": "One nearest-in-time peer event.",
         "properties": {
-          "state": {
-            "type": "string",
-            "title": "State"
+          "event_id": {
+            "title": "Event Id",
+            "type": "string"
           },
+          "fwd_r_10": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fwd R 10"
+          },
+          "instrument": {
+            "title": "Instrument",
+            "type": "string"
+          },
+          "time": {
+            "format": "date-time",
+            "title": "Time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "event_id",
+          "time",
+          "instrument",
+          "fwd_r_10"
+        ],
+        "title": "AnalogueView",
+        "type": "object"
+      },
+      "CandleQualityView": {
+        "description": "``quality`` block of the section 11 candle response.",
+        "properties": {
           "completeness": {
-            "type": "number",
-            "title": "Completeness"
+            "title": "Completeness",
+            "type": "number"
           },
           "exclusions": {
             "items": {
               "$ref": "#/components/schemas/ExclusionView"
             },
-            "type": "array",
-            "title": "Exclusions"
+            "title": "Exclusions",
+            "type": "array"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "state",
           "completeness",
           "exclusions"
         ],
         "title": "CandleQualityView",
-        "description": "``quality`` block of the section 11 candle response."
+        "type": "object"
       },
       "CandlesView": {
+        "description": "Section 11 candle window, columnar, plus the ``window`` echo (D-007 style).",
         "properties": {
-          "dataset_version": {
-            "type": "string",
-            "title": "Dataset Version"
-          },
-          "quality": {
-            "$ref": "#/components/schemas/CandleQualityView"
-          },
-          "window": {
-            "$ref": "#/components/schemas/WindowView"
-          },
-          "t": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "T"
-          },
-          "o": {
+          "c": {
             "items": {
               "type": "number"
             },
-            "type": "array",
-            "title": "O"
+            "title": "C",
+            "type": "array"
+          },
+          "dataset_version": {
+            "title": "Dataset Version",
+            "type": "string"
           },
           "h": {
             "items": {
               "type": "number"
             },
-            "type": "array",
-            "title": "H"
+            "title": "H",
+            "type": "array"
           },
           "l": {
             "items": {
               "type": "number"
             },
-            "type": "array",
-            "title": "L"
+            "title": "L",
+            "type": "array"
           },
-          "c": {
+          "o": {
             "items": {
               "type": "number"
             },
-            "type": "array",
-            "title": "C"
+            "title": "O",
+            "type": "array"
+          },
+          "quality": {
+            "$ref": "#/components/schemas/CandleQualityView"
+          },
+          "t": {
+            "items": {
+              "type": "string"
+            },
+            "title": "T",
+            "type": "array"
           },
           "v": {
             "items": {
               "type": "number"
             },
-            "type": "array",
-            "title": "V"
+            "title": "V",
+            "type": "array"
+          },
+          "window": {
+            "$ref": "#/components/schemas/WindowView"
           }
         },
-        "type": "object",
         "required": [
           "dataset_version",
           "quality",
@@ -1027,96 +133,115 @@
           "v"
         ],
         "title": "CandlesView",
-        "description": "Section 11 candle window, columnar, plus the ``window`` echo (D-007 style)."
+        "type": "object"
+      },
+      "DataQualityView": {
+        "description": "Guardian state for the event's instrument/timeframe.",
+        "properties": {
+          "completeness": {
+            "title": "Completeness",
+            "type": "number"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "state",
+          "completeness"
+        ],
+        "title": "DataQualityView",
+        "type": "object"
       },
       "DatasetManifestView": {
+        "description": "GET /v1/datasets/{version}: 'what exactly did this use?' (AC2).",
         "properties": {
+          "bar_semantics_version": {
+            "title": "Bar Semantics Version",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "dataset_schema_version": {
+            "title": "Dataset Schema Version",
+            "type": "string"
+          },
           "dataset_version": {
-            "type": "string",
-            "title": "Dataset Version"
+            "title": "Dataset Version",
+            "type": "string"
           },
-          "venue": {
-            "type": "string",
-            "title": "Venue"
+          "end_time": {
+            "format": "date-time",
+            "title": "End Time",
+            "type": "string"
           },
-          "market_type": {
-            "type": "string",
-            "title": "Market Type"
+          "instrument_metadata_version": {
+            "title": "Instrument Metadata Version",
+            "type": "string"
           },
           "instruments": {
             "items": {
               "type": "string"
             },
-            "type": "array",
-            "title": "Instruments"
+            "title": "Instruments",
+            "type": "array"
           },
-          "timeframes": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Timeframes"
-          },
-          "start_time": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Start Time"
-          },
-          "end_time": {
-            "type": "string",
-            "format": "date-time",
-            "title": "End Time"
-          },
-          "source_files": {
-            "items": {
-              "$ref": "#/components/schemas/SourceFileView"
-            },
-            "type": "array",
-            "title": "Source Files"
-          },
-          "row_counts": {
-            "additionalProperties": {
-              "type": "integer"
-            },
-            "type": "object",
-            "title": "Row Counts"
+          "market_type": {
+            "title": "Market Type",
+            "type": "string"
           },
           "missing_ranges": {
             "items": {
               "additionalProperties": true,
               "type": "object"
             },
-            "type": "array",
-            "title": "Missing Ranges"
+            "title": "Missing Ranges",
+            "type": "array"
           },
           "quality_summary": {
             "additionalProperties": true,
-            "type": "object",
-            "title": "Quality Summary"
+            "title": "Quality Summary",
+            "type": "object"
           },
-          "dataset_schema_version": {
-            "type": "string",
-            "title": "Dataset Schema Version"
+          "row_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Row Counts",
+            "type": "object"
           },
-          "bar_semantics_version": {
-            "type": "string",
-            "title": "Bar Semantics Version"
+          "source_files": {
+            "items": {
+              "$ref": "#/components/schemas/SourceFileView"
+            },
+            "title": "Source Files",
+            "type": "array"
+          },
+          "start_time": {
+            "format": "date-time",
+            "title": "Start Time",
+            "type": "string"
+          },
+          "timeframes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Timeframes",
+            "type": "array"
           },
           "timezone_policy_version": {
-            "type": "string",
-            "title": "Timezone Policy Version"
+            "title": "Timezone Policy Version",
+            "type": "string"
           },
-          "instrument_metadata_version": {
-            "type": "string",
-            "title": "Instrument Metadata Version"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
+          "venue": {
+            "title": "Venue",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "dataset_version",
           "venue",
@@ -1136,121 +261,121 @@
           "created_at"
         ],
         "title": "DatasetManifestView",
-        "description": "GET /v1/datasets/{version}: 'what exactly did this use?' (AC2)."
+        "type": "object"
       },
       "DefaultsResponse": {
+        "description": "GET /v1/config/defaults body: where parameters resolve from (PD-11).",
         "properties": {
-          "source": {
-            "type": "string",
-            "title": "Source"
-          },
           "defaults": {
             "additionalProperties": true,
-            "type": "object",
-            "title": "Defaults"
+            "title": "Defaults",
+            "type": "object"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "source",
           "defaults"
         ],
         "title": "DefaultsResponse",
-        "description": "GET /v1/config/defaults body: where parameters resolve from (PD-11)."
+        "type": "object"
       },
       "EventEnvelopeView": {
+        "description": "Section 6.2 event envelope as served by the API.",
         "properties": {
-          "event_id": {
-            "type": "string",
-            "title": "Event Id"
+          "data_quality": {
+            "additionalProperties": true,
+            "title": "Data Quality",
+            "type": "object"
+          },
+          "dataset_version": {
+            "title": "Dataset Version",
+            "type": "string"
           },
           "detector_id": {
-            "type": "string",
-            "title": "Detector Id"
-          },
-          "event_type": {
-            "type": "string",
-            "title": "Event Type"
-          },
-          "version": {
-            "type": "string",
-            "title": "Version"
-          },
-          "params_hash": {
-            "type": "string",
-            "title": "Params Hash"
-          },
-          "instrument_id": {
-            "type": "string",
-            "title": "Instrument Id"
-          },
-          "timeframe": {
-            "type": "string",
-            "title": "Timeframe"
-          },
-          "event_time": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Event Time"
+            "title": "Detector Id",
+            "type": "string"
           },
           "direction": {
-            "type": "string",
-            "title": "Direction"
+            "title": "Direction",
+            "type": "string"
           },
-          "ref_price": {
-            "type": "number",
-            "title": "Ref Price"
+          "engine_version": {
+            "title": "Engine Version",
+            "type": "string"
           },
-          "invalidation_price": {
-            "type": "number",
-            "title": "Invalidation Price"
+          "event_id": {
+            "title": "Event Id",
+            "type": "string"
           },
-          "regime": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Regime"
+          "event_time": {
+            "format": "date-time",
+            "title": "Event Time",
+            "type": "string"
+          },
+          "event_type": {
+            "title": "Event Type",
+            "type": "string"
           },
           "features": {
             "additionalProperties": true,
-            "type": "object",
-            "title": "Features"
+            "title": "Features",
+            "type": "object"
           },
-          "trigger": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Trigger"
+          "instrument_id": {
+            "title": "Instrument Id",
+            "type": "string"
+          },
+          "invalidation_price": {
+            "title": "Invalidation Price",
+            "type": "number"
           },
           "lookback_gap": {
-            "type": "boolean",
-            "title": "Lookback Gap"
+            "title": "Lookback Gap",
+            "type": "boolean"
           },
-          "dataset_version": {
-            "type": "string",
-            "title": "Dataset Version"
-          },
-          "engine_version": {
-            "type": "string",
-            "title": "Engine Version"
-          },
-          "data_quality": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Data Quality"
-          },
-          "resolved_params": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Resolved Params"
+          "params_hash": {
+            "title": "Params Hash",
+            "type": "string"
           },
           "provenance": {
             "additionalProperties": {
               "type": "string"
             },
-            "type": "object",
-            "title": "Provenance"
+            "title": "Provenance",
+            "type": "object"
+          },
+          "ref_price": {
+            "title": "Ref Price",
+            "type": "number"
+          },
+          "regime": {
+            "additionalProperties": true,
+            "title": "Regime",
+            "type": "object"
+          },
+          "resolved_params": {
+            "additionalProperties": true,
+            "title": "Resolved Params",
+            "type": "object"
+          },
+          "timeframe": {
+            "title": "Timeframe",
+            "type": "string"
+          },
+          "trigger": {
+            "additionalProperties": true,
+            "title": "Trigger",
+            "type": "object"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "event_id",
           "detector_id",
@@ -1274,45 +399,45 @@
           "provenance"
         ],
         "title": "EventEnvelopeView",
-        "description": "Section 6.2 event envelope as served by the API."
+        "type": "object"
       },
       "EventsView": {
+        "description": "``GET /v1/events`` body: resolved request echo plus envelopes.",
         "properties": {
-          "detector": {
-            "type": "string",
-            "title": "Detector"
-          },
-          "version": {
-            "type": "string",
-            "title": "Version"
-          },
-          "instrument_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Instrument Id"
-          },
-          "tf": {
-            "type": "string",
-            "title": "Tf"
-          },
           "dataset_version": {
-            "type": "string",
-            "title": "Dataset Version"
+            "title": "Dataset Version",
+            "type": "string"
           },
-          "window": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Window"
+          "detector": {
+            "title": "Detector",
+            "type": "string"
           },
           "events": {
             "items": {
               "$ref": "#/components/schemas/EventEnvelopeView"
             },
-            "type": "array",
-            "title": "Events"
+            "title": "Events",
+            "type": "array"
+          },
+          "instrument_id": {
+            "format": "uuid",
+            "title": "Instrument Id",
+            "type": "string"
+          },
+          "tf": {
+            "title": "Tf",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          },
+          "window": {
+            "additionalProperties": true,
+            "title": "Window",
+            "type": "object"
           }
         },
-        "type": "object",
         "required": [
           "detector",
           "version",
@@ -1323,35 +448,232 @@
           "events"
         ],
         "title": "EventsView",
-        "description": "``GET /v1/events`` body: resolved request echo plus envelopes."
+        "type": "object"
       },
-      "ExclusionView": {
+      "EvidenceEventView": {
+        "description": "The ``event`` block (spec 532-536 keys).",
         "properties": {
-          "gap_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Gap Id"
+          "detector": {
+            "title": "Detector",
+            "type": "string"
           },
-          "exclusion_start": {
-            "type": "string",
+          "direction": {
+            "title": "Direction",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "instrument": {
+            "title": "Instrument",
+            "type": "string"
+          },
+          "invalidation": {
+            "title": "Invalidation",
+            "type": "number"
+          },
+          "lookback_gap": {
+            "title": "Lookback Gap",
+            "type": "boolean"
+          },
+          "r_basis": {
+            "default": "atr",
+            "title": "R Basis",
+            "type": "string"
+          },
+          "ref_price": {
+            "title": "Ref Price",
+            "type": "number"
+          },
+          "tf": {
+            "title": "Tf",
+            "type": "string"
+          },
+          "time": {
             "format": "date-time",
-            "title": "Exclusion Start"
+            "title": "Time",
+            "type": "string"
           },
-          "exclusion_end": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Exclusion End"
+          "type": {
+            "title": "Type",
+            "type": "string"
           },
-          "kind": {
-            "type": "string",
-            "title": "Kind"
-          },
-          "status": {
-            "type": "string",
-            "title": "Status"
+          "version": {
+            "title": "Version",
+            "type": "string"
           }
         },
-        "type": "object",
+        "required": [
+          "id",
+          "detector",
+          "type",
+          "version",
+          "instrument",
+          "tf",
+          "time",
+          "direction",
+          "ref_price",
+          "invalidation",
+          "lookback_gap"
+        ],
+        "title": "EvidenceEventView",
+        "type": "object"
+      },
+      "EvidenceStatsView": {
+        "description": "The ``stats`` block: grade triple plus horizons and multiple-testing.",
+        "properties": {
+          "data_scope": {
+            "title": "Data Scope",
+            "type": "string"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade"
+          },
+          "grade_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade Reason"
+          },
+          "horizons": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Horizons",
+            "type": "array"
+          },
+          "model_sensitive": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Sensitive"
+          },
+          "multiple_testing": {
+            "additionalProperties": true,
+            "title": "Multiple Testing",
+            "type": "object"
+          },
+          "n_eff": {
+            "title": "N Eff",
+            "type": "integer"
+          },
+          "n_raw": {
+            "title": "N Raw",
+            "type": "integer"
+          },
+          "ref_id": {
+            "title": "Ref Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ref_id",
+          "data_scope",
+          "grade",
+          "model_sensitive",
+          "n_raw",
+          "n_eff",
+          "horizons",
+          "multiple_testing"
+        ],
+        "title": "EvidenceStatsView",
+        "type": "object"
+      },
+      "EvidenceView": {
+        "description": "``GET /v1/events/{id}`` body (spec 532-544).",
+        "properties": {
+          "analogues": {
+            "items": {
+              "$ref": "#/components/schemas/AnalogueView"
+            },
+            "title": "Analogues",
+            "type": "array"
+          },
+          "context": {
+            "additionalProperties": true,
+            "title": "Context",
+            "type": "object"
+          },
+          "data_quality": {
+            "$ref": "#/components/schemas/DataQualityView"
+          },
+          "dataset_version": {
+            "title": "Dataset Version",
+            "type": "string"
+          },
+          "event": {
+            "$ref": "#/components/schemas/EvidenceEventView"
+          },
+          "stats": {
+            "$ref": "#/components/schemas/EvidenceStatsView"
+          },
+          "trigger": {
+            "items": {
+              "$ref": "#/components/schemas/TriggerRowView"
+            },
+            "title": "Trigger",
+            "type": "array"
+          }
+        },
+        "required": [
+          "event",
+          "trigger",
+          "context",
+          "stats",
+          "analogues",
+          "data_quality",
+          "dataset_version"
+        ],
+        "title": "EvidenceView",
+        "type": "object"
+      },
+      "ExclusionView": {
+        "description": "One active exclusion interval; the chart shades it (design D-013/D-014).",
+        "properties": {
+          "exclusion_end": {
+            "format": "date-time",
+            "title": "Exclusion End",
+            "type": "string"
+          },
+          "exclusion_start": {
+            "format": "date-time",
+            "title": "Exclusion Start",
+            "type": "string"
+          },
+          "gap_id": {
+            "format": "uuid",
+            "title": "Gap Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
         "required": [
           "gap_id",
           "exclusion_start",
@@ -1360,56 +682,44 @@
           "status"
         ],
         "title": "ExclusionView",
-        "description": "One active exclusion interval; the chart shades it (design D-013/D-014)."
+        "type": "object"
       },
       "GapView": {
         "properties": {
-          "gap_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Gap Id"
-          },
-          "instrument_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Instrument Id"
-          },
-          "timeframe": {
-            "type": "string",
-            "title": "Timeframe"
-          },
-          "exclusion_start": {
-            "type": "string",
+          "detected_at": {
             "format": "date-time",
-            "title": "Exclusion Start"
+            "title": "Detected At",
+            "type": "string"
           },
           "exclusion_end": {
-            "type": "string",
             "format": "date-time",
-            "title": "Exclusion End"
+            "title": "Exclusion End",
+            "type": "string"
           },
-          "status": {
-            "type": "string",
-            "title": "Status"
+          "exclusion_start": {
+            "format": "date-time",
+            "title": "Exclusion Start",
+            "type": "string"
+          },
+          "gap_id": {
+            "format": "uuid",
+            "title": "Gap Id",
+            "type": "string"
+          },
+          "instrument_id": {
+            "format": "uuid",
+            "title": "Instrument Id",
+            "type": "string"
           },
           "kind": {
-            "type": "string",
-            "title": "Kind"
-          },
-          "source": {
-            "type": "string",
-            "title": "Source"
-          },
-          "detected_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Detected At"
+            "title": "Kind",
+            "type": "string"
           },
           "repaired_at": {
             "anyOf": [
               {
-                "type": "string",
-                "format": "date-time"
+                "format": "date-time",
+                "type": "string"
               },
               {
                 "type": "null"
@@ -1427,9 +737,20 @@
               }
             ],
             "title": "Repaired Dataset Version"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "timeframe": {
+            "title": "Timeframe",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "gap_id",
           "instrument_id",
@@ -1443,7 +764,8 @@
           "repaired_at",
           "repaired_dataset_version"
         ],
-        "title": "GapView"
+        "title": "GapView",
+        "type": "object"
       },
       "HTTPValidationError": {
         "properties": {
@@ -1451,81 +773,252 @@
             "items": {
               "$ref": "#/components/schemas/ValidationError"
             },
-            "type": "array",
-            "title": "Detail"
+            "title": "Detail",
+            "type": "array"
           }
         },
-        "type": "object",
-        "title": "HTTPValidationError"
+        "title": "HTTPValidationError",
+        "type": "object"
       },
       "HealthView": {
+        "description": "GET /v1/data/health: latest quality per series + exclusions still active.",
         "properties": {
-          "series": {
-            "items": {
-              "$ref": "#/components/schemas/QualityView"
-            },
-            "type": "array",
-            "title": "Series"
-          },
           "exclusions": {
             "items": {
               "$ref": "#/components/schemas/GapView"
             },
-            "type": "array",
-            "title": "Exclusions"
+            "title": "Exclusions",
+            "type": "array"
+          },
+          "series": {
+            "items": {
+              "$ref": "#/components/schemas/QualityView"
+            },
+            "title": "Series",
+            "type": "array"
           }
         },
-        "type": "object",
         "required": [
           "series",
           "exclusions"
         ],
         "title": "HealthView",
-        "description": "GET /v1/data/health: latest quality per series + exclusions still active."
+        "type": "object"
+      },
+      "HypothesisCreate": {
+        "description": "``POST /v1/hypotheses`` body: criteria frozen at creation (8.4).",
+        "properties": {
+          "criteria": {
+            "additionalProperties": true,
+            "title": "Criteria",
+            "type": "object"
+          },
+          "statement": {
+            "title": "Statement",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "statement",
+          "criteria"
+        ],
+        "title": "HypothesisCreate",
+        "type": "object"
+      },
+      "HypothesisPatch": {
+        "description": "``PATCH /v1/hypotheses/{id}`` body: criteria may never appear here.",
+        "properties": {
+          "autopsy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Autopsy"
+          },
+          "criteria": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Criteria"
+          },
+          "statement": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Statement"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "title": "HypothesisPatch",
+        "type": "object"
+      },
+      "HypothesisView": {
+        "description": "One hypothesis row as served (spec 10 columns).",
+        "properties": {
+          "autopsy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Autopsy"
+          },
+          "criteria": {
+            "additionalProperties": true,
+            "title": "Criteria",
+            "type": "object"
+          },
+          "holdout_opened_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Holdout Opened At"
+          },
+          "holdout_result": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Holdout Result"
+          },
+          "hyp_id": {
+            "format": "uuid",
+            "title": "Hyp Id",
+            "type": "string"
+          },
+          "locked": {
+            "title": "Locked",
+            "type": "boolean"
+          },
+          "preregistered_at": {
+            "title": "Preregistered At",
+            "type": "string"
+          },
+          "statement": {
+            "title": "Statement",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "hyp_id",
+          "title",
+          "statement",
+          "status",
+          "criteria",
+          "preregistered_at",
+          "holdout_opened_at",
+          "holdout_result",
+          "autopsy",
+          "locked"
+        ],
+        "title": "HypothesisView",
+        "type": "object"
       },
       "IndicatorsView": {
+        "description": "``GET /v1/indicators`` body (design D-011).",
         "properties": {
+          "dataset_version": {
+            "title": "Dataset Version",
+            "type": "string"
+          },
+          "instrument_id": {
+            "format": "uuid",
+            "title": "Instrument Id",
+            "type": "string"
+          },
           "name": {
-            "type": "string",
-            "title": "Name"
+            "title": "Name",
+            "type": "string"
           },
           "params": {
             "additionalProperties": true,
-            "type": "object",
-            "title": "Params"
-          },
-          "instrument_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Instrument Id"
-          },
-          "tf": {
-            "type": "string",
-            "title": "Tf"
-          },
-          "dataset_version": {
-            "type": "string",
-            "title": "Dataset Version"
-          },
-          "window": {
-            "$ref": "#/components/schemas/WindowView"
-          },
-          "t": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "T"
+            "title": "Params",
+            "type": "object"
           },
           "series": {
             "items": {
               "$ref": "#/components/schemas/SeriesView"
             },
-            "type": "array",
-            "title": "Series"
+            "title": "Series",
+            "type": "array"
+          },
+          "t": {
+            "items": {
+              "type": "string"
+            },
+            "title": "T",
+            "type": "array"
+          },
+          "tf": {
+            "title": "Tf",
+            "type": "string"
+          },
+          "window": {
+            "$ref": "#/components/schemas/WindowView"
           }
         },
-        "type": "object",
         "required": [
           "name",
           "params",
@@ -1537,41 +1030,26 @@
           "series"
         ],
         "title": "IndicatorsView",
-        "description": "``GET /v1/indicators`` body (design D-011)."
+        "type": "object"
       },
       "IngestRequest": {
+        "description": "POST /v1/data/ingest body (spec section 11; times are ISO-8601 UTC).",
         "properties": {
-          "venue": {
-            "type": "string",
-            "title": "Venue"
-          },
-          "market_type": {
-            "type": "string",
-            "title": "Market Type"
+          "from": {
+            "format": "date-time",
+            "title": "From",
+            "type": "string"
           },
           "instrument_ids": {
             "items": {
               "type": "string"
             },
-            "type": "array",
-            "title": "Instrument Ids"
+            "title": "Instrument Ids",
+            "type": "array"
           },
-          "timeframes": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Timeframes"
-          },
-          "from": {
-            "type": "string",
-            "format": "date-time",
-            "title": "From"
-          },
-          "to": {
-            "type": "string",
-            "format": "date-time",
-            "title": "To"
+          "market_type": {
+            "title": "Market Type",
+            "type": "string"
           },
           "storage_budget_gb": {
             "anyOf": [
@@ -1583,9 +1061,24 @@
               }
             ],
             "title": "Storage Budget Gb"
+          },
+          "timeframes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Timeframes",
+            "type": "array"
+          },
+          "to": {
+            "format": "date-time",
+            "title": "To",
+            "type": "string"
+          },
+          "venue": {
+            "title": "Venue",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "venue",
           "market_type",
@@ -1595,45 +1088,30 @@
           "to"
         ],
         "title": "IngestRequest",
-        "description": "POST /v1/data/ingest body (spec section 11; times are ISO-8601 UTC)."
+        "type": "object"
       },
       "InstrumentView": {
         "properties": {
-          "instrument_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Instrument Id"
-          },
-          "venue": {
-            "type": "string",
-            "title": "Venue"
-          },
-          "market_type": {
-            "type": "string",
-            "title": "Market Type"
-          },
           "asset": {
-            "type": "string",
-            "title": "Asset"
+            "title": "Asset",
+            "type": "string"
           },
-          "quote": {
-            "type": "string",
-            "title": "Quote"
+          "instrument_id": {
+            "format": "uuid",
+            "title": "Instrument Id",
+            "type": "string"
           },
-          "native_symbol": {
-            "type": "string",
-            "title": "Native Symbol"
-          },
-          "tick_size": {
+          "listed_at": {
             "anyOf": [
               {
+                "format": "date-time",
                 "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Tick Size"
+            "title": "Listed At"
           },
           "lot_step": {
             "anyOf": [
@@ -1646,20 +1124,34 @@
             ],
             "title": "Lot Step"
           },
-          "listed_at": {
+          "market_type": {
+            "title": "Market Type",
+            "type": "string"
+          },
+          "native_symbol": {
+            "title": "Native Symbol",
+            "type": "string"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "tick_size": {
             "anyOf": [
               {
-                "type": "string",
-                "format": "date-time"
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Listed At"
+            "title": "Tick Size"
+          },
+          "venue": {
+            "title": "Venue",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "instrument_id",
           "venue",
@@ -1671,87 +1163,108 @@
           "lot_step",
           "listed_at"
         ],
-        "title": "InstrumentView"
+        "title": "InstrumentView",
+        "type": "object"
       },
       "JobQueued": {
+        "description": "Spec section 11: POST answers ``{\"job_id\",\"status\":\"queued\"}`` (202).",
         "properties": {
           "job_id": {
-            "type": "string",
             "format": "uuid",
-            "title": "Job Id"
+            "title": "Job Id",
+            "type": "string"
           },
           "status": {
-            "type": "string",
             "const": "queued",
-            "title": "Status"
+            "title": "Status",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "job_id",
           "status"
         ],
         "title": "JobQueued",
-        "description": "Spec section 11: POST answers ``{\"job_id\",\"status\":\"queued\"}`` (202)."
+        "type": "object"
       },
       "JobTimestamps": {
         "properties": {
           "created_at": {
-            "type": "string",
             "format": "date-time",
-            "title": "Created At"
-          },
-          "started_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Started At"
+            "title": "Created At",
+            "type": "string"
           },
           "finished_at": {
             "anyOf": [
               {
-                "type": "string",
-                "format": "date-time"
+                "format": "date-time",
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
             "title": "Finished At"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
           }
         },
-        "type": "object",
         "required": [
           "created_at",
           "started_at",
           "finished_at"
         ],
-        "title": "JobTimestamps"
+        "title": "JobTimestamps",
+        "type": "object"
       },
       "JobView": {
+        "description": "GET /v1/jobs/{id} payload (spec section 11).",
         "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
           "job_id": {
-            "type": "string",
             "format": "uuid",
-            "title": "Job Id"
+            "title": "Job Id",
+            "type": "string"
           },
           "kind": {
-            "type": "string",
-            "title": "Kind"
+            "title": "Kind",
+            "type": "string"
           },
-          "status": {
-            "type": "string",
-            "title": "Status"
+          "logs": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Logs",
+            "type": "array"
+          },
+          "params": {
+            "additionalProperties": true,
+            "title": "Params",
+            "type": "object"
           },
           "progress": {
-            "type": "number",
-            "title": "Progress"
+            "title": "Progress",
+            "type": "number"
           },
           "result_ref": {
             "anyOf": [
@@ -1764,34 +1277,14 @@
             ],
             "title": "Result Ref"
           },
-          "params": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Params"
-          },
-          "logs": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Logs"
-          },
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Error"
+          "status": {
+            "title": "Status",
+            "type": "string"
           },
           "timestamps": {
             "$ref": "#/components/schemas/JobTimestamps"
           }
         },
-        "type": "object",
         "required": [
           "job_id",
           "kind",
@@ -1804,39 +1297,190 @@
           "timestamps"
         ],
         "title": "JobView",
-        "description": "GET /v1/jobs/{id} payload (spec section 11)."
+        "type": "object"
+      },
+      "NoteCreate": {
+        "description": "``POST /v1/notes`` body (``experiment_id`` stays NULL until M5b).",
+        "properties": {
+          "body_md": {
+            "title": "Body Md",
+            "type": "string"
+          },
+          "chart_state": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chart State"
+          },
+          "experiment_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Experiment Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "body_md"
+        ],
+        "title": "NoteCreate",
+        "type": "object"
+      },
+      "NotePatch": {
+        "description": "``PATCH /v1/notes/{id}`` body: every field optional.",
+        "properties": {
+          "body_md": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body Md"
+          },
+          "chart_state": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chart State"
+          },
+          "experiment_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Experiment Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "title": "NotePatch",
+        "type": "object"
+      },
+      "NoteView": {
+        "description": "One note row as served (spec 10 columns).",
+        "properties": {
+          "body_md": {
+            "title": "Body Md",
+            "type": "string"
+          },
+          "chart_state": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chart State"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "experiment_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Experiment Id"
+          },
+          "note_id": {
+            "format": "uuid",
+            "title": "Note Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "note_id",
+          "title",
+          "body_md",
+          "experiment_id",
+          "chart_state",
+          "created_at"
+        ],
+        "title": "NoteView",
+        "type": "object"
       },
       "QualityView": {
         "properties": {
-          "instrument_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Instrument Id"
-          },
-          "timeframe": {
-            "type": "string",
-            "title": "Timeframe"
-          },
-          "state": {
-            "type": "string",
-            "title": "State"
-          },
           "completeness": {
-            "type": "number",
-            "title": "Completeness"
+            "title": "Completeness",
+            "type": "number"
+          },
+          "computed_at": {
+            "format": "date-time",
+            "title": "Computed At",
+            "type": "string"
           },
           "detail": {
             "additionalProperties": true,
-            "type": "object",
-            "title": "Detail"
+            "title": "Detail",
+            "type": "object"
           },
-          "computed_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Computed At"
+          "instrument_id": {
+            "format": "uuid",
+            "title": "Instrument Id",
+            "type": "string"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "timeframe": {
+            "title": "Timeframe",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "instrument_id",
           "timeframe",
@@ -1845,14 +1489,16 @@
           "detail",
           "computed_at"
         ],
-        "title": "QualityView"
+        "title": "QualityView",
+        "type": "object"
       },
       "RepairRequest": {
+        "description": "POST /v1/data/repair body: the stored gap to refetch.",
         "properties": {
           "gap_id": {
-            "type": "string",
             "format": "uuid",
-            "title": "Gap Id"
+            "title": "Gap Id",
+            "type": "string"
           },
           "storage_budget_gb": {
             "anyOf": [
@@ -1866,18 +1512,82 @@
             "title": "Storage Budget Gb"
           }
         },
-        "type": "object",
         "required": [
           "gap_id"
         ],
         "title": "RepairRequest",
-        "description": "POST /v1/data/repair body: the stored gap to refetch."
+        "type": "object"
+      },
+      "ScopeView": {
+        "description": "Requested vs applied window (spec 8.1: clipped requests are flagged, never silent).",
+        "properties": {
+          "applied_from": {
+            "format": "date-time",
+            "title": "Applied From",
+            "type": "string"
+          },
+          "applied_to": {
+            "format": "date-time",
+            "title": "Applied To",
+            "type": "string"
+          },
+          "clipped": {
+            "title": "Clipped",
+            "type": "boolean"
+          },
+          "flag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flag"
+          },
+          "requested_from": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested From"
+          },
+          "requested_to": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested To"
+          }
+        },
+        "required": [
+          "requested_from",
+          "requested_to",
+          "applied_from",
+          "applied_to",
+          "clipped",
+          "flag"
+        ],
+        "title": "ScopeView",
+        "type": "object"
       },
       "SeriesView": {
+        "description": "One keyed indicator output; warm-up entries are ``null`` (section 5).",
         "properties": {
           "key": {
-            "type": "string",
-            "title": "Key"
+            "title": "Key",
+            "type": "string"
           },
           "values": {
             "items": {
@@ -1890,89 +1600,367 @@
                 }
               ]
             },
-            "type": "array",
-            "title": "Values"
+            "title": "Values",
+            "type": "array"
           }
         },
-        "type": "object",
         "required": [
           "key",
           "values"
         ],
         "title": "SeriesView",
-        "description": "One keyed indicator output; warm-up entries are ``null`` (section 5)."
+        "type": "object"
       },
       "SourceFileView": {
         "properties": {
-          "path": {
-            "type": "string",
-            "title": "Path"
-          },
           "content_sha256": {
-            "type": "string",
-            "title": "Content Sha256"
+            "title": "Content Sha256",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
           },
           "rows": {
-            "type": "integer",
-            "title": "Rows"
+            "title": "Rows",
+            "type": "integer"
           }
         },
-        "type": "object",
         "required": [
           "path",
           "content_sha256",
           "rows"
         ],
-        "title": "SourceFileView"
+        "title": "SourceFileView",
+        "type": "object"
       },
-      "StatusResponse": {
+      "StatsFilter": {
+        "description": "Event selection for the run. ``timeframe`` is required: every analysis\nin 8.1 uses one instrument timeframe (gap math needs ``bar_ms``).",
         "properties": {
-          "service": {
-            "type": "string",
-            "title": "Service"
+          "detector": {
+            "default": "RVOL_CLIMAX",
+            "title": "Detector",
+            "type": "string"
           },
-          "status": {
-            "type": "string",
-            "enum": [
-              "ok",
-              "degraded"
+          "direction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ],
-            "title": "Status"
+            "title": "Direction"
           },
-          "api_version": {
-            "type": "string",
-            "title": "Api Version"
+          "event_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Type"
           },
-          "service_version": {
-            "type": "string",
-            "title": "Service Version"
+          "from": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From"
           },
-          "engine_version": {
-            "type": "string",
-            "title": "Engine Version"
+          "params": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Params"
+          },
+          "timeframe": {
+            "title": "Timeframe",
+            "type": "string"
+          },
+          "to": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "required": [
+          "timeframe"
+        ],
+        "title": "StatsFilter",
+        "type": "object"
+      },
+      "StatsRequest": {
+        "description": "``POST /v1/stats`` body (spec line 516 + hypothesis_id for the HOLDOUT gate).",
+        "properties": {
+          "bootstrap_seed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bootstrap Seed"
+          },
+          "cluster_models": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cluster Models"
+          },
+          "data_scope": {
+            "default": "DEVELOPMENT",
+            "title": "Data Scope",
+            "type": "string"
+          },
+          "family_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Family Id"
+          },
+          "filter": {
+            "$ref": "#/components/schemas/StatsFilter"
+          },
+          "hypothesis_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hypothesis Id"
+          },
+          "instrument_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Instrument Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "filter",
+          "instrument_ids"
+        ],
+        "title": "StatsRequest",
+        "type": "object"
+      },
+      "StatsResultView": {
+        "description": "``POST /v1/stats`` / ``GET /v1/stats/{ref_id}`` body: the stored row.",
+        "properties": {
+          "boundaries": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Boundaries",
+            "type": "object"
           },
           "code_version": {
-            "type": "string",
-            "title": "Code Version"
+            "title": "Code Version",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "data_scope": {
+            "title": "Data Scope",
+            "type": "string"
           },
           "dataset_schema_version": {
-            "type": "string",
-            "title": "Dataset Schema Version"
+            "title": "Dataset Schema Version",
+            "type": "string"
+          },
+          "dataset_version": {
+            "title": "Dataset Version",
+            "type": "string"
+          },
+          "engine_version": {
+            "title": "Engine Version",
+            "type": "string"
+          },
+          "filter": {
+            "additionalProperties": true,
+            "title": "Filter",
+            "type": "object"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade"
+          },
+          "model_sensitive": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Sensitive"
+          },
+          "n_eff": {
+            "title": "N Eff",
+            "type": "integer"
+          },
+          "ref_id": {
+            "format": "uuid",
+            "title": "Ref Id",
+            "type": "string"
+          },
+          "resolved_params": {
+            "additionalProperties": true,
+            "title": "Resolved Params",
+            "type": "object"
+          },
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/ScopeView"
+          },
+          "seed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seed"
+          }
+        },
+        "required": [
+          "ref_id",
+          "filter",
+          "data_scope",
+          "boundaries",
+          "dataset_version",
+          "dataset_schema_version",
+          "engine_version",
+          "code_version",
+          "resolved_params",
+          "seed",
+          "result",
+          "grade",
+          "n_eff",
+          "model_sensitive",
+          "scope",
+          "created_at"
+        ],
+        "title": "StatsResultView",
+        "type": "object"
+      },
+      "StatusResponse": {
+        "description": "GET /v1/status body (spec section 11, 'System').",
+        "properties": {
+          "api_version": {
+            "title": "Api Version",
+            "type": "string"
+          },
+          "code_version": {
+            "title": "Code Version",
+            "type": "string"
           },
           "database": {
-            "type": "string",
             "enum": [
               "up",
               "down"
             ],
-            "title": "Database"
+            "title": "Database",
+            "type": "string"
+          },
+          "dataset_schema_version": {
+            "title": "Dataset Schema Version",
+            "type": "string"
+          },
+          "engine_version": {
+            "title": "Engine Version",
+            "type": "string"
+          },
+          "service": {
+            "title": "Service",
+            "type": "string"
+          },
+          "service_version": {
+            "title": "Service Version",
+            "type": "string"
           },
           "spec": {
-            "type": "string",
-            "title": "Spec"
+            "title": "Spec",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "ok",
+              "degraded"
+            ],
+            "title": "Status",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "service",
           "status",
@@ -1985,10 +1973,59 @@
           "spec"
         ],
         "title": "StatusResponse",
-        "description": "GET /v1/status body (spec section 11, 'System')."
+        "type": "object"
+      },
+      "TriggerRowView": {
+        "description": "One checklist row: the stored trigger block plus its provenance.",
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "passed": {
+            "title": "Passed",
+            "type": "boolean"
+          },
+          "provenance": {
+            "default": "CALCULATED",
+            "title": "Provenance",
+            "type": "string"
+          },
+          "threshold": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Threshold"
+          },
+          "value": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "name",
+          "passed"
+        ],
+        "title": "TriggerRowView",
+        "type": "object"
       },
       "ValidationError": {
         "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
           "loc": {
             "items": {
               "anyOf": [
@@ -2000,40 +2037,46 @@
                 }
               ]
             },
-            "type": "array",
-            "title": "Location"
+            "title": "Location",
+            "type": "array"
           },
           "msg": {
-            "type": "string",
-            "title": "Message"
+            "title": "Message",
+            "type": "string"
           },
           "type": {
-            "type": "string",
-            "title": "Error Type"
-          },
-          "input": {
-            "title": "Input"
-          },
-          "ctx": {
-            "type": "object",
-            "title": "Context"
+            "title": "Error Type",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "loc",
           "msg",
           "type"
         ],
-        "title": "ValidationError"
+        "title": "ValidationError",
+        "type": "object"
       },
       "WindowView": {
+        "description": "Resolved window knobs echoed so every served payload is reproducible.",
         "properties": {
+          "as_of": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of"
+          },
           "from": {
             "anyOf": [
               {
-                "type": "string",
-                "format": "date-time"
+                "format": "date-time",
+                "type": "string"
               },
               {
                 "type": "null"
@@ -2041,41 +2084,1537 @@
             ],
             "title": "From"
           },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
           "to": {
             "anyOf": [
               {
-                "type": "string",
-                "format": "date-time"
+                "format": "date-time",
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
             "title": "To"
-          },
-          "limit": {
-            "type": "integer",
-            "title": "Limit"
-          },
-          "as_of": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "As Of"
           }
         },
-        "type": "object",
         "required": [
           "limit"
         ],
         "title": "WindowView",
-        "description": "Resolved window knobs echoed so every served payload is reproducible."
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "Read-only research API. No order-execution surface exists in v1 (PD-1). Errors use the envelope {error:{code,message,detail}}.",
+    "title": "CryptoOS API",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/v1/candles": {
+      "get": {
+        "description": "Closed bars for one (instrument, timeframe) window (spec section 11).",
+        "operationId": "candles_v1_candles_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "instrument_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Instrument Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tf",
+            "required": true,
+            "schema": {
+              "title": "Tf",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "as_of",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "As Of"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandlesView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Candles",
+        "tags": [
+          "market",
+          "market"
+        ]
+      }
+    },
+    "/v1/config/defaults": {
+      "get": {
+        "description": "Documented defaults (PD-11): the file the API resolves parameters against.",
+        "operationId": "config_defaults_v1_config_defaults_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Config Defaults",
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/v1/data/gaps": {
+      "get": {
+        "description": "Every stored exclusion interval (section 4.6: reports list all of them).",
+        "operationId": "data_gaps_v1_data_gaps_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "instrument_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Instrument Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "timeframe",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Timeframe"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/GapView"
+                  },
+                  "title": "Response Data Gaps V1 Data Gaps Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Data Gaps",
+        "tags": [
+          "data",
+          "data"
+        ]
+      }
+    },
+    "/v1/data/health": {
+      "get": {
+        "description": "Latest quality per (instrument, timeframe) + the exclusions still active.",
+        "operationId": "data_health_v1_data_health_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "market_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Market Type"
+            }
+          },
+          {
+            "in": "query",
+            "name": "instrument_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Instrument Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "timeframe",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Timeframe"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Data Health",
+        "tags": [
+          "data",
+          "data"
+        ]
+      }
+    },
+    "/v1/data/ingest": {
+      "post": {
+        "description": "Queue an ingest/backfill job; execution happens in the background task.",
+        "operationId": "data_ingest_v1_data_ingest_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobQueued"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Data Ingest",
+        "tags": [
+          "data",
+          "data"
+        ]
+      }
+    },
+    "/v1/data/repair": {
+      "post": {
+        "description": "Queue a refetch of one stored gap (section 4.6: refetch, re-assess, re-derive).",
+        "operationId": "data_repair_v1_data_repair_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RepairRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobQueued"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Data Repair",
+        "tags": [
+          "data",
+          "data"
+        ]
+      }
+    },
+    "/v1/datasets/{dataset_version}": {
+      "get": {
+        "description": "The stored manifest: source files, hashes, row counts, version fields (AC2).",
+        "operationId": "dataset_view_v1_datasets__dataset_version__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "dataset_version",
+            "required": true,
+            "schema": {
+              "title": "Dataset Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetManifestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Dataset View",
+        "tags": [
+          "data",
+          "data"
+        ]
+      }
+    },
+    "/v1/events": {
+      "get": {
+        "description": "Closed-bar events for one (instrument, timeframe) window (section 6.2).\n\nDetector/version/params resolve through the registry and\n``config/defaults.yaml`` (PD-11); the window resolution is exactly the\ncandles path so provenance matches.",
+        "operationId": "events_v1_events_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "instrument_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Instrument Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tf",
+            "required": true,
+            "schema": {
+              "title": "Tf",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "detector",
+            "required": false,
+            "schema": {
+              "default": "RVOL_CLIMAX",
+              "title": "Detector",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "version",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Version"
+            }
+          },
+          {
+            "in": "query",
+            "name": "event_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Event Type"
+            }
+          },
+          {
+            "in": "query",
+            "name": "params",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Params"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "as_of",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "As Of"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Events",
+        "tags": [
+          "events",
+          "events"
+        ]
+      }
+    },
+    "/v1/events/{event_id}": {
+      "get": {
+        "description": "Evidence payload for one stored (or recomputed) event.",
+        "operationId": "event_evidence_v1_events__event_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "event_id",
+            "required": true,
+            "schema": {
+              "title": "Event Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvidenceView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Event Evidence",
+        "tags": [
+          "events",
+          "events"
+        ]
+      }
+    },
+    "/v1/hypotheses": {
+      "get": {
+        "description": "List hypotheses; ``?status=REJECTED`` is the Graveyard view (spec 8.4).",
+        "operationId": "list_hypotheses_v1_hypotheses_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/HypothesisView"
+                  },
+                  "title": "Response List Hypotheses V1 Hypotheses Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Hypotheses",
+        "tags": [
+          "hypotheses",
+          "hypotheses"
+        ]
+      },
+      "post": {
+        "description": "Pre-register a hypothesis: criteria frozen with timestamp (spec 8.4).",
+        "operationId": "create_hypothesis_v1_hypotheses_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HypothesisCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HypothesisView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Hypothesis",
+        "tags": [
+          "hypotheses",
+          "hypotheses"
+        ]
+      }
+    },
+    "/v1/hypotheses/{hyp_id}": {
+      "get": {
+        "description": "One hypothesis by id (404 unknown).",
+        "operationId": "get_hypothesis_v1_hypotheses__hyp_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hyp_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Hyp Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HypothesisView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Hypothesis",
+        "tags": [
+          "hypotheses",
+          "hypotheses"
+        ]
+      },
+      "patch": {
+        "description": "Edit title/statement/status/autopsy. Criteria are pre-registered (422).",
+        "operationId": "patch_hypothesis_v1_hypotheses__hyp_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hyp_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Hyp Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HypothesisPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HypothesisView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch Hypothesis",
+        "tags": [
+          "hypotheses",
+          "hypotheses"
+        ]
+      }
+    },
+    "/v1/hypotheses/{hyp_id}/open-holdout": {
+      "post": {
+        "description": "Open the holdout exactly once (atomic; second call is 409, spec 8.1).",
+        "operationId": "open_holdout_v1_hypotheses__hyp_id__open_holdout_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hyp_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Hyp Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HypothesisView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Open Holdout",
+        "tags": [
+          "hypotheses",
+          "hypotheses"
+        ]
+      }
+    },
+    "/v1/indicators": {
+      "get": {
+        "description": "Server-computed indicator over the same window as /v1/candles (D-011).\n\nName and params fail fast (422) before any I/O: unknown names,\nundocumented keys and missing documented defaults are never guessed.",
+        "operationId": "indicators_v1_indicators_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "instrument_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Instrument Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tf",
+            "required": true,
+            "schema": {
+              "title": "Tf",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "title": "Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "params",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Params"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "as_of",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "As Of"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndicatorsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Indicators",
+        "tags": [
+          "market",
+          "market"
+        ]
+      }
+    },
+    "/v1/instruments": {
+      "get": {
+        "description": "The instrument registry (PD-12: scopes name these explicitly).",
+        "operationId": "instruments_v1_instruments_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "venue",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Venue"
+            }
+          },
+          {
+            "in": "query",
+            "name": "market_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Market Type"
+            }
+          },
+          {
+            "in": "query",
+            "name": "asset",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Asset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/InstrumentView"
+                  },
+                  "title": "Response Instruments V1 Instruments Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Instruments",
+        "tags": [
+          "data",
+          "data"
+        ]
+      }
+    },
+    "/v1/jobs/{job_id}": {
+      "get": {
+        "description": "One queued/running/finished job (spec section 11).",
+        "operationId": "job_view_v1_jobs__job_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Job View",
+        "tags": [
+          "data",
+          "data"
+        ]
+      }
+    },
+    "/v1/notes": {
+      "get": {
+        "description": "List notes, newest first.",
+        "operationId": "list_notes_v1_notes_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/NoteView"
+                  },
+                  "title": "Response List Notes V1 Notes Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Notes",
+        "tags": [
+          "notes",
+          "notes"
+        ]
+      },
+      "post": {
+        "description": "Create a notebook note (the Evidence panel's Save to Notebook lands here).",
+        "operationId": "create_note_v1_notes_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NoteCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoteView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Note",
+        "tags": [
+          "notes",
+          "notes"
+        ]
+      }
+    },
+    "/v1/notes/{note_id}": {
+      "delete": {
+        "description": "Delete a note (notes are not results, PD-13 does not apply).",
+        "operationId": "delete_note_v1_notes__note_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "note_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Note Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Note",
+        "tags": [
+          "notes",
+          "notes"
+        ]
+      },
+      "get": {
+        "description": "One note by id (404 unknown).",
+        "operationId": "get_note_v1_notes__note_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "note_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Note Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoteView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Note",
+        "tags": [
+          "notes",
+          "notes"
+        ]
+      },
+      "patch": {
+        "description": "Edit a note's title, body, chart state or experiment link.",
+        "operationId": "patch_note_v1_notes__note_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "note_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Note Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotePatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoteView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch Note",
+        "tags": [
+          "notes",
+          "notes"
+        ]
+      }
+    },
+    "/v1/stats": {
+      "post": {
+        "description": "Run an event study and store the StatsResult (spec 8.2, 11).",
+        "operationId": "post_stats_v1_stats_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StatsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatsResultView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Stats",
+        "tags": [
+          "stats",
+          "stats"
+        ]
+      }
+    },
+    "/v1/stats/{ref_id}": {
+      "get": {
+        "description": "Return the stored StatsResult row verbatim (spec 11; 404 unknown).\n\nThe scope echo is rebuilt from the stored filter: the row is immutable, so\nthe recomputed echo matches the POST response exactly.",
+        "operationId": "get_stats_v1_stats__ref_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ref_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Ref Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatsResultView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Stats",
+        "tags": [
+          "stats",
+          "stats"
+        ]
+      }
+    },
+    "/v1/status": {
+      "get": {
+        "operationId": "status_v1_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Status",
+        "tags": [
+          "system"
+        ]
       }
     }
   }
