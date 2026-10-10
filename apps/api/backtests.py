@@ -26,10 +26,12 @@ from sqlalchemy import Connection, text
 
 from apps.api.db import connection_scope
 from apps.api.jobs import run_job
+from engine.data.instruments import MarketType
 from engine.errors import NotFoundError, ValidationError
 from engine.jobs import JobKind, enqueue_job
 from engine.strategy.hash import canonical_hash
-from engine.strategy.models import Side, StrategyDefinition
+from engine.strategy.models import StrategyDefinition
+from engine.strategy.short_side import assert_short_side_markets, is_short_side
 
 router = APIRouter(prefix="/v1", tags=["strategy"])
 
@@ -272,15 +274,30 @@ async def create_backtest(body: BacktestCreate, background: BackgroundTasks) -> 
                 {"strategy_id": body.strategy_id, "version": body.version},
             )
         definition = StrategyDefinition.model_validate(strategy.definition)
-        if definition.entry.side in (Side.SHORT_ONLY, Side.BOTH):
-            raise ValidationError(
-                "short-side strategies are disabled until M10 (R11)",
-                {"side": definition.entry.side.value},
-            )
         if definition.entry.mode != "SIGNAL":
             raise ValidationError(
                 "only entry.mode=SIGNAL is implemented; RANDOM_BASELINE lands with M7",
                 {"mode": definition.entry.mode},
+            )
+        # M10 (T10.3/D-071): SHORT_ONLY/BOTH is runnable now, but only on
+        # perp instruments - the universe's market types are the authority
+        if is_short_side(definition.entry.side.value):
+            instrument_rows = conn.execute(
+                text(
+                    "SELECT instrument_id, market_type, native_symbol FROM market.instrument"
+                    " WHERE instrument_id = ANY(:ids)"
+                ),
+                {"ids": list(universe)},
+            ).all()
+            if len(instrument_rows) != len(universe):
+                raise NotFoundError(
+                    "universe instrument not found",
+                    {"universe": universe},
+                )
+            assert_short_side_markets(
+                side=definition.entry.side.value,
+                market_types=[MarketType(row.market_type) for row in instrument_rows],
+                symbols=[row.native_symbol for row in instrument_rows],
             )
         experiment = conn.execute(
             text(

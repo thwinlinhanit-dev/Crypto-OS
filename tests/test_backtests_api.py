@@ -264,8 +264,9 @@ def test_backtest_unknown_fill_model_422(client: TestClient, conn: Connection, s
     assert response.status_code == 422, response.text
 
 
-def test_backtest_short_side_rejected_until_m10(client: TestClient, conn: Connection, seeded: str) -> None:
-    """R11/D-043: SHORT_ONLY strategies are parsed but never runnable."""
+def test_backtest_short_side_rejected_on_spot(client: TestClient, conn: Connection, seeded: str) -> None:
+    """R11/D-071 (M10): SHORT_ONLY is runnable now, but on perp only — a spot
+    universe is rejected (fail-closed, PD-10)."""
     experiment = _experiment(client, conn, seeded)
     body = json.loads(json.dumps(DEFINITION))
     body["entry"]["side"] = "SHORT_ONLY"
@@ -281,6 +282,7 @@ def test_backtest_short_side_rejected_until_m10(client: TestClient, conn: Connec
         },
     )
     assert response.status_code == 422, response.text
+    assert "short-side" in response.text
 
 
 def test_backtest_queued_and_completes(client: TestClient, conn: Connection, seeded: str) -> None:

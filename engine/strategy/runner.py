@@ -24,10 +24,12 @@ import polars as pl
 from sqlalchemy import Connection, text
 
 from apps.api.settings import get_settings
+from engine.data.instruments import MarketType
 from engine.data.parquet import read_part
 from engine.errors import NotFoundError, ValidationError
 from engine.events.registry import detect_with
-from engine.strategy.models import Side, StrategyDefinition
+from engine.strategy.models import StrategyDefinition
+from engine.strategy.short_side import assert_short_side_markets, is_short_side
 from engine.strategy.simulator import Bar, Signal, simulate
 from engine.versions import ENGINE_VERSION, code_version
 
@@ -172,15 +174,30 @@ def run_backtest_job(conn: Connection, params: dict[str, Any]) -> UUID:
     )
     strategy = StrategyDefinition.model_validate(strategy_row.definition)
 
-    if strategy.entry.side in (Side.SHORT_ONLY, Side.BOTH):
-        raise ValidationError(
-            "short-side strategies are disabled until M10 (R11)",
-            {"side": strategy.entry.side.value},
-        )
     if strategy.entry.mode != "SIGNAL":
         raise ValidationError(
             "only entry.mode=SIGNAL is implemented; RANDOM_BASELINE lands with M7",
             {"mode": strategy.entry.mode},
+        )
+    # M10 (T10.3/D-071): SHORT_ONLY/BOTH runs on perp only; the runner
+    # re-checks the universe's market types so a queued job cannot bypass
+    # the API gate
+    if is_short_side(strategy.entry.side.value):
+        instrument_rows = conn.execute(
+            text(
+                "SELECT market_type FROM market.instrument"
+                " WHERE instrument_id = ANY(:ids)"
+            ),
+            {"ids": [str(i) for i in universe]},
+        ).all()
+        if len(instrument_rows) != len(universe):
+            raise ValidationError(
+                "universe instrument not found",
+                {"universe": [str(i) for i in universe]},
+            )
+        assert_short_side_markets(
+            side=strategy.entry.side.value,
+            market_types=[MarketType(row.market_type) for row in instrument_rows],
         )
 
     experiment = _require(
