@@ -465,6 +465,68 @@ export async function postRandomBaseline(
   return (await postJson("/v1/baselines/random", baseUrl, body)) as RunView;
 }
 
+export async function getAiTools(
+  tier?: string,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<{ tools: Array<Record<string, unknown>> }> {
+  const query = tier ? `?tier=${encodeURIComponent(tier)}` : "";
+  return (await readJson(`/v1/ai/tools${query}`, baseUrl)) as {
+    tools: Array<Record<string, unknown>>;
+  };
+}
+
+/**
+ * POST /v1/ai/chat over SSE: yields the assistant delta, then the done
+ * event (run id, executed tool calls, unresolved placeholders — PD-5).
+ */
+export async function postAiChat(
+  body: { messages: Array<{ role: string; content: string }>; mode: string },
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<{
+  text: string;
+  runId: string;
+  toolCalls: Array<{ name: string; result_ref: string }>;
+  unresolvedPlaceholders: string[];
+}> {
+  const response = await fetch(`${baseUrl}/v1/ai/chat`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+    cache: "no-store",
+  });
+  if (!response.ok) throw new Error(`HTTP_${response.status}`);
+  const raw = await response.text();
+  let text = "";
+  let runId = "";
+  const toolCalls: Array<{ name: string; result_ref: string }> = [];
+  let unresolvedPlaceholders: string[] = [];
+  for (const line of raw.split("\n")) {
+    if (!line.startsWith("data: ")) continue;
+    let event: Record<string, unknown>;
+    try {
+      event = JSON.parse(line.slice(6)) as Record<string, unknown>;
+    } catch {
+      continue;
+    }
+    if (typeof event.delta === "string") text += event.delta;
+    if (event.type === "done") {
+      runId = String(event.run_id ?? "");
+      unresolvedPlaceholders = Array.isArray(event.unresolved_placeholders)
+        ? (event.unresolved_placeholders as string[])
+        : [];
+      if (Array.isArray(event.tool_calls)) {
+        for (const call of event.tool_calls as Array<Record<string, unknown>>) {
+          toolCalls.push({
+            name: String(call.name ?? ""),
+            result_ref: String(call.result_ref ?? ""),
+          });
+        }
+      }
+    }
+  }
+  return { text, runId, toolCalls, unresolvedPlaceholders };
+}
+
 export async function postWatchlist(
   body: WatchlistCreate,
   baseUrl: string = DEFAULT_API_BASE,

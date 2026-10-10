@@ -4,6 +4,87 @@
  */
 
 export interface paths {
+    "/v1/agents/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Runs
+         * @description GET /v1/agents/runs: the runs and their tool-call counts (spec §11).
+         */
+        get: operations["list_runs_v1_agents_runs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/agents/runs/{run_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Run
+         * @description GET /v1/agents/runs/{id}: one run plus its tool calls (spec §11).
+         */
+        get: operations["get_run_v1_agents_runs__run_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ai/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Chat
+         * @description SSE stream: one delta event, then a ``done`` event carrying the run
+         *     id, the executed tool calls and the integrity flags (spec §11, PD-5).
+         */
+        post: operations["chat_v1_ai_chat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ai/tools": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Tools
+         * @description GET /v1/ai/tools: the registry as JSON (spec §11).
+         */
+        get: operations["list_tools_v1_ai_tools_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/backtests": {
         parameters: {
             query?: never;
@@ -1070,6 +1151,24 @@ export interface components {
             window: components["schemas"]["WindowView"];
         };
         /**
+         * ChatRequest
+         * @description POST /v1/ai/chat body.
+         */
+        ChatRequest: {
+            /**
+             * Messages
+             * @default []
+             */
+            messages: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Mode
+             * @default Research
+             */
+            mode: string;
+        };
+        /**
          * DataQualityView
          * @description Guardian state for the event's instrument/timeframe.
          */
@@ -2122,6 +2221,16 @@ export interface components {
             /** Version */
             version: string;
         };
+        /**
+         * ToolsResponse
+         * @description GET /v1/ai/tools body: the registry as JSON (spec §11).
+         */
+        ToolsResponse: {
+            /** Tools */
+            tools: {
+                [key: string]: unknown;
+            }[];
+        };
         /** TradeView */
         TradeView: {
             /**
@@ -2323,6 +2432,134 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    list_runs_v1_agents_runs_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_run_v1_agents_runs__run_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    chat_v1_ai_chat_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChatRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_tools_v1_ai_tools_get: {
+        parameters: {
+            query?: {
+                tier?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ToolsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_backtests_v1_backtests_get: {
         parameters: {
             query?: never;

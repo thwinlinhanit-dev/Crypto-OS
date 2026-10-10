@@ -46,6 +46,8 @@ export {
   postValidation,
   getValidation,
   postRandomBaseline,
+  getAiTools,
+  postAiChat,
   postWatchlist,
   getWatchlists,
   deleteWatchlist,

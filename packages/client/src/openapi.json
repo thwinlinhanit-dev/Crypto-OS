@@ -390,6 +390,27 @@
         "title": "CandlesView",
         "type": "object"
       },
+      "ChatRequest": {
+        "description": "POST /v1/ai/chat body.",
+        "properties": {
+          "messages": {
+            "default": [],
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Messages",
+            "type": "array"
+          },
+          "mode": {
+            "default": "Research",
+            "title": "Mode",
+            "type": "string"
+          }
+        },
+        "title": "ChatRequest",
+        "type": "object"
+      },
       "DataQualityView": {
         "description": "Guardian state for the event's instrument/timeframe.",
         "properties": {
@@ -2876,6 +2897,24 @@
         "title": "StrategyView",
         "type": "object"
       },
+      "ToolsResponse": {
+        "description": "GET /v1/ai/tools body: the registry as JSON (spec \u00a711).",
+        "properties": {
+          "tools": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Tools",
+            "type": "array"
+          }
+        },
+        "required": [
+          "tools"
+        ],
+        "title": "ToolsResponse",
+        "type": "object"
+      },
       "TradeView": {
         "additionalProperties": false,
         "properties": {
@@ -3407,6 +3446,184 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/v1/agents/runs": {
+      "get": {
+        "description": "GET /v1/agents/runs: the runs and their tool-call counts (spec \u00a711).",
+        "operationId": "list_runs_v1_agents_runs_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Runs V1 Agents Runs Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Runs",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/v1/agents/runs/{run_id}": {
+      "get": {
+        "description": "GET /v1/agents/runs/{id}: one run plus its tool calls (spec \u00a711).",
+        "operationId": "get_run_v1_agents_runs__run_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Run V1 Agents Runs  Run Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Run",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/v1/ai/chat": {
+      "post": {
+        "description": "SSE stream: one delta event, then a ``done`` event carrying the run\nid, the executed tool calls and the integrity flags (spec \u00a711, PD-5).",
+        "operationId": "chat_v1_ai_chat_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Chat",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/v1/ai/tools": {
+      "get": {
+        "description": "GET /v1/ai/tools: the registry as JSON (spec \u00a711).",
+        "operationId": "list_tools_v1_ai_tools_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "tier",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tier"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Tools",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
     "/v1/backtests": {
       "get": {
         "operationId": "list_backtests_v1_backtests_get",

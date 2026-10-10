@@ -739,3 +739,78 @@ main:has(.chart-page) {
   background: rgba(74, 222, 128, 0.55);
   border-radius: 1px;
 }
+
+/* --- M9: AI Copilot ---------------------------------------------------- */
+
+.chat-log {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  margin: 0.8rem 0;
+  max-height: 26rem;
+  overflow-y: auto;
+}
+
+.chat-turn {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  padding: 0.55rem 0.7rem;
+}
+
+.chat-turn.assistant {
+  border-left: 3px solid var(--accent);
+}
+
+.chat-role {
+  display: block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.chat-content {
+  margin: 0.25rem 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 0.86rem;
+}
+
+.tool-calls {
+  margin: 0.4rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+.tool-calls li {
+  margin: 0.1rem 0;
+}
+
+.chat-composer {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-end;
+}
+
+.chat-input {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.85rem;
+  padding: 0.5rem 0.6rem;
+  resize: vertical;
+}
+
+.banner-warn {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+
+.small {
+  font-size: 0.76rem;
+}

@@ -21,6 +21,9 @@ const LINKS = [
   // Spec nav 549 "Scanner" — M8 ships the page (spec-560 columns, saved
   // scans, state preserved).
   { href: "/scanner", label: "Scanner" },
+  // Spec nav 549 "AI Copilot" — M9 ships the page (five modes, the tool
+  // registry, flagged placeholders).
+  { href: "/ai", label: "AI Copilot" },
   { href: "/data", label: "Data Health" },
 ];
 
