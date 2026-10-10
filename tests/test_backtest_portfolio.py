@@ -16,7 +16,7 @@ Acceptance evidence (spec M6 AC / design note section 5):
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 
 from engine.strategy.models import StrategyDefinition
 from engine.strategy.portfolio import (

@@ -723,3 +723,19 @@ main:has(.chart-page) {
 .lineage-not-built {
   margin-top: 0.4rem;
 }
+
+/* --- M6: Strategy Lab ------------------------------------------------ */
+
+.equity-spark {
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  height: 64px;
+  margin: 0.3rem 0 0.6rem;
+}
+
+.equity-spark-bar {
+  flex: 1;
+  background: rgba(74, 222, 128, 0.55);
+  border-radius: 1px;
+}

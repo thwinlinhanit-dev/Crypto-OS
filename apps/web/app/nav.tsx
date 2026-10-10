@@ -12,6 +12,9 @@ const LINKS = [
   { href: "/research/notebook", label: "Research" },
   // Spec nav 549 "Experiments" — M5b T5b.3 ships the page under Research.
   { href: "/research/experiments", label: "Experiments" },
+  // Spec nav 549 "Strategy Lab" — M6 T6.4 ships the page (backtests live
+  // under experiments per D-041).
+  { href: "/strategy", label: "Strategy Lab" },
   { href: "/data", label: "Data Health" },
 ];
 

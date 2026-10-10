@@ -68,6 +68,33 @@
             "title": "Fill Model",
             "type": "string"
           },
+          "max_concurrent_positions": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Concurrent Positions"
+          },
+          "max_portfolio_heat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Portfolio Heat"
+          },
+          "per_asset_cap_pct": {
+            "default": 25.0,
+            "title": "Per Asset Cap Pct",
+            "type": "number"
+          },
           "period_end": {
             "anyOf": [
               {
@@ -89,6 +116,11 @@
               }
             ],
             "title": "Period Start"
+          },
+          "portfolio": {
+            "default": false,
+            "title": "Portfolio",
+            "type": "boolean"
           },
           "seed": {
             "anyOf": [

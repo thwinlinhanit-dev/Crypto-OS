@@ -800,10 +800,24 @@ export interface components {
              * @default REALISTIC_OHLC
              */
             fill_model: string;
+            /** Max Concurrent Positions */
+            max_concurrent_positions?: number | null;
+            /** Max Portfolio Heat */
+            max_portfolio_heat?: number | null;
+            /**
+             * Per Asset Cap Pct
+             * @default 25
+             */
+            per_asset_cap_pct: number;
             /** Period End */
             period_end?: string | null;
             /** Period Start */
             period_start?: string | null;
+            /**
+             * Portfolio
+             * @default false
+             */
+            portfolio: boolean;
             /** Seed */
             seed?: number | null;
             /** Strategy Id */

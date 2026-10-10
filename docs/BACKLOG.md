@@ -77,11 +77,8 @@ built now and what would have to be true to pick it up.
 
 - **Parity layer 2 (T6.5)** - `engine/parity/layer2.py` + the trade-list
   comparison against the owner's TradingView export (OQ-22); until the
-  export exists the suite runs skip-guarded (the h=10 precedent).
-- **Strategy Lab UI + trade overlay (T6.4)** - `apps/web/app/strategy/`
-  (strategy selector, backtest run, trades/equity/metrics) plus the chart
-  overlay (entry x-cross, stop step line, exit marker with reason + R,
-  skipped signals hollow). The client wrappers come with the openapi regen.
+  export exists the suite runs skip-guarded (the h=10 precedent). This is
+  the only unbuilt M6 task card; T6.1-T6.4 are shipped.
 - **Short-side strategies (R11)** - M10 with the perp adapter; parsed but
   422 today (D-043).
 - **Random-baseline entry mode (7.6)** - M7 validation surface.

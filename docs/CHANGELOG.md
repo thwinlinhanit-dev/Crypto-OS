@@ -21,10 +21,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); version tags sta
   every skip carrying a reason, single-instrument parity with `simulate`,
   equity curve per bar, empty universe. Suite now 597 (596 passed + 1
   skipped vs the previous 588).
+- Strategy Lab (T6.4, spec UI 556/563): `apps/web/app/strategy/page.tsx` +
+  `layout.tsx` — strategy selector (versioned), experiment selector, fill
+  model + portfolio-mode controls, backtests table (status/fill/scope/locked),
+  and per-backtest detail: metrics summary (trades/closed/win-rate/pnl/avg-R/
+  final-equity/flagged), equity-curve sparkline, trades table (7.5 record:
+  entry/exit/reason/R/pnl/bars/gap) and the skipped-signals table (7.3.1).
+  Nav gains the Strategy Lab entry; `globals.css` gains the sparkline styles.
+  PD-5: every number comes from a stored server result.
+- Tests: 65 new (11 strategy models, 11 sizing, 16 fills, 17 simulator,
+  10 API) including the full async lifecycle (POST -> job -> simulator ->
+  trades -> succeeded) and byte-identical reproducibility (M6 AC). Suite
+  now 588 (587 passed + 1 skipped vs M5b's 523).
 
 ### Notes
-- T6.3 lands with T6.1/T6.2: the remaining M6 work is parity layer 2 (T6.5)
-  and the Strategy Lab UI (T6.4).
+- T6.1/T6.2/T6.3/T6.4 landed: the only remaining M6 work is parity layer 2
+  (T6.5, blocked on the owner's TradingView trade-list export - OQ-22);
+  short-side strategies stay 422 until M10 (R11); RANDOM_BASELINE stays 422
+  until M7 (7.6). The chart trade-overlay markers land with the chart
+  integration; this page carries the results views.
 - Simulator (T6.1, spec §7): `engine/strategy/models.py` (the 7.1 definition
   JSON transcribed field-for-field; spec wire names `trigger_R` /
   `activate_R` preserved through Pydantic aliases; unknown/ reserved
