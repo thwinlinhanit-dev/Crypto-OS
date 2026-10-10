@@ -17,6 +17,7 @@ from pydantic import BaseModel
 from apps.api.ai import router as ai_router
 from apps.api.ai import runs_router as ai_runs_router
 from apps.api.backtests import router as backtests_router
+from apps.api.backup import router as backup_router
 from apps.api.data import router as data_router
 from apps.api.db import database_reachable
 from apps.api.errors import install_error_handlers
@@ -121,6 +122,9 @@ def create_app() -> FastAPI:
     # M10 perp + live candles (spec 10/11, design note m10_perp_live):
     # GET /v1/funding|oi|liquidations, WebSocket /v1/ws (D-073).
     app.include_router(perp_router)
+    # M11 hardening (spec M11 T11.4, design note m11_hardening):
+    # POST /v1/backups (export), POST /v1/backups/import.
+    app.include_router(backup_router)
     # M5 stats (spec section 11, design note m5_stats section 4):
     # POST /v1/stats + GET /v1/stats/{ref_id}, reads only (PD-1).
     app.include_router(stats_router)
