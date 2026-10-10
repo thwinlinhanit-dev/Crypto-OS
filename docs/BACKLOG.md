@@ -75,10 +75,6 @@ built now and what would have to be true to pick it up.
 
 ## M6 park list (design note `specs/design/m6_backtest.md` section 9)
 
-- **Portfolio mode (T6.3)** - shared equity, deterministic `instrument_id`
-  ordering (D-040), `max_concurrent_positions` / `max_portfolio_heat` /
-  per-asset caps; the per-instrument simulator is ready. To pick it up: the
-  design note's section 5 plus a portfolio test suite.
 - **Parity layer 2 (T6.5)** - `engine/parity/layer2.py` + the trade-list
   comparison against the owner's TradingView export (OQ-22); until the
   export exists the suite runs skip-guarded (the h=10 precedent).

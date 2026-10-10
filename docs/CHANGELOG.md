@@ -3,9 +3,28 @@
 Format follows [Keep a Changelog](https://keepachangelog.com/); version tags start at M0
 (the spec defines no release numbering yet).
 
-## [M6] - 2026-10-10 - Backtest simulator, strategy CRUD, parity layer 2
+## [M6] - 2026-10-10 - Backtest simulator, strategy CRUD, portfolio mode
 
 ### Added
+- Portfolio mode (T6.3, spec 7.4 "PORTFOLIO mode"): `engine/strategy/portfolio.py` —
+  one shared equity, instruments processed in `instrument_id` sort order each
+  event (D-040), entries and closes processed as separate time-ordered events
+  so a same-signal-time entry observes the open position, constraints
+  `max_concurrent_positions` / `max_portfolio_heat` / per-asset cap; every
+  rejected entry is recorded as `SKIPPED` with its reason (M6 AC: no signal
+  disappears). Exposed on `POST /v1/backtests` (`portfolio: bool` + the three
+  caps) and wired into `engine/strategy/runner.py` (multi-instrument runs go
+  through `simulate_portfolio`; single-instrument runs keep the existing path,
+  R9).
+- Tests: `tests/test_backtest_portfolio.py` (9 tests) — shared equity pool,
+  deterministic order regardless of input dict order, each cap's skip reason,
+  every skip carrying a reason, single-instrument parity with `simulate`,
+  equity curve per bar, empty universe. Suite now 597 (596 passed + 1
+  skipped vs the previous 588).
+
+### Notes
+- T6.3 lands with T6.1/T6.2: the remaining M6 work is parity layer 2 (T6.5)
+  and the Strategy Lab UI (T6.4).
 - Simulator (T6.1, spec §7): `engine/strategy/models.py` (the 7.1 definition
   JSON transcribed field-for-field; spec wire names `trigger_R` /
   `activate_R` preserved through Pydantic aliases; unknown/ reserved
@@ -49,9 +68,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); version tags sta
   owner (the TradingView "List of trades" export for parity layer 2).
 
 ### Notes
-- T6.1/T6.2 only: portfolio mode (T6.3), parity layer 2 (T6.5) and the
-  Strategy Lab UI (T6.4) land next; short-side strategies stay 422 until
-  M10 (R11); RANDOM_BASELINE stays 422 until M7 (7.6).
+- T6.1/T6.2/T6.3 landed: the remaining M6 work is parity layer 2 (T6.5) and
+  the Strategy Lab UI (T6.4); short-side strategies stay 422 until M10 (R11);
+  RANDOM_BASELINE stays 422 until M7 (7.6).
 
 ## [M5b] - 2026-10-10 - Experiments, families, immutability, lineage
 

@@ -14,6 +14,7 @@ unknown dataset_version 422, SHORT_ONLY/BOTH 422 until M10 (R11, D-043),
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -209,46 +210,100 @@ def run_backtest_job(conn: Connection, params: dict[str, Any]) -> UUID:
         },
     )
 
-    trades: list[dict[str, Any]] = []
+    trade_rows: list[dict[str, Any]] = []
     skipped: list[dict[str, Any]] = []
     equity_curve: list[tuple[str, float]] = []
 
+    portfolio = bool(params.get("portfolio", False))
+    tick_size = float(params.get("tick_size", 1e-8))
+    lot_step = float(params.get("lot_step", 1e-8))
+    loaded: dict[str, tuple[Any, list[Bar]]] = {}
     for instrument_id in universe:
-        loaded = _load_bars(conn, instrument_id, timeframe, dataset_version, period_start, period_end)
-        if loaded is None:
+        item = _load_bars(conn, instrument_id, timeframe, dataset_version, period_start, period_end)
+        if item is None:
             continue
-        frame, bars = loaded
-        if not bars:
-            continue
-        atr = _atr_series(bars, strategy.stop.atr_len)
-        signals = _signals_from_frame(
-            strategy, frame, bars, instrument_id=instrument_id, timeframe=timeframe
+        frame, bars = item
+        if bars:
+            loaded[instrument_id] = (frame, bars)
+
+    if portfolio and len(loaded) > 1:
+        # T6.3: shared equity, deterministic instrument order (D-040), caps.
+        from engine.strategy.portfolio import PortfolioConfig, simulate_portfolio
+
+        config = PortfolioConfig(
+            max_concurrent_positions=_int_or_none(params.get("max_concurrent_positions")),
+            max_portfolio_heat=_float_or_none(params.get("max_portfolio_heat")),
+            per_asset_cap_pct=float(params.get("per_asset_cap_pct", 25.0)),
         )
-        result = simulate(
+        signals_by_instrument: dict[str, Sequence[Signal]] = {
+            instrument: _signals_from_frame(
+                strategy, frame, bars, instrument_id=instrument, timeframe=timeframe
+            )
+            for instrument, (frame, bars) in loaded.items()
+        }
+        bars_by_instrument: dict[str, Sequence[Bar]] = {
+            name: bars for name, (_frame, bars) in loaded.items()
+        }
+        atr_by_instrument: dict[str, Sequence[float | None]] = {
+            name: _atr_series(bars, strategy.stop.atr_len)
+            for name, (_frame, bars) in loaded.items()
+        }
+        portfolio_result = simulate_portfolio(
             strategy,
-            instrument_id,
-            bars,
-            signals,
-            atr=atr,
-            structure_level=None,
-            tick_size=float(params.get("tick_size", 1e-8)),
-            lot_step=float(params.get("lot_step", 1e-8)),
+            list(loaded),
+            bars_by_instrument,
+            signals_by_instrument,
+            atr_by_instrument=atr_by_instrument,
+            config=config,
+            tick_size=tick_size,
+            lot_step=lot_step,
         )
-        trades.extend(_trade_rows(backtest_id, result))
+        for accepted in portfolio_result.trades:
+            trade_rows.append(_portfolio_trade_row(backtest_id, accepted))
         skipped.extend(
             {
-                "instrument": instrument_id,
-                "signal_bar_index": s.signal_bar_index,
-                "signal_time": s.signal_time,
-                "event_type": s.event_type,
-                "outcome": s.outcome,
-                "reason": s.reason,
+                "instrument": s["instrument"],
+                "outcome": "SKIPPED",
+                "reason": s["reason"],
+                "signal_time": s.get("signal_time", ""),
             }
-            for s in result.skipped
+            for s in portfolio_result.skipped
         )
-        equity_curve.extend(result.equity_curve)
+        equity_curve.extend(portfolio_result.equity_curve)
+    else:
+        for instrument_id in universe:
+            if instrument_id not in loaded:
+                continue
+            frame, bars = loaded[instrument_id]
+            atr = _atr_series(bars, strategy.stop.atr_len)
+            signals = _signals_from_frame(
+                strategy, frame, bars, instrument_id=instrument_id, timeframe=timeframe
+            )
+            result = simulate(
+                strategy,
+                instrument_id,
+                bars,
+                signals,
+                atr=atr,
+                structure_level=None,
+                tick_size=tick_size,
+                lot_step=lot_step,
+            )
+            trade_rows.extend(_trade_rows(backtest_id, result))
+            skipped.extend(
+                {
+                    "instrument": instrument_id,
+                    "signal_bar_index": s.signal_bar_index,
+                    "signal_time": s.signal_time,
+                    "event_type": s.event_type,
+                    "outcome": s.outcome,
+                    "reason": s.reason,
+                }
+                for s in result.skipped
+            )
+            equity_curve.extend(result.equity_curve)
 
-    for trade in trades:
+    for trade in trade_rows:
         conn.execute(
             text(
                 "INSERT INTO strategy.trade (backtest_id, trade_no, instrument_id, side,"
@@ -262,7 +317,7 @@ def run_backtest_job(conn: Connection, params: dict[str, Any]) -> UUID:
             trade,
         )
 
-    metrics = _metrics(trades, equity_curve)
+    metrics = _metrics(trade_rows, equity_curve)
     conn.execute(
         text(
             "UPDATE strategy.backtest SET status = 'succeeded',"
@@ -276,6 +331,28 @@ def run_backtest_job(conn: Connection, params: dict[str, Any]) -> UUID:
         },
     )
     return backtest_id
+
+
+def _int_or_none(value: Any) -> int | None:
+    if value is None:
+        return None
+    return int(value)
+
+
+def _float_or_none(value: Any) -> float | None:
+    if value is None:
+        return None
+    return float(value)
+
+
+def _portfolio_trade_row(backtest_id: UUID, trade: Any) -> dict[str, Any]:
+    """A portfolio-mode trade uses the same insert row shape as simulate()."""
+    from engine.strategy.simulator import BacktestResult
+
+    holder = BacktestResult(trades=[trade])
+    rows = _trade_rows(backtest_id, holder)
+    assert len(rows) == 1
+    return rows[0]
 
 
 def _iso(moment: datetime | None) -> str | None:

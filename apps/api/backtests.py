@@ -73,6 +73,12 @@ class BacktestCreate(Model):
     period_start: str | None = None
     period_end: str | None = None
     seed: int | None = None
+    # T6.3 portfolio mode (spec 7.4): shared equity with caps. When false
+    # (default) each instrument runs independently (R9 single-symbol mode).
+    portfolio: bool = False
+    max_concurrent_positions: int | None = None
+    max_portfolio_heat: float | None = None
+    per_asset_cap_pct: float = 25.0
 
 
 class BacktestView(Model):
@@ -314,6 +320,10 @@ async def create_backtest(body: BacktestCreate, background: BackgroundTasks) -> 
             "period_start": _iso(period_start),
             "period_end": _iso(period_end),
             "seed": body.seed,
+            "portfolio": body.portfolio,
+            "max_concurrent_positions": body.max_concurrent_positions,
+            "max_portfolio_heat": body.max_portfolio_heat,
+            "per_asset_cap_pct": body.per_asset_cap_pct,
             "backtest_id": str(backtest_id),
         }
         job = enqueue_job(conn, kind=JobKind.BACKTEST, params=params)
