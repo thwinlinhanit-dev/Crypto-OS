@@ -24,6 +24,7 @@ from apps.api.experiments import router as experiments_router
 from apps.api.hypotheses import router as hypotheses_router
 from apps.api.market import router as market_router
 from apps.api.notes import router as notes_router
+from apps.api.scanner import router as scanner_router
 from apps.api.settings import get_settings
 from apps.api.stats import router as stats_router
 from apps.api.validation import router as validation_router
@@ -107,6 +108,9 @@ def create_app() -> FastAPI:
     # M7 validation (spec 9/10/11, design note m7_validation): three levels,
     # random baseline, status list (9.4).
     app.include_router(validation_router)
+    # M8 scanner (spec 10/11/12, design note m8_scanner): watchlists,
+    # GET /v1/scanner rows, GET /v1/mtf regime summary.
+    app.include_router(scanner_router)
     # M5 stats (spec section 11, design note m5_stats section 4):
     # POST /v1/stats + GET /v1/stats/{ref_id}, reads only (PD-1).
     app.include_router(stats_router)
