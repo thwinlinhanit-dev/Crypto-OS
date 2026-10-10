@@ -273,6 +273,26 @@
         "title": "BacktestView",
         "type": "object"
       },
+      "BaselineCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "backtest_id": {
+            "format": "uuid",
+            "title": "Backtest Id",
+            "type": "string"
+          },
+          "seeds": {
+            "default": 1000,
+            "title": "Seeds",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "backtest_id"
+        ],
+        "title": "BaselineCreate",
+        "type": "object"
+      },
       "CandleQualityView": {
         "description": "``quality`` block of the section 11 candle response.",
         "properties": {
@@ -2266,6 +2286,83 @@
         "title": "RepairRequest",
         "type": "object"
       },
+      "RunView": {
+        "additionalProperties": false,
+        "properties": {
+          "backtest_id": {
+            "format": "uuid",
+            "title": "Backtest Id",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "experiment_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Experiment Id"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "level": {
+            "title": "Level",
+            "type": "integer"
+          },
+          "locked": {
+            "title": "Locked",
+            "type": "boolean"
+          },
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          },
+          "run_id": {
+            "format": "uuid",
+            "title": "Run Id",
+            "type": "string"
+          },
+          "seed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seed"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id",
+          "backtest_id",
+          "experiment_id",
+          "level",
+          "kind",
+          "status",
+          "result",
+          "seed",
+          "locked",
+          "created_at"
+        ],
+        "title": "RunView",
+        "type": "object"
+      },
       "ScopeView": {
         "description": "Requested vs applied window (spec 8.1: clipped requests are flagged, never silent).",
         "properties": {
@@ -3028,6 +3125,29 @@
         "title": "TriggerRowView",
         "type": "object"
       },
+      "ValidationCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "backtest_id": {
+            "format": "uuid",
+            "title": "Backtest Id",
+            "type": "string"
+          },
+          "kinds": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Kinds",
+            "type": "array"
+          }
+        },
+        "required": [
+          "backtest_id",
+          "kinds"
+        ],
+        "title": "ValidationCreate",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "ctx": {
@@ -3516,6 +3636,49 @@
         "tags": [
           "strategy",
           "strategy"
+        ]
+      }
+    },
+    "/v1/baselines/random": {
+      "post": {
+        "description": "Queue the 9.2 random-entry baseline (seeds 1..N).",
+        "operationId": "create_random_baseline_v1_baselines_random_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BaselineCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Random Baseline",
+        "tags": [
+          "validation",
+          "validation"
         ]
       }
     },
@@ -5690,6 +5853,97 @@
         "tags": [
           "strategy",
           "strategy"
+        ]
+      }
+    },
+    "/v1/validation": {
+      "post": {
+        "description": "Queue a validation run (spec 11: async).",
+        "operationId": "create_validation_v1_validation_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidationCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RunView"
+                  },
+                  "title": "Response Create Validation V1 Validation Post",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Validation",
+        "tags": [
+          "validation",
+          "validation"
+        ]
+      }
+    },
+    "/v1/validation/{run_id}": {
+      "get": {
+        "operationId": "get_validation_v1_validation__run_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Validation",
+        "tags": [
+          "validation",
+          "validation"
         ]
       }
     }

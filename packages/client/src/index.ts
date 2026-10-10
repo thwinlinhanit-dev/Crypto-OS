@@ -43,6 +43,9 @@ export {
   getBacktestMetrics,
   getBacktestSkipped,
   getBacktestEquity,
+  postValidation,
+  getValidation,
+  postRandomBaseline,
   postNote,
   getNotes,
   getNote,
@@ -91,6 +94,9 @@ export type {
   StrategyCreate,
   StrategyView,
   TradeView,
+  BaselineCreate,
+  RunView,
+  ValidationCreate,
   WindowView,
 } from "./api";
 export type { components, paths } from "./schema";

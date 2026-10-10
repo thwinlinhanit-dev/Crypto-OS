@@ -15,6 +15,9 @@ const LINKS = [
   // Spec nav 549 "Strategy Lab" — M6 T6.4 ships the page (backtests live
   // under experiments per D-041).
   { href: "/strategy", label: "Strategy Lab" },
+  // Spec nav 549 "Validation" — M7 T7.4 ships the dashboard (three levels,
+  // baseline distribution, overall status list).
+  { href: "/validation", label: "Validation" },
   { href: "/data", label: "Data Health" },
 ];
 

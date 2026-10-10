@@ -121,6 +121,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/baselines/random": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Random Baseline
+         * @description Queue the 9.2 random-entry baseline (seeds 1..N).
+         */
+        post: operations["create_random_baseline_v1_baselines_random_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/candles": {
         parameters: {
             query?: never;
@@ -757,6 +777,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/validation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Validation
+         * @description Queue a validation run (spec 11: async).
+         */
+        post: operations["create_validation_v1_validation_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/validation/{run_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Validation */
+        get: operations["get_validation_v1_validation__run_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -869,6 +926,19 @@ export interface components {
             universe: string[];
             /** Version */
             version: string;
+        };
+        /** BaselineCreate */
+        BaselineCreate: {
+            /**
+             * Backtest Id
+             * Format: uuid
+             */
+            backtest_id: string;
+            /**
+             * Seeds
+             * @default 1000
+             */
+            seeds: number;
         };
         /**
          * CandleQualityView
@@ -1727,6 +1797,37 @@ export interface components {
             /** Storage Budget Gb */
             storage_budget_gb?: number | null;
         };
+        /** RunView */
+        RunView: {
+            /**
+             * Backtest Id
+             * Format: uuid
+             */
+            backtest_id: string;
+            /** Created At */
+            created_at: string;
+            /** Experiment Id */
+            experiment_id: string | null;
+            /** Kind */
+            kind: string;
+            /** Level */
+            level: number;
+            /** Locked */
+            locked: boolean;
+            /** Result */
+            result: {
+                [key: string]: unknown;
+            };
+            /**
+             * Run Id
+             * Format: uuid
+             */
+            run_id: string;
+            /** Seed */
+            seed: number | null;
+            /** Status */
+            status: string;
+        };
         /**
          * ScopeView
          * @description Requested vs applied window (spec 8.1: clipped requests are flagged, never silent).
@@ -1998,6 +2099,16 @@ export interface components {
             threshold?: unknown | null;
             /** Value */
             value?: unknown | null;
+        };
+        /** ValidationCreate */
+        ValidationCreate: {
+            /**
+             * Backtest Id
+             * Format: uuid
+             */
+            backtest_id: string;
+            /** Kinds */
+            kinds: string[];
         };
         /** ValidationError */
         ValidationError: {
@@ -2283,6 +2394,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TradeView"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_random_baseline_v1_baselines_random_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BaselineCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunView"];
                 };
             };
             /** @description Validation Error */
@@ -3548,6 +3692,70 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StrategyView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_validation_v1_validation_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ValidationCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunView"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_validation_v1_validation__run_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunView"];
                 };
             };
             /** @description Validation Error */

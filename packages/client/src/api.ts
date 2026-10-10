@@ -36,6 +36,9 @@ export type StrategyView = components["schemas"]["StrategyView"];
 export type BacktestCreate = components["schemas"]["BacktestCreate"];
 export type BacktestView = components["schemas"]["BacktestView"];
 export type TradeView = components["schemas"]["TradeView"];
+export type ValidationCreate = components["schemas"]["ValidationCreate"];
+export type BaselineCreate = components["schemas"]["BaselineCreate"];
+export type RunView = components["schemas"]["RunView"];
 export type HypothesisView = components["schemas"]["HypothesisView"];
 export type HypothesisCreate = components["schemas"]["HypothesisCreate"];
 export type HypothesisPatch = components["schemas"]["HypothesisPatch"];
@@ -434,6 +437,30 @@ export async function getBacktestEquity(
     `/v1/backtests/${encodeURIComponent(backtestId)}/equity`,
     baseUrl,
   )) as Record<string, unknown>[];
+}
+
+export async function postValidation(
+  body: ValidationCreate,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<RunView[]> {
+  return (await postJson("/v1/validation", baseUrl, body)) as RunView[];
+}
+
+export async function getValidation(
+  runId: string,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<RunView> {
+  return (await readJson(
+    `/v1/validation/${encodeURIComponent(runId)}`,
+    baseUrl,
+  )) as RunView;
+}
+
+export async function postRandomBaseline(
+  body: BaselineCreate,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<RunView> {
+  return (await postJson("/v1/baselines/random", baseUrl, body)) as RunView;
 }
 
 export async function postNote(

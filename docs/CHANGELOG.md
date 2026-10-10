@@ -3,9 +3,22 @@
 Format follows [Keep a Changelog](https://keepachangelog.com/); version tags start at M0
 (the spec defines no release numbering yet).
 
-## [M7] - 2026-10-10 - Validation suite: metrics, random baseline, three levels
+## [M7] - 2026-10-10 - Validation suite: metrics, random baseline, three levels, dashboard
 
 ### Added
+- Validation dashboard (T7.4, spec 9.3/9.4 UI): `apps/web/app/validation/page.tsx` +
+  `layout.tsx` — backtest picker, "Run levels" (Level 2 + Level 3 kinds) and
+  "Random baseline (1000 seeds)" controls, the overall status panel (9.4: a
+  LIST with the unmet VALIDATED conditions listed, never a composite),
+  the three-level runs with each test's status word + numeric basis (the
+  state word is always the text; colour never alone — the M2 badge
+  contract), and the baseline distribution table (P5/P50/P80/P95 per
+  metric with the strategy percentile noted). Nav gains the Validation
+  entry. PD-5: every number comes from a stored server result.
+- Client regen: openapi + schema now carry `/v1/validation` +
+  `/v1/baselines/random`; `postValidation` / `getValidation` /
+  `postRandomBaseline` wrappers + `ValidationCreate` / `BaselineCreate` /
+  `RunView` types exported.
 - Metrics (T7.1, spec 9.1 verbatim list): `engine/validation/metrics.py` —
   net return, CAGR, profit factor, expectancy (R), win rate, avg win/loss,
   payoff ratio, Sharpe, Sortino, max drawdown, Calmar, exposure, turnover,
@@ -52,10 +65,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); version tags sta
   (holdout flow end-to-end, depends on OQ-19).
 
 ### Notes
-- T7.1 only: the Validation dashboard UI (T7.4), the full walk-forward /
-  param-stability / Monte-Carlo / cost+delay stress suites (T7.2-T7.3) and
-  the holdout flow end-to-end (T7.5) land next. Liquidity/funding stays
-  NOT_RUN until M10 (9.3).
+- T7.1-T7.4 landed: T7.2-T7.3 (walk-forward / param-stability / cost+delay
+  stress / Monte Carlo computations) are committed; the remaining M7 work
+  is T7.5 holdout flow end-to-end, blocked on OQ-23 (the OQ-19 reading).
+  Liquidity/funding stays NOT_RUN until M10 (9.3). The `next build` gate
+  needs `NODE_OPTIONS=--max-old-space-size=8192` on this machine (worker
+  heap, not a code issue); the production `tsc -p tsconfig.json` passes.
 
 ## [M6] - 2026-10-10 - Backtest simulator, strategy CRUD, portfolio mode
 
