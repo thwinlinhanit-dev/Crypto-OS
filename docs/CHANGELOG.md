@@ -3,6 +3,60 @@
 Format follows [Keep a Changelog](https://keepachangelog.com/); version tags start at M0
 (the spec defines no release numbering yet).
 
+## [M7] - 2026-10-10 - Validation suite: metrics, random baseline, three levels
+
+### Added
+- Metrics (T7.1, spec 9.1 verbatim list): `engine/validation/metrics.py` —
+  net return, CAGR, profit factor, expectancy (R), win rate, avg win/loss,
+  payoff ratio, Sharpe, Sortino, max drawdown, Calmar, exposure, turnover,
+  trade count, avg/median R, top-1/5/10 trade share, longest losing streak.
+  Per-symbol AND portfolio-level inputs; per-symbol Sharpe is never the
+  headline. Open positions excluded from closed-trade metrics (D-049); a
+  zero-loss book reports a finite cap + flag, never `Infinity` (D-046);
+  Sharpe/Sortino annualize with the caller-supplied `periods_per_year`
+  (D-045).
+- Random-entry baseline (9.2): `engine/validation/baseline.py` — seeds
+  1..N (default 1000), deterministic per-seed random entries with the same
+  exits/sizing/costs/fill model, p-calibration so the mean trade count
+  matches within +/-10%, distributions + P5/P50/P80/P95 percentiles, and
+  the percentile verdict (PF >= P95 PASS, P80-P95 WARN, <P80 FAIL).
+- Three levels (9.3): `engine/validation/levels.py` — Level 1 (parity N/A
+  without an export, truncation, deterministic replay, accounting
+  invariants), Level 2 (Edge CI-excludes-zero / INSUFFICIENT <30 trades,
+  OOS sign+share, walk-forward >=60%, clustering, multiple-testing
+  informational, random baseline, param stability, trade dependency,
+  concentration, regime split), Level 3 (cost stress, delay stress, gap
+  risk, Monte Carlo, liquidity/funding NOT_RUN before M10). Every test
+  returns a status with a numeric basis; the trust rule (any Level 1
+  FAIL/NOT_RUN other than N/A parity -> Level 2/3 UNTRUSTED, D-047) is
+  computed once.
+- Status mapping (9.4): `engine/validation/status.py` — the overall status
+  is a LIST, never a composite: REJECTED on kill criterion; PROMISING when
+  no FAIL and Edge PASS (with the unmet VALIDATED conditions listed);
+  VALIDATED only with every applicable test PASS, pooled trades >=100,
+  Level 1 trusted, a frozen experiment and a passed holdout.
+- Tables + API (spec 10/11): migration `0007_m7_validation`
+  (`validation.run`, locked one-way flag, live-applied) + `JobKind.
+  VALIDATION`/`BASELINE` in `engine/jobs.py` + `apps/api/validation.py`
+  (`POST /v1/validation` async with kinds[], `GET /v1/validation/{id}`,
+  `POST /v1/baselines/random`) + `engine/validation/runner.py` (loads the
+  backtest's trades, computes metrics + levels, persists one run per kind
+  with the 9.5 provenance).
+- Tests: 47 new (12 metrics, 9 baseline, 17 levels, 9 status). One real
+  engine bug caught: a truncation FAILURE reported PASS (the boolean helper
+  fell through to a default PASS). Suite now 644 (643 passed + 1 skipped).
+- Test isolation: `validation.run` added to the shared TRUNCATE lists (the
+  new run->backtest FK otherwise breaks other suites' cleanup).
+- Decisions D-045..D-052 recorded in `docs/DECISIONS.md`; design note
+  `specs/design/m7_validation.md` is the module contract; OQ-23 open
+  (holdout flow end-to-end, depends on OQ-19).
+
+### Notes
+- T7.1 only: the Validation dashboard UI (T7.4), the full walk-forward /
+  param-stability / Monte-Carlo / cost+delay stress suites (T7.2-T7.3) and
+  the holdout flow end-to-end (T7.5) land next. Liquidity/funding stays
+  NOT_RUN until M10 (9.3).
+
 ## [M6] - 2026-10-10 - Backtest simulator, strategy CRUD, portfolio mode
 
 ### Added

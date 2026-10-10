@@ -289,7 +289,7 @@ def test_evidence_recompute_path(client: TestClient, conn: Connection, seeded: s
     target = default_ids[-1]["event_id"]
     conn.execute(
         text(
-            "TRUNCATE strategy.trade, strategy.backtest,"
+            "TRUNCATE validation.run, strategy.trade, strategy.backtest,"
             " research.event, research.event_outcome, research.stats_result"
         )
     )
@@ -325,7 +325,7 @@ def test_evidence_unpersisted_custom_params_404(
     custom_id = _capit_ids(client)[-1]  # SMALL_PARAMS event, never persisted here
     conn.execute(
         text(
-            "TRUNCATE strategy.trade, strategy.backtest,"
+            "TRUNCATE validation.run, strategy.trade, strategy.backtest,"
             " research.event, research.event_outcome, research.stats_result"
         )
     )

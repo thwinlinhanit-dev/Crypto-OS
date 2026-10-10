@@ -26,6 +26,7 @@ from apps.api.market import router as market_router
 from apps.api.notes import router as notes_router
 from apps.api.settings import get_settings
 from apps.api.stats import router as stats_router
+from apps.api.validation import router as validation_router
 from engine.versions import (
     DATASET_SCHEMA_VERSION,
     ENGINE_VERSION,
@@ -103,6 +104,9 @@ def create_app() -> FastAPI:
     # M6 strategies + backtests (spec 7/10/11, design note m6_backtest):
     # versioned strategy CRUD, async backtests, trade/equity/metrics/skipped.
     app.include_router(backtests_router)
+    # M7 validation (spec 9/10/11, design note m7_validation): three levels,
+    # random baseline, status list (9.4).
+    app.include_router(validation_router)
     # M5 stats (spec section 11, design note m5_stats section 4):
     # POST /v1/stats + GET /v1/stats/{ref_id}, reads only (PD-1).
     app.include_router(stats_router)

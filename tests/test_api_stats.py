@@ -182,7 +182,7 @@ def conn() -> Iterator[Connection]:
             "DELETE FROM market.dataset_manifest",
             "DELETE FROM system.audit_log",
             "DELETE FROM market.instrument",
-            "TRUNCATE strategy.trade, strategy.backtest,"
+            "TRUNCATE validation.run, strategy.trade, strategy.backtest,"
             " research.event, research.event_outcome, research.stats_result,"
             " research.hypothesis, research.note, research.variant, research.experiment,"
             " research.experiment_family",

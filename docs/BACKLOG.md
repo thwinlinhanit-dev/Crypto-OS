@@ -73,6 +73,22 @@ built now and what would have to be true to pick it up.
   (M7 adds the rest). `GET /v1/experiments/{id}/lineage` names them under
   `not_implemented` in the meantime.
 
+## M7 park list (design note `specs/design/m7_validation.md` section 8)
+
+- **T7.2-T7.3 full suites** - the walk-forward, param-stability,
+  concentration, regime-split, cost+delay stress and Monte-Carlo
+  computations behind the 9.3 tests (the level functions currently accept
+  precomputed inputs; the suites that compute them land next, reusing the
+  M5 cluster bootstrap and the M6 simulator's re-run seam).
+- **T7.4 Validation dashboard** - `/validation`: run picker, the three
+  levels with status word + numeric basis, the baseline distribution
+  render (percentiles with the strategy percentile marked) and the overall
+  status list (9.4). The client wrappers come with the openapi regen.
+- **T7.5 holdout flow end-to-end** - blocked on OQ-23 (the OQ-19 reading);
+  the API gate exists since M5 (D-030).
+- **Liquidity/funding tests** - M10 (NOT_RUN before).
+- **Randomized signal timing + simple benchmark strategies** - v1.1 (9.6).
+
 ## M6 park list (design note `specs/design/m6_backtest.md` section 9)
 
 - **Parity layer 2 (T6.5)** - `engine/parity/layer2.py` + the trade-list

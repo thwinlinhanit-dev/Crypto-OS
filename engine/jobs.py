@@ -52,6 +52,8 @@ class JobKind(StrEnum):
     REPAIR = "REPAIR"
     RESAMPLE = "RESAMPLE"
     BACKTEST = "BACKTEST"
+    VALIDATION = "VALIDATION"
+    BASELINE = "BASELINE"
 
 
 class JobStatus(StrEnum):
@@ -380,6 +382,30 @@ async def execute_job(
                 result_ref=str(backtest_id),
                 error=None,
                 message=f"succeeded backtest_id={backtest_id}",
+            )
+        if job.kind is JobKind.VALIDATION:
+            from engine.validation.runner import run_validation_job
+
+            run_ids = run_validation_job(conn, job.params)
+            return _finish(
+                conn,
+                job.job_id,
+                status=JobStatus.SUCCEEDED,
+                result_ref=",".join(str(r) for r in run_ids),
+                error=None,
+                message=f"succeeded validation runs={len(run_ids)}",
+            )
+        if job.kind is JobKind.BASELINE:
+            from engine.validation.runner import run_baseline_job
+
+            run_id = run_baseline_job(conn, job.params)
+            return _finish(
+                conn,
+                job.job_id,
+                status=JobStatus.SUCCEEDED,
+                result_ref=str(run_id),
+                error=None,
+                message=f"succeeded baseline run_id={run_id}",
             )
         raise RuntimeError(f"unknown job kind {job.kind!r}")
     except EngineError as exc:

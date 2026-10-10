@@ -107,7 +107,7 @@ class FixtureAdapter:
 #: truncated together. Append-only tables use TRUNCATE because their row
 #: triggers reject DELETE outright (PD-13).
 RESEARCH_TABLES = (
-    "strategy.trade, strategy.backtest,"
+    "validation.run, strategy.trade, strategy.backtest,"
     " research.event, research.event_outcome, research.stats_result,"
     " research.hypothesis, research.note, research.variant, research.experiment,"
     " research.experiment_family"

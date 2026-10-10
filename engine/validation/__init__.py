@@ -1,1 +1,1 @@
-"""Placeholder package — the module lands with its milestone (PD-9)."""
+"""M7 (T7.1) — validation suite package (spec section 9)."""
