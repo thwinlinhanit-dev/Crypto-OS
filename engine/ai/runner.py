@@ -188,6 +188,7 @@ def run_turn(
     allowed = {t.name for t in mode_tools}
     tool_results: dict[str, dict[str, Any]] = {}
     executions: list[ToolExecution] = []
+    _seen: set[tuple[str, str]] = set()
 
     for _ in range(max_rounds):
         deltas = list(provider.stream_chat(conversation, [t.schema for t in mode_tools]))
@@ -195,14 +196,23 @@ def run_turn(
         calls = _parse_tool_calls_from_deltas(text)
         if not calls:
             break
+        # de-duplicate: a provider that re-emits the same call each round
+        # (the echo provider replays the user message) must not loop
+        # max_rounds times over one call
+        fresh = [
+            call for call in calls if (call.name, json.dumps(call.arguments, sort_keys=True)) not in _seen
+        ]
+        if not fresh:
+            break
         conversation.append(Message(role="assistant", content=text))
-        for call in calls:
+        for call in fresh:
             if call.name not in allowed:
                 raise ModeNotAllowedError(
                     f"tool {call.name!r} is not allowed in {mode} mode"
                 )
             registry_tool(call.name)  # raises ToolNotFoundError if unknown
             result = executor(call.name, call.arguments)
+            _seen.add((call.name, json.dumps(call.arguments, sort_keys=True)))
             ref_id = str(result.get("ref_id", "")) or call.name
             tool_results[ref_id] = result
             executions.append(

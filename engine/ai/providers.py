@@ -98,24 +98,31 @@ class EchoProvider:
         last_user = next(
             (m for m in reversed(messages) if m.role == "user"), None
         )
-        calls: list[ToolCall] = []
         if last_user is not None:
             try:
                 parsed = json.loads(last_user.content)
-                if isinstance(parsed, list):
-                    calls = _parse_tool_calls(parsed)
             except (json.JSONDecodeError, TypeError):
-                calls = []
-        if calls:
-            yield json.dumps(
-                {
-                    "__tool_calls__": [
-                        {"name": c.name, "arguments": c.arguments} for c in calls
-                    ]
-                }
-            )
-        else:
-            yield "echo: " + (last_user.content if last_user else "")
+                parsed = None
+            # two accepted shapes: a bare list of calls, or the tagged
+            # {"__tool_calls__": [...]} wrapper the provider protocol uses
+            if isinstance(parsed, dict) and isinstance(
+                parsed.get("__tool_calls__"), list
+            ):
+                yield json.dumps(parsed)
+                return
+            if isinstance(parsed, list):
+                calls = _parse_tool_calls(parsed)
+                if calls:
+                    yield json.dumps(
+                        {
+                            "__tool_calls__": [
+                                {"name": c.name, "arguments": c.arguments}
+                                for c in calls
+                            ]
+                        }
+                    )
+                    return
+        yield "echo: " + (last_user.content if last_user else "")
 
 
 class OpenAIProvider:

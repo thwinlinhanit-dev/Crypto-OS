@@ -14,6 +14,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from apps.api.ai import router as ai_router
+from apps.api.ai import runs_router as ai_runs_router
 from apps.api.backtests import router as backtests_router
 from apps.api.data import router as data_router
 from apps.api.db import database_reachable
@@ -111,6 +113,10 @@ def create_app() -> FastAPI:
     # M8 scanner (spec 10/11/12, design note m8_scanner): watchlists,
     # GET /v1/scanner rows, GET /v1/mtf regime summary.
     app.include_router(scanner_router)
+    # M9 AI Copilot + MCP (spec 9/10/11, design note m9_ai):
+    # POST /v1/ai/chat (SSE), GET /v1/ai/tools, GET /v1/agents/runs.
+    app.include_router(ai_router)
+    app.include_router(ai_runs_router)
     # M5 stats (spec section 11, design note m5_stats section 4):
     # POST /v1/stats + GET /v1/stats/{ref_id}, reads only (PD-1).
     app.include_router(stats_router)
