@@ -26,6 +26,7 @@ from apps.api.experiments import router as experiments_router
 from apps.api.hypotheses import router as hypotheses_router
 from apps.api.market import router as market_router
 from apps.api.notes import router as notes_router
+from apps.api.perp import router as perp_router
 from apps.api.scanner import router as scanner_router
 from apps.api.settings import get_settings
 from apps.api.stats import router as stats_router
@@ -117,6 +118,9 @@ def create_app() -> FastAPI:
     # POST /v1/ai/chat (SSE), GET /v1/ai/tools, GET /v1/agents/runs.
     app.include_router(ai_router)
     app.include_router(ai_runs_router)
+    # M10 perp + live candles (spec 10/11, design note m10_perp_live):
+    # GET /v1/funding|oi|liquidations, WebSocket /v1/ws (D-073).
+    app.include_router(perp_router)
     # M5 stats (spec section 11, design note m5_stats section 4):
     # POST /v1/stats + GET /v1/stats/{ref_id}, reads only (PD-1).
     app.include_router(stats_router)
