@@ -39,6 +39,8 @@ export type TradeView = components["schemas"]["TradeView"];
 export type ValidationCreate = components["schemas"]["ValidationCreate"];
 export type BaselineCreate = components["schemas"]["BaselineCreate"];
 export type RunView = components["schemas"]["RunView"];
+export type WatchlistCreate = components["schemas"]["WatchlistCreate"];
+export type WatchlistView = components["schemas"]["WatchlistView"];
 export type HypothesisView = components["schemas"]["HypothesisView"];
 export type HypothesisCreate = components["schemas"]["HypothesisCreate"];
 export type HypothesisPatch = components["schemas"]["HypothesisPatch"];
@@ -461,6 +463,61 @@ export async function postRandomBaseline(
   baseUrl: string = DEFAULT_API_BASE,
 ): Promise<RunView> {
   return (await postJson("/v1/baselines/random", baseUrl, body)) as RunView;
+}
+
+export async function postWatchlist(
+  body: WatchlistCreate,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<WatchlistView> {
+  return (await postJson("/v1/watchlists", baseUrl, body)) as WatchlistView;
+}
+
+export async function getWatchlists(
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<WatchlistView[]> {
+  return (await readJson("/v1/watchlists", baseUrl)) as WatchlistView[];
+}
+
+export async function deleteWatchlist(
+  watchlistId: string,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<void> {
+  const response = await fetch(`${baseUrl}/v1/watchlists/${encodeURIComponent(watchlistId)}`, {
+    method: "DELETE",
+    cache: "no-store",
+  });
+  if (!response.ok) throw new Error(`HTTP_${response.status}: ${watchlistId}`);
+}
+
+export async function getScanner(
+  params: {
+    watchlist?: string;
+    tf?: string;
+    min_grade?: string;
+    as_of?: string;
+  },
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<Record<string, unknown>> {
+  const query = new URLSearchParams();
+  if (params.watchlist) query.set("watchlist", params.watchlist);
+  if (params.tf) query.set("tf", params.tf);
+  if (params.min_grade) query.set("min_grade", params.min_grade);
+  if (params.as_of) query.set("as_of", params.as_of);
+  const suffix = query.toString();
+  return (await readJson(`/v1/scanner${suffix ? `?${suffix}` : ""}`, baseUrl)) as Record<
+    string,
+    unknown
+  >;
+}
+
+export async function getMtf(
+  instrumentId: string,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<Record<string, unknown>> {
+  return (await readJson(`/v1/mtf?instrument_id=${encodeURIComponent(instrumentId)}`, baseUrl)) as Record<
+    string,
+    unknown
+  >;
 }
 
 export async function postNote(

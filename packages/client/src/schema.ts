@@ -627,6 +627,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/mtf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Mtf
+         * @description Spec 11: per-timeframe regime summary for one instrument (D-054: the
+         *     regime module is the single definition).
+         */
+        get: operations["get_mtf_v1_mtf_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/notes": {
         parameters: {
             query?: never;
@@ -677,6 +698,27 @@ export interface paths {
          * @description Edit a note's title, body, chart state or experiment link.
          */
         patch: operations["patch_note_v1_notes__note_id__patch"];
+        trace?: never;
+    };
+    "/v1/scanner": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Scanner
+         * @description Spec 11/12: rows {instrument, price, chg_24h, rvol, last_event,
+         *     regime, grade, n_eff}. One row per instrument, stored data only (PD-5).
+         */
+        get: operations["get_scanner_v1_scanner_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/v1/stats": {
@@ -808,6 +850,59 @@ export interface paths {
         get: operations["get_validation_v1_validation__run_id__get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/watchlists": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Watchlists */
+        get: operations["list_watchlists_v1_watchlists_get"];
+        put?: never;
+        /** Create Watchlist */
+        post: operations["create_watchlist_v1_watchlists_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/watchlists/{watchlist_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Watchlist */
+        get: operations["get_watchlist_v1_watchlists__watchlist_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Watchlist */
+        delete: operations["delete_watchlist_v1_watchlists__watchlist_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/watchlists/{watchlist_id}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Watchlist Item */
+        post: operations["add_watchlist_item_v1_watchlists__watchlist_id__items_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2170,6 +2265,41 @@ export interface components {
             /** Status */
             status: string;
         };
+        /** WatchlistCreate */
+        WatchlistCreate: {
+            /**
+             * Instrument Ids
+             * @default []
+             */
+            instrument_ids: string[];
+            /** Name */
+            name: string;
+        };
+        /**
+         * WatchlistItemsAdd
+         * @description ``POST /v1/watchlists/{id}/items`` body: membership only.
+         */
+        WatchlistItemsAdd: {
+            /**
+             * Instrument Ids
+             * @default []
+             */
+            instrument_ids: string[];
+        };
+        /** WatchlistView */
+        WatchlistView: {
+            /** Created At */
+            created_at: string;
+            /** Instrument Ids */
+            instrument_ids: string[];
+            /** Name */
+            name: string;
+            /**
+             * Watchlist Id
+             * Format: uuid
+             */
+            watchlist_id: string;
+        };
         /**
          * WindowView
          * @description Resolved window knobs echoed so every served payload is reproducible.
@@ -3386,6 +3516,39 @@ export interface operations {
             };
         };
     };
+    get_mtf_v1_mtf_get: {
+        parameters: {
+            query: {
+                instrument_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_notes_v1_notes_get: {
         parameters: {
             query?: never;
@@ -3523,6 +3686,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NoteView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_scanner_v1_scanner_get: {
+        parameters: {
+            query?: {
+                watchlist?: string | null;
+                tf?: string;
+                min_grade?: string | null;
+                as_of?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": string[] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
             /** @description Validation Error */
@@ -3756,6 +3959,158 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RunView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_watchlists_v1_watchlists_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchlistView"][];
+                };
+            };
+        };
+    };
+    create_watchlist_v1_watchlists_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WatchlistCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchlistView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_watchlist_v1_watchlists__watchlist_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                watchlist_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchlistView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_watchlist_v1_watchlists__watchlist_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                watchlist_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_watchlist_item_v1_watchlists__watchlist_id__items_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                watchlist_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WatchlistItemsAdd"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchlistView"];
                 };
             };
             /** @description Validation Error */

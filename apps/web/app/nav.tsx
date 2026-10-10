@@ -18,6 +18,9 @@ const LINKS = [
   // Spec nav 549 "Validation" — M7 T7.4 ships the dashboard (three levels,
   // baseline distribution, overall status list).
   { href: "/validation", label: "Validation" },
+  // Spec nav 549 "Scanner" — M8 ships the page (spec-560 columns, saved
+  // scans, state preserved).
+  { href: "/scanner", label: "Scanner" },
   { href: "/data", label: "Data Health" },
 ];
 

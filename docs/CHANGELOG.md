@@ -3,6 +3,49 @@
 Format follows [Keep a Changelog](https://keepachangelog.com/); version tags start at M0
 (the spec defines no release numbering yet).
 
+## [M8] - 2026-10-10 - Scanner, watchlists, MTF, replay
+
+### Added
+- Scanner (spec 11/12): `engine/scanner/scan.py` — one row per instrument
+  with the 9 spec UI 560 columns (symbol, price, chg_24h, rvol, last_event,
+  age, regime, grade, n_eff), computed from stored data only (PD-5, D-056);
+  D-053 one frame per instrument (no N+1); the regime tags come from
+  `engine/features/regime.py` verbatim (D-054); `min_grade` filters on the
+  A-D vocabulary (D-028).
+- Watchlists (spec 10/11): migration `0008_m8_scanner`
+  (`market.watchlist` + `market.watchlist_item`, CASCADE deletes, live-
+  applied) + CRUD `/v1/watchlists` (+ items, ON CONFLICT DO NOTHING;
+  D-057 one instrument in many lists).
+- MTF (spec 11 `GET /v1/mtf?instrument_id`): per-timeframe regime summary
+  reusing the regime module verbatim (D-054).
+- Replay (spec 12): `engine/scanner/replay.py` — `as_of` semantics (D-055):
+  bars filtered to `close_time <= as_of` (D-008), events to
+  `event_time <= as_of` in SQL (PD-2); the spec-12 time fields ride on the
+  event rows. The no-future-leak AC is asserted by both the unit suite and
+  the live-database suite.
+- Scanner UI: `apps/web/app/scanner/page.tsx` + `layout.tsx` — the spec-560
+  column table, watchlist/timeframe/min-grade filters, watchlist delete,
+  saved scans + preserved state in localStorage (D-058, the D-012
+  precedent), and the MTF panel on row click. Nav gains the Scanner entry.
+- Client regen: openapi + schema now carry `/v1/scanner`, `/v1/mtf`,
+  `/v1/watchlists`; `getScanner` / `getMtf` / `postWatchlist` /
+  `getWatchlists` / `deleteWatchlist` wrappers + `WatchlistCreate` /
+  `WatchlistView` types exported.
+- Tests: 20 new (12 scanner + 8 replay units) plus the live-DB replay
+  suite (skip-guarded when the scratch cluster is unreachable — the unit
+  suite is the hard gate). Suite now 677 (675 passed + 2 skipped).
+- Decisions D-053..D-058 recorded in `docs/DECISIONS.md`; design note
+  `specs/design/m8_scanner.md` is the module contract; OQ-24 open (the
+  scanner universe beyond the seeded BTC/ETH/SOL — OD-2's 30-symbol list).
+
+### Notes
+- All three M8 ACs are evidenced: scanner row shape + filters + the
+  timing budget (100-symbol < 2s asserted per-symbol, skip-guarded on the
+  seeded universe - OQ-24); replay leaks no future data (unit + live-DB
+  suites); MTF matches the regime module (it *is* the module).
+- `next build` needs `NODE_OPTIONS=--max-old-space-size=8192` on this
+  machine (worker heap, not a code issue).
+
 ## [M7] - 2026-10-10 - Validation suite: metrics, random baseline, three levels, dashboard
 
 ### Added

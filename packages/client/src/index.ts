@@ -46,6 +46,11 @@ export {
   postValidation,
   getValidation,
   postRandomBaseline,
+  postWatchlist,
+  getWatchlists,
+  deleteWatchlist,
+  getScanner,
+  getMtf,
   postNote,
   getNotes,
   getNote,
@@ -97,6 +102,8 @@ export type {
   BaselineCreate,
   RunView,
   ValidationCreate,
+  WatchlistCreate,
+  WatchlistView,
   WindowView,
 } from "./api";
 export type { components, paths } from "./schema";
