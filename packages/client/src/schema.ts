@@ -4,6 +4,123 @@
  */
 
 export interface paths {
+    "/v1/backtests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Backtests */
+        get: operations["list_backtests_v1_backtests_get"];
+        put?: never;
+        /**
+         * Create Backtest
+         * @description Queue an async backtest (spec 11). Every backtest belongs to an
+         *     experiment (D-041).
+         */
+        post: operations["create_backtest_v1_backtests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/backtests/{backtest_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Backtest */
+        get: operations["get_backtest_v1_backtests__backtest_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/backtests/{backtest_id}/equity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Backtest Equity
+         * @description Per-bar equity curve (stored inside metrics; the Parquet artifact is
+         *     M7 with the validation suite).
+         */
+        get: operations["get_backtest_equity_v1_backtests__backtest_id__equity_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/backtests/{backtest_id}/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Backtest Metrics */
+        get: operations["get_backtest_metrics_v1_backtests__backtest_id__metrics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/backtests/{backtest_id}/skipped": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Backtest Skipped
+         * @description 7.3.1: every skipped/not-filled signal with its reason (M6 AC).
+         */
+        get: operations["get_backtest_skipped_v1_backtests__backtest_id__skipped_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/backtests/{backtest_id}/trades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Backtest Trades
+         * @description 7.5 trade records (spec 11 ``GET /v1/backtests/{id}/trades``).
+         */
+        get: operations["get_backtest_trades_v1_backtests__backtest_id__trades_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/candles": {
         parameters: {
             query?: never;
@@ -602,6 +719,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/strategies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Strategies */
+        get: operations["list_strategies_v1_strategies_get"];
+        put?: never;
+        /**
+         * Create Strategy
+         * @description Create a strategy version (7.1: edits create a new version).
+         */
+        post: operations["create_strategy_v1_strategies_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/strategies/{strategy_id}/{version}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Strategy */
+        get: operations["get_strategy_v1_strategies__strategy_id___version__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -622,6 +777,84 @@ export interface components {
              * Format: date-time
              */
             time: string;
+        };
+        /**
+         * BacktestCreate
+         * @description ``POST /v1/backtests`` body (spec 11: async; experiment_id required).
+         */
+        BacktestCreate: {
+            /**
+             * Data Scope
+             * @default DEVELOPMENT
+             */
+            data_scope: string;
+            /** Dataset Version */
+            dataset_version?: string | null;
+            /**
+             * Experiment Id
+             * Format: uuid
+             */
+            experiment_id: string;
+            /**
+             * Fill Model
+             * @default REALISTIC_OHLC
+             */
+            fill_model: string;
+            /** Period End */
+            period_end?: string | null;
+            /** Period Start */
+            period_start?: string | null;
+            /** Seed */
+            seed?: number | null;
+            /** Strategy Id */
+            strategy_id: string;
+            /** Timeframe */
+            timeframe: string;
+            /** Universe */
+            universe: string[];
+            /** Version */
+            version: string;
+        };
+        /** BacktestView */
+        BacktestView: {
+            /**
+             * Backtest Id
+             * Format: uuid
+             */
+            backtest_id: string;
+            /** Code Version */
+            code_version: string;
+            /** Created At */
+            created_at: string;
+            /** Data Scope */
+            data_scope: string;
+            /** Dataset Schema Version */
+            dataset_schema_version: string;
+            /** Dataset Version */
+            dataset_version: string;
+            /** Engine Version */
+            engine_version: string;
+            /**
+             * Experiment Id
+             * Format: uuid
+             */
+            experiment_id: string;
+            /** Fill Model */
+            fill_model: string;
+            /** Locked */
+            locked: boolean;
+            /** Seed */
+            seed: number | null;
+            /** Status */
+            status: string;
+            /** Strategy Id */
+            strategy_id: string;
+            /** Supersedes */
+            supersedes: string | null;
+            /** Universe */
+            universe: string[];
+            /** Version */
+            version: string;
         };
         /**
          * CandleQualityView
@@ -1653,6 +1886,87 @@ export interface components {
             status: "ok" | "degraded";
         };
         /**
+         * StrategyCreate
+         * @description ``POST /v1/strategies`` body: the 7.1 definition JSON.
+         */
+        StrategyCreate: {
+            /** Definition */
+            definition: {
+                [key: string]: unknown;
+            };
+            /** Strategy Id */
+            strategy_id: string;
+            /** Version */
+            version: string;
+        };
+        /** StrategyView */
+        StrategyView: {
+            /** Definition */
+            definition: {
+                [key: string]: unknown;
+            };
+            /** Definition Hash */
+            definition_hash: string;
+            /** Strategy Id */
+            strategy_id: string;
+            /** Version */
+            version: string;
+        };
+        /** TradeView */
+        TradeView: {
+            /**
+             * Backtest Id
+             * Format: uuid
+             */
+            backtest_id: string;
+            /** Bars Held */
+            bars_held: number | null;
+            /** Data Gap During Hold */
+            data_gap_during_hold: boolean;
+            /** Decision Time */
+            decision_time: string;
+            /** Entry Price */
+            entry_price: number;
+            /** Entry Tag */
+            entry_tag: string;
+            /** Exit Decision Time */
+            exit_decision_time: string | null;
+            /** Exit Fill Time */
+            exit_fill_time: string | null;
+            /** Exit Price */
+            exit_price: number | null;
+            /** Exit Reason */
+            exit_reason: string | null;
+            /** Exit Signal Time */
+            exit_signal_time: string | null;
+            /** Fees */
+            fees: number;
+            /** Fill Time */
+            fill_time: string;
+            /** Instrument Id */
+            instrument_id: string;
+            /** Mae R */
+            mae_r: number | null;
+            /** Mfe R */
+            mfe_r: number | null;
+            /** Pnl */
+            pnl: number | null;
+            /** Pnl Pct */
+            pnl_pct: number | null;
+            /** Qty */
+            qty: number;
+            /** R Multiple */
+            r_multiple: number | null;
+            /** Side */
+            side: string;
+            /** Signal Time */
+            signal_time: string;
+            /** Straddles Boundary */
+            straddles_boundary: boolean;
+            /** Trade No */
+            trade_no: number;
+        };
+        /**
          * TriggerRowView
          * @description One checklist row: the stored trigger block plus its provenance.
          */
@@ -1754,6 +2068,220 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    list_backtests_v1_backtests_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BacktestView"][];
+                };
+            };
+        };
+    };
+    create_backtest_v1_backtests_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BacktestCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BacktestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_backtest_v1_backtests__backtest_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                backtest_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BacktestView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_backtest_equity_v1_backtests__backtest_id__equity_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                backtest_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    }[];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_backtest_metrics_v1_backtests__backtest_id__metrics_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                backtest_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_backtest_skipped_v1_backtests__backtest_id__skipped_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                backtest_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    }[];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_backtest_trades_v1_backtests__backtest_id__trades_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                backtest_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TradeView"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     candles_v1_candles_get: {
         parameters: {
             query: {
@@ -2930,6 +3458,91 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StatusResponse"];
+                };
+            };
+        };
+    };
+    list_strategies_v1_strategies_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StrategyView"][];
+                };
+            };
+        };
+    };
+    create_strategy_v1_strategies_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StrategyCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StrategyView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_strategy_v1_strategies__strategy_id___version__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                strategy_id: string;
+                version: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StrategyView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

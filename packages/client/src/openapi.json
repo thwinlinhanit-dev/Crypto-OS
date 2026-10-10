@@ -38,6 +38,209 @@
         "title": "AnalogueView",
         "type": "object"
       },
+      "BacktestCreate": {
+        "additionalProperties": false,
+        "description": "``POST /v1/backtests`` body (spec 11: async; experiment_id required).",
+        "properties": {
+          "data_scope": {
+            "default": "DEVELOPMENT",
+            "title": "Data Scope",
+            "type": "string"
+          },
+          "dataset_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Version"
+          },
+          "experiment_id": {
+            "format": "uuid",
+            "title": "Experiment Id",
+            "type": "string"
+          },
+          "fill_model": {
+            "default": "REALISTIC_OHLC",
+            "title": "Fill Model",
+            "type": "string"
+          },
+          "period_end": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period End"
+          },
+          "period_start": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period Start"
+          },
+          "seed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seed"
+          },
+          "strategy_id": {
+            "title": "Strategy Id",
+            "type": "string"
+          },
+          "timeframe": {
+            "title": "Timeframe",
+            "type": "string"
+          },
+          "universe": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Universe",
+            "type": "array"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "experiment_id",
+          "strategy_id",
+          "version",
+          "universe",
+          "timeframe"
+        ],
+        "title": "BacktestCreate",
+        "type": "object"
+      },
+      "BacktestView": {
+        "additionalProperties": false,
+        "properties": {
+          "backtest_id": {
+            "format": "uuid",
+            "title": "Backtest Id",
+            "type": "string"
+          },
+          "code_version": {
+            "title": "Code Version",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "data_scope": {
+            "title": "Data Scope",
+            "type": "string"
+          },
+          "dataset_schema_version": {
+            "title": "Dataset Schema Version",
+            "type": "string"
+          },
+          "dataset_version": {
+            "title": "Dataset Version",
+            "type": "string"
+          },
+          "engine_version": {
+            "title": "Engine Version",
+            "type": "string"
+          },
+          "experiment_id": {
+            "format": "uuid",
+            "title": "Experiment Id",
+            "type": "string"
+          },
+          "fill_model": {
+            "title": "Fill Model",
+            "type": "string"
+          },
+          "locked": {
+            "title": "Locked",
+            "type": "boolean"
+          },
+          "seed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seed"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "strategy_id": {
+            "title": "Strategy Id",
+            "type": "string"
+          },
+          "supersedes": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supersedes"
+          },
+          "universe": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Universe",
+            "type": "array"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "backtest_id",
+          "experiment_id",
+          "strategy_id",
+          "version",
+          "universe",
+          "data_scope",
+          "fill_model",
+          "dataset_version",
+          "dataset_schema_version",
+          "engine_version",
+          "code_version",
+          "seed",
+          "status",
+          "supersedes",
+          "locked",
+          "created_at"
+        ],
+        "title": "BacktestView",
+        "type": "object"
+      },
       "CandleQualityView": {
         "description": "``quality`` block of the section 11 candle response.",
         "properties": {
@@ -2488,6 +2691,269 @@
         "title": "StatusResponse",
         "type": "object"
       },
+      "StrategyCreate": {
+        "additionalProperties": false,
+        "description": "``POST /v1/strategies`` body: the 7.1 definition JSON.",
+        "properties": {
+          "definition": {
+            "additionalProperties": true,
+            "title": "Definition",
+            "type": "object"
+          },
+          "strategy_id": {
+            "title": "Strategy Id",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "strategy_id",
+          "version",
+          "definition"
+        ],
+        "title": "StrategyCreate",
+        "type": "object"
+      },
+      "StrategyView": {
+        "additionalProperties": false,
+        "properties": {
+          "definition": {
+            "additionalProperties": true,
+            "title": "Definition",
+            "type": "object"
+          },
+          "definition_hash": {
+            "title": "Definition Hash",
+            "type": "string"
+          },
+          "strategy_id": {
+            "title": "Strategy Id",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "strategy_id",
+          "version",
+          "definition",
+          "definition_hash"
+        ],
+        "title": "StrategyView",
+        "type": "object"
+      },
+      "TradeView": {
+        "additionalProperties": false,
+        "properties": {
+          "backtest_id": {
+            "format": "uuid",
+            "title": "Backtest Id",
+            "type": "string"
+          },
+          "bars_held": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bars Held"
+          },
+          "data_gap_during_hold": {
+            "title": "Data Gap During Hold",
+            "type": "boolean"
+          },
+          "decision_time": {
+            "title": "Decision Time",
+            "type": "string"
+          },
+          "entry_price": {
+            "title": "Entry Price",
+            "type": "number"
+          },
+          "entry_tag": {
+            "title": "Entry Tag",
+            "type": "string"
+          },
+          "exit_decision_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exit Decision Time"
+          },
+          "exit_fill_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exit Fill Time"
+          },
+          "exit_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exit Price"
+          },
+          "exit_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exit Reason"
+          },
+          "exit_signal_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exit Signal Time"
+          },
+          "fees": {
+            "title": "Fees",
+            "type": "number"
+          },
+          "fill_time": {
+            "title": "Fill Time",
+            "type": "string"
+          },
+          "instrument_id": {
+            "title": "Instrument Id",
+            "type": "string"
+          },
+          "mae_r": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mae R"
+          },
+          "mfe_r": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mfe R"
+          },
+          "pnl": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pnl"
+          },
+          "pnl_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pnl Pct"
+          },
+          "qty": {
+            "title": "Qty",
+            "type": "number"
+          },
+          "r_multiple": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "R Multiple"
+          },
+          "side": {
+            "title": "Side",
+            "type": "string"
+          },
+          "signal_time": {
+            "title": "Signal Time",
+            "type": "string"
+          },
+          "straddles_boundary": {
+            "title": "Straddles Boundary",
+            "type": "boolean"
+          },
+          "trade_no": {
+            "title": "Trade No",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "backtest_id",
+          "trade_no",
+          "instrument_id",
+          "side",
+          "signal_time",
+          "decision_time",
+          "fill_time",
+          "exit_signal_time",
+          "exit_decision_time",
+          "exit_fill_time",
+          "entry_price",
+          "exit_price",
+          "qty",
+          "fees",
+          "pnl",
+          "pnl_pct",
+          "r_multiple",
+          "mfe_r",
+          "mae_r",
+          "bars_held",
+          "entry_tag",
+          "exit_reason",
+          "data_gap_during_hold",
+          "straddles_boundary"
+        ],
+        "title": "TradeView",
+        "type": "object"
+      },
       "TriggerRowView": {
         "description": "One checklist row: the stored trigger block plus its provenance.",
         "properties": {
@@ -2715,6 +3181,312 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/v1/backtests": {
+      "get": {
+        "operationId": "list_backtests_v1_backtests_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BacktestView"
+                  },
+                  "title": "Response List Backtests V1 Backtests Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Backtests",
+        "tags": [
+          "strategy",
+          "strategy"
+        ]
+      },
+      "post": {
+        "description": "Queue an async backtest (spec 11). Every backtest belongs to an\nexperiment (D-041).",
+        "operationId": "create_backtest_v1_backtests_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BacktestCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BacktestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Backtest",
+        "tags": [
+          "strategy",
+          "strategy"
+        ]
+      }
+    },
+    "/v1/backtests/{backtest_id}": {
+      "get": {
+        "operationId": "get_backtest_v1_backtests__backtest_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "backtest_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Backtest Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BacktestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Backtest",
+        "tags": [
+          "strategy",
+          "strategy"
+        ]
+      }
+    },
+    "/v1/backtests/{backtest_id}/equity": {
+      "get": {
+        "description": "Per-bar equity curve (stored inside metrics; the Parquet artifact is\nM7 with the validation suite).",
+        "operationId": "get_backtest_equity_v1_backtests__backtest_id__equity_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "backtest_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Backtest Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "title": "Response Get Backtest Equity V1 Backtests  Backtest Id  Equity Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Backtest Equity",
+        "tags": [
+          "strategy",
+          "strategy"
+        ]
+      }
+    },
+    "/v1/backtests/{backtest_id}/metrics": {
+      "get": {
+        "operationId": "get_backtest_metrics_v1_backtests__backtest_id__metrics_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "backtest_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Backtest Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Backtest Metrics V1 Backtests  Backtest Id  Metrics Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Backtest Metrics",
+        "tags": [
+          "strategy",
+          "strategy"
+        ]
+      }
+    },
+    "/v1/backtests/{backtest_id}/skipped": {
+      "get": {
+        "description": "7.3.1: every skipped/not-filled signal with its reason (M6 AC).",
+        "operationId": "get_backtest_skipped_v1_backtests__backtest_id__skipped_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "backtest_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Backtest Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "title": "Response Get Backtest Skipped V1 Backtests  Backtest Id  Skipped Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Backtest Skipped",
+        "tags": [
+          "strategy",
+          "strategy"
+        ]
+      }
+    },
+    "/v1/backtests/{backtest_id}/trades": {
+      "get": {
+        "description": "7.5 trade records (spec 11 ``GET /v1/backtests/{id}/trades``).",
+        "operationId": "get_backtest_trades_v1_backtests__backtest_id__trades_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "backtest_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Backtest Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TradeView"
+                  },
+                  "title": "Response Get Backtest Trades V1 Backtests  Backtest Id  Trades Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Backtest Trades",
+        "tags": [
+          "strategy",
+          "strategy"
+        ]
+      }
+    },
     "/v1/candles": {
       "get": {
         "description": "Closed bars for one (instrument, timeframe) window (spec section 11).",
@@ -4767,6 +5539,125 @@
         "summary": "Status",
         "tags": [
           "system"
+        ]
+      }
+    },
+    "/v1/strategies": {
+      "get": {
+        "operationId": "list_strategies_v1_strategies_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StrategyView"
+                  },
+                  "title": "Response List Strategies V1 Strategies Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Strategies",
+        "tags": [
+          "strategy",
+          "strategy"
+        ]
+      },
+      "post": {
+        "description": "Create a strategy version (7.1: edits create a new version).",
+        "operationId": "create_strategy_v1_strategies_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StrategyCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StrategyView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Strategy",
+        "tags": [
+          "strategy",
+          "strategy"
+        ]
+      }
+    },
+    "/v1/strategies/{strategy_id}/{version}": {
+      "get": {
+        "operationId": "get_strategy_v1_strategies__strategy_id___version__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "strategy_id",
+            "required": true,
+            "schema": {
+              "title": "Strategy Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version",
+            "required": true,
+            "schema": {
+              "title": "Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StrategyView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Strategy",
+        "tags": [
+          "strategy",
+          "strategy"
         ]
       }
     }

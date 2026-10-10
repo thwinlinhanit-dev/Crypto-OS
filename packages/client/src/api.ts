@@ -31,6 +31,11 @@ export type ExperimentPatch = components["schemas"]["ExperimentPatch"];
 export type ExperimentView = components["schemas"]["ExperimentView"];
 export type LineageView = components["schemas"]["LineageView"];
 export type VerifyView = components["schemas"]["VerifyView"];
+export type StrategyCreate = components["schemas"]["StrategyCreate"];
+export type StrategyView = components["schemas"]["StrategyView"];
+export type BacktestCreate = components["schemas"]["BacktestCreate"];
+export type BacktestView = components["schemas"]["BacktestView"];
+export type TradeView = components["schemas"]["TradeView"];
 export type HypothesisView = components["schemas"]["HypothesisView"];
 export type HypothesisCreate = components["schemas"]["HypothesisCreate"];
 export type HypothesisPatch = components["schemas"]["HypothesisPatch"];
@@ -346,6 +351,89 @@ export async function getExperimentLineage(
     `/v1/experiments/${encodeURIComponent(experimentId)}/lineage`,
     baseUrl,
   )) as LineageView;
+}
+
+export async function postStrategy(
+  body: StrategyCreate,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<StrategyView> {
+  return (await postJson("/v1/strategies", baseUrl, body)) as StrategyView;
+}
+
+export async function getStrategies(baseUrl: string = DEFAULT_API_BASE): Promise<StrategyView[]> {
+  return (await readJson("/v1/strategies", baseUrl)) as StrategyView[];
+}
+
+export async function getStrategy(
+  strategyId: string,
+  version: string,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<StrategyView> {
+  return (await readJson(
+    `/v1/strategies/${encodeURIComponent(strategyId)}/${encodeURIComponent(version)}`,
+    baseUrl,
+  )) as StrategyView;
+}
+
+export async function postBacktest(
+  body: BacktestCreate,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<BacktestView> {
+  return (await postJson("/v1/backtests", baseUrl, body)) as BacktestView;
+}
+
+export async function getBacktests(baseUrl: string = DEFAULT_API_BASE): Promise<BacktestView[]> {
+  return (await readJson("/v1/backtests", baseUrl)) as BacktestView[];
+}
+
+export async function getBacktest(
+  backtestId: string,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<BacktestView> {
+  return (await readJson(
+    `/v1/backtests/${encodeURIComponent(backtestId)}`,
+    baseUrl,
+  )) as BacktestView;
+}
+
+export async function getBacktestTrades(
+  backtestId: string,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<TradeView[]> {
+  return (await readJson(
+    `/v1/backtests/${encodeURIComponent(backtestId)}/trades`,
+    baseUrl,
+  )) as TradeView[];
+}
+
+export async function getBacktestMetrics(
+  backtestId: string,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<Record<string, unknown>> {
+  return (await readJson(
+    `/v1/backtests/${encodeURIComponent(backtestId)}/metrics`,
+    baseUrl,
+  )) as Record<string, unknown>;
+}
+
+export async function getBacktestSkipped(
+  backtestId: string,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<Record<string, unknown>[]> {
+  return (await readJson(
+    `/v1/backtests/${encodeURIComponent(backtestId)}/skipped`,
+    baseUrl,
+  )) as Record<string, unknown>[];
+}
+
+export async function getBacktestEquity(
+  backtestId: string,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<Record<string, unknown>[]> {
+  return (await readJson(
+    `/v1/backtests/${encodeURIComponent(backtestId)}/equity`,
+    baseUrl,
+  )) as Record<string, unknown>[];
 }
 
 export async function postNote(
