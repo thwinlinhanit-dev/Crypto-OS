@@ -12,12 +12,21 @@ import { persist } from "zustand/middleware";
  */
 
 export type OverlayId = "sma" | "ema" | "vwap" | "bb";
-export type SubPaneId = "volume" | "rsi";
+export type SubPaneId = "volume" | "rsi" | "funding" | "oi" | "liquidations";
 
 export interface SubPaneState {
   id: SubPaneId;
   enabled: boolean;
   collapsed: boolean;
+}
+
+/** The perp sub-panes (M10, T10.1/D-074): funding, open interest and
+ * liquidations, rendered under the candles for perp instruments only
+ * (PD-10: never on spot). */
+export const PERP_PANE_IDS: readonly SubPaneId[] = ["funding", "oi", "liquidations"] as const;
+
+export function isPerpPane(id: SubPaneId): boolean {
+  return PERP_PANE_IDS.includes(id);
 }
 
 export interface ChartLayoutState {
@@ -53,6 +62,11 @@ const DEFAULTS = {
   subPanes: [
     { id: "volume", enabled: true, collapsed: false },
     { id: "rsi", enabled: false, collapsed: false },
+    // M10 (D-074): the perp sub-panes default off; they only render for
+    // perp instruments (the page gates them on market_type, PD-10)
+    { id: "funding", enabled: false, collapsed: false },
+    { id: "oi", enabled: false, collapsed: false },
+    { id: "liquidations", enabled: false, collapsed: false },
   ],
 } satisfies Partial<ChartLayoutState>;
 

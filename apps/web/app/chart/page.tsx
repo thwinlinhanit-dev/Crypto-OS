@@ -8,9 +8,12 @@ import type { IRange, UTCTimestamp } from "lightweight-charts";
 import type { ExclusionView, EventsView } from "@cryptosos/client";
 import { getEvents } from "@cryptosos/client";
 
+import type { SeriesPoint } from "./data";
+
 import ChartPane, { type PaneHandles, type PaneLine } from "./panes";
 import CommandPalette, { type PaletteAction } from "./palette";
-import { useChartLayout, type OverlayId } from "./store";
+import { isPerpPane, useChartLayout, type OverlayId } from "./store";
+import { emptyPerpData, fetchPerpData } from "./perp";
 import {
   TIMEFRAMES,
   hoverRequests,
@@ -248,6 +251,61 @@ export default function ChartPage() {
       : [];
   }, [data.series]);
 
+  // M10 (T10.1/D-074): the perp sub-panes only render for perp instruments
+  // (PD-10); the data comes from the stored perp rows (PD-5).
+  const isPerpInstrument = useMemo(
+    () => instruments.some((item) => item.instrument_id === instrumentId
+      && item.market_type === "PERPETUAL"),
+    [instruments, instrumentId],
+  );
+
+  const perpEnabled = useMemo(
+    () => isPerpInstrument && layout.subPanes.some((pane) => isPerpPane(pane.id) && pane.enabled),
+    [isPerpInstrument, layout.subPanes],
+  );
+
+  const perpQuery = useQuery({
+    queryKey: ["perp", instrumentId],
+    queryFn: () => fetchPerpData(instrumentId as string),
+    enabled: perpEnabled && instrumentId != null,
+    staleTime: 60_000,
+    retry: 1,
+  });
+
+  const perp = perpQuery.data ?? emptyPerpData();
+
+  const fundingLines = useMemo<PaneLine[]>(
+    () =>
+      perp.funding.length
+        ? [{ id: "funding", points: perp.funding, color: "#a78bfa" }]
+        : [],
+    [perp.funding],
+  );
+
+  const oiLines = useMemo<PaneLine[]>(
+    () =>
+      perp.openInterest.length
+        ? [{ id: "oi", points: perp.openInterest, color: "#38bdf8" }]
+        : [],
+    [perp.openInterest],
+  );
+
+  const liquidationLines = useMemo<PaneLine[]>(() => {
+    if (!perp.liquidations.length) return [];
+    // liquidations render as a step line of qty by side: LONG liquidations
+    // above, SHORT below (the venue's side convention)
+    const longs: SeriesPoint[] = perp.liquidations
+      .filter((row) => row.side === "LONG")
+      .map((row) => ({ time: row.time / 1000, value: row.qty }));
+    const shorts: SeriesPoint[] = perp.liquidations
+      .filter((row) => row.side === "SHORT")
+      .map((row) => ({ time: row.time / 1000, value: -row.qty }));
+    const lines: PaneLine[] = [];
+    if (longs.length) lines.push({ id: "liq-long", points: longs, color: "#f87171" });
+    if (shorts.length) lines.push({ id: "liq-short", points: shorts, color: "#4ade80" });
+    return lines;
+  }, [perp.liquidations]);
+
   const exclusions = data.quality?.exclusions ?? EMPTY_EXCLUSIONS;
   const quality = data.quality;
   const timeVisible = layout.timeframe !== "1D";
@@ -356,10 +414,15 @@ export default function ChartPage() {
         />
         {layout.subPanes.map((pane) => {
           if (!pane.enabled) return null;
+          if (isPerpPane(pane.id) && !isPerpInstrument) return null; // PD-10
           if (pane.collapsed) {
+            const label = pane.id === "volume" ? "VOLUME"
+              : pane.id === "rsi" ? "RSI"
+              : pane.id === "funding" ? "FUNDING"
+              : pane.id === "oi" ? "OI" : "LIQUIDATIONS";
             return (
               <div key={pane.id} className="chart-pane-collapsed">
-                {pane.id === "volume" ? "VOLUME" : "RSI"} — collapsed (expand from Display)
+                {label} — collapsed (expand from Display)
               </div>
             );
           }
@@ -377,15 +440,38 @@ export default function ChartPage() {
             onHover: handleHover,
             onNearLeftEdge: data.loadOlder,
           } as const;
-          return pane.id === "volume" ? (
-            <ChartPane key="volume" id="volume" {...common} histogram lines={volumeLines} />
-          ) : (
+          if (pane.id === "volume") {
+            return (
+              <ChartPane key="volume" id="volume" {...common} histogram lines={volumeLines} />
+            );
+          }
+          if (pane.id === "rsi") {
+            return (
+              <ChartPane
+                key="rsi"
+                id="rsi"
+                {...common}
+                lines={rsiLines}
+                priceLevels={RSI_LEVELS}
+              />
+            );
+          }
+          // M10 perp sub-panes (D-074): funding / OI / liquidations, from
+          // the stored perp rows (PD-5); rendered only for perp instruments
+          if (pane.id === "funding") {
+            return (
+              <ChartPane key="funding" id="funding" {...common} lines={fundingLines} />
+            );
+          }
+          if (pane.id === "oi") {
+            return <ChartPane key="oi" id="oi" {...common} lines={oiLines} />;
+          }
+          return (
             <ChartPane
-              key="rsi"
-              id="rsi"
+              key="liquidations"
+              id="liquidations"
               {...common}
-              lines={rsiLines}
-              priceLevels={RSI_LEVELS}
+              lines={liquidationLines}
             />
           );
         })}
@@ -548,15 +634,25 @@ export default function ChartPage() {
               </div>
               <div className="chart-menu-section">
                 <div className="chart-menu-title">Panes</div>
-                {layout.subPanes.map((pane, index) => (
+                {layout.subPanes.map((pane, index) => {
+                  // M10 (D-074/PD-10): the perp panes are disabled on spot
+                  // instruments - perp data is never substituted
+                  const gated = isPerpPane(pane.id) && !isPerpInstrument;
+                  return (
                   <div key={pane.id} className="chart-menu-item">
-                    <label>
+                    <label className={gated ? "muted" : undefined}>
                       <input
                         type="checkbox"
                         checked={pane.enabled}
+                        disabled={gated}
                         onChange={() => layout.togglePane(pane.id)}
                       />
-                      {pane.id === "volume" ? "Volume (+ RVOL line)" : "RSI"}
+                      {pane.id === "volume" ? "Volume (+ RVOL line)"
+                        : pane.id === "rsi" ? "RSI"
+                        : pane.id === "funding" ? "Funding (perp)"
+                        : pane.id === "oi" ? "Open interest (perp)"
+                        : "Liquidations (perp)"}
+                      {gated && " — perp only"}
                     </label>
                     {pane.id === "rsi" && (
                       <input
@@ -596,7 +692,8 @@ export default function ChartPage() {
                       ↓
                     </button>
                   </div>
-                ))}
+                  );
+                })}
               </div>
               <div className="chart-menu-section">
                 <div className="chart-menu-title">Hover metrics</div>
