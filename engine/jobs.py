@@ -46,11 +46,12 @@ _SELECT = (
 
 
 class JobKind(StrEnum):
-    """Job kinds M1 enqueues (design note section 10)."""
+    """Job kinds the engine enqueues (design note section 10; M6 adds BACKTEST)."""
 
     INGEST = "INGEST"
     REPAIR = "REPAIR"
     RESAMPLE = "RESAMPLE"
+    BACKTEST = "BACKTEST"
 
 
 class JobStatus(StrEnum):
@@ -367,6 +368,18 @@ async def execute_job(
                 result_ref=resample_result.dataset_version,
                 error=None,
                 message=f"succeeded dataset_version={resample_result.dataset_version}",
+            )
+        if job.kind is JobKind.BACKTEST:
+            from engine.strategy.runner import run_backtest_job
+
+            backtest_id = run_backtest_job(conn, job.params)
+            return _finish(
+                conn,
+                job.job_id,
+                status=JobStatus.SUCCEEDED,
+                result_ref=str(backtest_id),
+                error=None,
+                message=f"succeeded backtest_id={backtest_id}",
             )
         raise RuntimeError(f"unknown job kind {job.kind!r}")
     except EngineError as exc:

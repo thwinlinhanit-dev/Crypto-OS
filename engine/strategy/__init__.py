@@ -1,1 +1,1 @@
-"""Placeholder package — the module lands with its milestone (PD-9)."""
+"""M6 (T6.1) — backtest simulator package (spec section 7)."""

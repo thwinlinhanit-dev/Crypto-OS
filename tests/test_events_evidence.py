@@ -287,7 +287,12 @@ def test_evidence_recompute_path(client: TestClient, conn: Connection, seeded: s
     default_ids = client.get("/v1/events", params=_query(params=None)).json()["events"]
     assert default_ids, "default params must fire on the 120-bar fixture"
     target = default_ids[-1]["event_id"]
-    conn.execute(text("TRUNCATE research.event, research.event_outcome, research.stats_result"))
+    conn.execute(
+        text(
+            "TRUNCATE strategy.trade, strategy.backtest,"
+            " research.event, research.event_outcome, research.stats_result"
+        )
+    )
     conn.commit()
     assert (
         conn.execute(
@@ -318,7 +323,12 @@ def test_evidence_unpersisted_custom_params_404(
     client: TestClient, conn: Connection, seeded: str
 ) -> None:
     custom_id = _capit_ids(client)[-1]  # SMALL_PARAMS event, never persisted here
-    conn.execute(text("TRUNCATE research.event, research.event_outcome, research.stats_result"))
+    conn.execute(
+        text(
+            "TRUNCATE strategy.trade, strategy.backtest,"
+            " research.event, research.event_outcome, research.stats_result"
+        )
+    )
     conn.commit()
     response = client.get(f"/v1/events/{custom_id}")
     assert response.status_code == 404, (

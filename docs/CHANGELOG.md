@@ -3,7 +3,57 @@
 Format follows [Keep a Changelog](https://keepachangelog.com/); version tags start at M0
 (the spec defines no release numbering yet).
 
-## [M5b] - 2026-10-10 - Experiments, families, freeze/verify, lineage
+## [M6] - 2026-10-10 - Backtest simulator, strategy CRUD, parity layer 2
+
+### Added
+- Simulator (T6.1, spec §7): `engine/strategy/models.py` (the 7.1 definition
+  JSON transcribed field-for-field; spec wire names `trigger_R` /
+  `activate_R` preserved through Pydantic aliases; unknown/ reserved
+  vocabularies 422), `sizing.py` (7.2 risk distance, stop price, RISK /
+  FIXED quantity with lot-step round-down), `fills.py` (7.3: PARITY fills
+  at the signal-bar CLOSE - D-039; REALISTIC_OHLC at the next bar's OPEN
+  with adverse slippage; resting stop / target semantics with
+  gap-through-open; E5 same-bar resolution - REALISTIC_OHLC stop first,
+  PARITY the broker-emulator path heuristic), `simulator.py` (7.4 per-bar
+  order of operations, 7.5 trade record with every time field, E1-E6: no
+  signal disappears - NOT_FILLED/NO_NEXT_BAR, SKIPPED/ENTRY_DATA_GAP,
+  SKIPPED/GAP_THROUGH_STOP, SKIPPED/QTY_ZERO, open-at-END_OF_DATA,
+  data-gap flagging), `hash.py` (canonical JSON sha256 - D-037 form),
+  `runner.py` (job-side glue: manifest-backed bars, RVOL_CLIMAX signals
+  through the detector registry, persistence in the caller's transaction).
+- Tables (T6.1/T6.2, spec §10): migration `0006_m6_backtest` -
+  `strategy.strategy_version` (versioned, content-hashed),
+  `strategy.backtest` (experiment_id NOT NULL - D-041; locked one-way
+  flag; CHECKs), `strategy.trade` (append-only trigger, verified live:
+  `IMMUTABLE_RESULT: strategy.trade is append-only`). Applied against the
+  live cluster.
+- Job seam: `JobKind.BACKTEST` in `engine/jobs.py`; `execute_job` dispatches
+  through the same claim -> execute -> commit pattern as INGEST/REPAIR
+  (D-042: the simulator stays pure).
+- API (T6.2, spec §11): `apps/api/backtests.py` -
+  `POST/GET /v1/strategies` (edits create a NEW version - 7.1),
+  `GET /v1/strategies/{id}/{version}`, `POST /v1/backtests` (202 async;
+  requires a registered experiment_id - D-041; fail-closed on unknown
+  fill_model/data_scope/manifest, SHORT_ONLY until M10 - R11/D-043),
+  `GET /v1/backtests/{id}[/trades|/metrics|/skipped|/equity]`.
+- Tests: 65 new (11 strategy models, 11 sizing, 16 fills, 17 simulator,
+  10 API) including the full async lifecycle (POST -> job -> simulator ->
+  trades -> succeeded) and byte-identical reproducibility (M6 AC). Suite
+  now 588 (587 passed + 1 skipped vs M5b's 523).
+- Test isolation: the M6 FK (`strategy.backtest.experiment_id ->
+  research.experiment`) is added to the shared TRUNCATE lists
+  (`tests/support.py`, `test_api_stats.py`, `test_events_evidence.py`) so
+  every suite's cleanup still runs.
+- Decisions D-038..D-044 recorded in `docs/DECISIONS.md`; design note
+  `specs/design/m6_backtest.md` is the module contract; OQ-22 open for the
+  owner (the TradingView "List of trades" export for parity layer 2).
+
+### Notes
+- T6.1/T6.2 only: portfolio mode (T6.3), parity layer 2 (T6.5) and the
+  Strategy Lab UI (T6.4) land next; short-side strategies stay 422 until
+  M10 (R11); RANDOM_BASELINE stays 422 until M7 (7.6).
+
+## [M5b] - 2026-10-10 - Experiments, families, immutability, lineage
 
 ### Added
 - Experiment tables (T5b.1, spec §10): migration `0005_m5b_experiments`

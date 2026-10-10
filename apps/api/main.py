@@ -14,6 +14,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from apps.api.backtests import router as backtests_router
 from apps.api.data import router as data_router
 from apps.api.db import database_reachable
 from apps.api.errors import install_error_handlers
@@ -99,6 +100,9 @@ def create_app() -> FastAPI:
     # M5b experiments (spec 8.4/8.5/11, design note m5b_experiments):
     # families/variants, experiment CRUD, freeze + verify + lineage.
     app.include_router(experiments_router)
+    # M6 strategies + backtests (spec 7/10/11, design note m6_backtest):
+    # versioned strategy CRUD, async backtests, trade/equity/metrics/skipped.
+    app.include_router(backtests_router)
     # M5 stats (spec section 11, design note m5_stats section 4):
     # POST /v1/stats + GET /v1/stats/{ref_id}, reads only (PD-1).
     app.include_router(stats_router)

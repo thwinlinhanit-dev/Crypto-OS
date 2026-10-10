@@ -68,5 +68,25 @@ built now and what would have to be true to pick it up.
   layout is set).
 - **Strategy/backtest/validation/conclusion lineage nodes** -
   `refs.backtests`, `refs.validations`, `refs.baselines` and the matching
-  lineage stages need the M6/M7 tables; `GET /v1/experiments/{id}/lineage`
-  names them under `not_implemented` in the meantime.
+  lineage stages need the M6/M7 tables; M6 lands `strategy.backtest` +
+  `strategy.trade`, so the lineage endpoint can now resolve backtest refs
+  (M7 adds the rest). `GET /v1/experiments/{id}/lineage` names them under
+  `not_implemented` in the meantime.
+
+## M6 park list (design note `specs/design/m6_backtest.md` section 9)
+
+- **Portfolio mode (T6.3)** - shared equity, deterministic `instrument_id`
+  ordering (D-040), `max_concurrent_positions` / `max_portfolio_heat` /
+  per-asset caps; the per-instrument simulator is ready. To pick it up: the
+  design note's section 5 plus a portfolio test suite.
+- **Parity layer 2 (T6.5)** - `engine/parity/layer2.py` + the trade-list
+  comparison against the owner's TradingView export (OQ-22); until the
+  export exists the suite runs skip-guarded (the h=10 precedent).
+- **Strategy Lab UI + trade overlay (T6.4)** - `apps/web/app/strategy/`
+  (strategy selector, backtest run, trades/equity/metrics) plus the chart
+  overlay (entry x-cross, stop step line, exit marker with reason + R,
+  skipped signals hollow). The client wrappers come with the openapi regen.
+- **Short-side strategies (R11)** - M10 with the perp adapter; parsed but
+  422 today (D-043).
+- **Random-baseline entry mode (7.6)** - M7 validation surface.
+- **`REALISTIC_INTRABAR` (R8)** - reserved, NOT_IMPLEMENTED.
