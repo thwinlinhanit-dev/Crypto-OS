@@ -37,3 +37,21 @@ connection string in the gitignored `.env`. Docker is optional (R10).
 | `specs/` | reference Pine, events, design notes |
 | `data/` | raw / normalized / derived bars — local, immutable, gitignored (PD-7) |
 | `docs/` | `DECISIONS.md`, `BACKLOG.md`, `CHANGELOG.md` |
+
+## Status — 2026-10-10
+
+**M0–M11 of `IMPLEMENTATION_SPEC_v1.1.1` are complete** (the full milestone
+list M0…M11: bootstrap, candles, chart, features, events, stats, experiments,
+backtests, validation, AI Copilot + MCP, perp + live candles, hardening).
+
+- Suite: **809 passed + 2 skipped**; ruff + `mypy --strict` (170 files) clean;
+  web `tsc` + `next build` clean; the §14 e2e core flow passes end to end.
+- AC evidence per milestone: [`docs/CHANGELOG.md`](./docs/CHANGELOG.md).
+- Every decision: [`docs/DECISIONS.md`](./docs/DECISIONS.md) (D-001…D-081).
+- Remaining gaps are owner-input-blocked: **OQ-22** (parity layer 2 — the
+  TradingView trade-list export) and **OQ-23** (the holdout flow — the OQ-19
+  reading). Both have the engine/API groundwork in place.
+
+The web app runs on `http://localhost:3000` and the API on `http://localhost:8000`;
+browser-check the web app on `:3005` and widen `ALLOWED_ORIGINS` on the API for
+non-3000 origins. |

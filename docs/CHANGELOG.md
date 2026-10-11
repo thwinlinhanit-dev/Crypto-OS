@@ -3,6 +3,103 @@
 Format follows [Keep a Changelog](https://keepachangelog.com/); version tags start at M0
 (the spec defines no release numbering yet).
 
+## [M11] - 2026-10-10 - Hardening: a11y, performance gates, e2e, backup/export
+
+### Added
+- Backup/export (T11.4): `engine/backup.py` — the notebook + registry +
+  lineage bundle (`POST /v1/backups`, `POST /v1/backups/import`); the
+  bundle is JSON with `schema_version` + `created_at`; import is
+  idempotent (ON CONFLICT DO NOTHING) and the frozen contract survives the
+  round trip (D-021/D-079); no secrets, metadata + lineage only (PD-6).
+  `GET /v1/backups/{id}` answers 404 (exports are direct downloads, OQ-27).
+- Performance gates (T11.2): `tests/test_perf_api.py` — the §14 targets
+  as hard CI gates (D-075): indicators 5,000 bars <150ms; single-symbol
+  10y daily backtest <5s; chart interactions <50ms (the hover map lookup);
+  the scanner 100-symbol row build <2s; the 5,000-candle API <300ms
+  (live-DB, skip-guarded per D-076). A budget overrun fails CI.
+- E2E core flow (T11.3): `tests/test_e2e_core_flow.py` — the spec §14
+  acceptance path as one deterministic run (D-077): open BTC 1D → toggle
+  events → click a marker → Evidence (grade + n_eff) → add to experiment
+  → run backtest → validation → freeze → verify INTACT.
+- A11y audit (T11.1): `tests/test_a11y.py` — the WCAG AA contrast check
+  over the CSS vars (D-080): --text/--muted meet 4.5:1, the status
+  colors meet 3:1; the nav landmark + aria-labels; the
+  `prefers-reduced-motion` rule added to globals.css.
+
+### M11 AC evidence
+- e2e core flow: 1 passed (the full 8-step §14 path).
+- performance: 5 passed (all §14 budgets hold).
+- backup/export: 8 passed (the bundle shape, validation, idempotency,
+  the frozen contract).
+- a11y: 7 passed (contrast ratios + the reduced-motion rule).
+- Suite: 809 passed + 2 skipped; ruff + mypy strict (170 files) clean;
+  web tsc clean.
+
+## [M10] - 2026-10-10 - Perp derivatives + live candles
+
+### Added
+- Perp adapter (T10.1): `engine/exchanges/perp.py` — funding (8h, spec
+  7.7), open interest, liquidations; rate-limit aware (429 backoff, R6);
+  fail-closed on a non-list payload; idempotent persists; the market-type
+  guard (PD-10). Migration 0010 (`market.funding_rate`,
+  `market.open_interest`, `market.liquidation`).
+- Live kline WebSocket supervisor (T10.2): `engine/market/live.py` —
+  gap detection (a jump past the next expected bar is a gap, recorded in
+  `system.gap` — never silent, PD-10/the AC), REST backfill repair
+  (REPAIRED + GREEN), the forming bar never stored (§17), jittered capped
+  reconnect backoff (D-072).
+- Funding cost model + SHORT-side (T10.3): `engine/strategy/funding.py`
+  (8h accrual on notional; positive rate = longs pay shorts, D-070) +
+  `engine/strategy/short_side.py` (SHORT_ONLY/BOTH runs on perp only,
+  D-071; the runner re-checks the universe's market types).
+- The API surface: `apps/api/perp.py` — `GET /v1/funding|oi|liquidations`
+  (fail-closed on a spot instrument, PD-10) + `WebSocket /v1/ws` (the
+  spec §11 channels, D-073).
+- The chart sub-panes: `apps/web/app/chart/perp.ts` + the store/page
+  wiring — funding/OI/liquidations under the candles, gated on
+  market_type=PERPETUAL (D-074).
+
+### M10 AC evidence
+- kill mid-bar → detected gap → automatic repair → GREEN: 1 passed
+  (`test_kill_mid_bar_gap_detected_repaired_green`); no silent gaps: 1
+  passed; a failed backfill keeps the gap OPEN: 1 passed.
+- perp adapter: 9 passed; funding model: 12 passed; short-side gate: 8
+  passed; perp API: 10 passed.
+- Suite: 788 passed + 2 skipped; ruff + mypy strict (164 files) clean.
+
+## [M9] - 2026-10-10 - AI Copilot + MCP
+
+### Added
+- Tool registry (spec §9): `engine/ai/registry.py` — the spec's 21 tools
+  verbatim, tiered READ_ONLY/RESEARCH; the registry is closed (unknown
+  tools raise, D-063); no order-related tools exist; experiment tools
+  respect immutability; holdout-scope tools carry `requires_holdout`
+  (D-064).
+- Number integrity (spec §9): `engine/ai/integrity.py` — the
+  `{{ref:<ref_id>#<json_path>}}` placeholder resolver (fail-closed:
+  unknown ref/path removed + flagged, never rendered raw, D-059) + the
+  free-text numeral scanner (the AC).
+- Providers + the Copilot loop: `engine/ai/providers.py`
+  (LLMProvider; Echo + OpenAI adapters; `LLM_PROVIDER` selection, D-061)
+  + `engine/ai/runner.py` (the five modes; the loop de-duplicates calls;
+  Critic mode fails closed below three items, D-060).
+- Migration 0009 (`agents.run` + `agents.tool_call`) + `engine/ai/mcp.py`
+  — every MCP call writes `agents.tool_call` AND `system.audit_log`
+  (D-062, the AC).
+- The API: `apps/api/ai.py` — `POST /v1/ai/chat` (SSE), `GET /v1/ai/tools`,
+  `GET /v1/agents/runs[/{id}]`; the chat endpoint creates the run row,
+  executes audited tools, resolves placeholders.
+- The UI: `apps/web/app/ai/page.tsx` — the five modes, the tool-registry
+  table, the transcript log, the executed-tool-call list, the
+  unresolved-placeholder alert (the AC).
+
+### M9 AC evidence
+- numbers without ref flagged: 13 passed (the resolver + the UI alert).
+- no order-related tools; experiment tools respect immutability: 12
+  passed (the AC's explicit gate).
+- MCP calls audited: 12 passed (agents.tool_call + audit_log per call).
+- Suite: 739 passed + 2 skipped; ruff + mypy strict (154 files) clean.
+
 ## [M8] - 2026-10-10 - Scanner, watchlists, MTF, replay
 
 ### Added

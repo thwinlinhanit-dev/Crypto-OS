@@ -91,3 +91,30 @@ built now and what would have to be true to pick it up.
   422 today (D-043).
 - **Random-baseline entry mode (7.6)** - M7 validation surface.
 - **`REALISTIC_INTRABAR` (R8)** - reserved, NOT_IMPLEMENTED.
+
+## v1.1 park list (spec line 47)
+
+- **Orderbook heatmap / footprint / CVD visualizations** - the Master §9
+  reference describes them; CryptoOS MUST NOT copy the proprietary
+  implementation (spec line 101). An independent implementation is v1.1.
+- **Paper trading, alerts, report export** - v1.1.
+- **Randomized-timing baseline + benchmark-strategy baselines** - v1.1 (9.6).
+- **FDR / White's Reality Check / SPA corrections** - v1.1 (8.4 backlog).
+- **Bybit/OKX/Hyperliquid adapters** - v1.1 via the same ExchangeAdapter
+  interface (R2/D-067).
+- **Import events/features from an external research system** - v1.1 (OD-7,
+  default no).
+
+## Status — 2026-10-10
+
+**M0-M11 of IMPLEMENTATION_SPEC_v1.1.1 are complete.** Suite: 809 passed
++ 2 skipped; ruff + mypy strict (170 files) clean; web tsc + next build
+clean; the e2e core flow passes. Every milestone's AC evidence is recorded
+in `docs/CHANGELOG.md`; every decision in `docs/DECISIONS.md` (D-001..D-081).
+
+The two remaining gaps are owner-input-blocked:
+- **OQ-22** (parity layer 2 - the owner's TradingView "List of trades" export)
+- **OQ-23** (the holdout flow end-to-end - the OQ-19 reading)
+
+Both have the API/engine groundwork in place; only the owner's input (an
+export, a reading confirmation) is missing.
