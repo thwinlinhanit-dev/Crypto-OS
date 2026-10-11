@@ -13,6 +13,17 @@ from engine.hypothesis.experiment import (
     build_experiment_config,
     scope_universe_guard,
 )
+from engine.hypothesis.mcp import (
+    HYPOTHESIS_EVALUATE,
+    HYPOTHESIS_PROPOSE,
+    RESEARCH_QUESTION_SEARCH,
+    local_baseline_ranking,
+    recommendation,
+    register_all,
+)
+from engine.hypothesis.mcp import (
+    schemas as hf_schemas,
+)
 from engine.hypothesis.models import (
     ALLOWED_TRANSITIONS,
     DOMAINS,
@@ -54,9 +65,12 @@ from engine.hypothesis.robustness import (
 __all__ = [
     "ALLOWED_TRANSITIONS",
     "DOMAINS",
+    "HYPOTHESIS_EVALUATE",
+    "HYPOTHESIS_PROPOSE",
     "KNOWN_FEATURES",
     "ORIGINS",
     "RELATIONSHIPS",
+    "RESEARCH_QUESTION_SEARCH",
     "STATUSES",
     "Check",
     "CriterionOutcome",
@@ -84,8 +98,12 @@ __all__ = [
     "evaluate",
     "find_duplicates",
     "get_hypothesis",
+    "hf_schemas",
     "horizon_summaries",
     "is_terminal",
+    "local_baseline_ranking",
+    "recommendation",
+    "register_all",
     "run_robustness",
     "scope_universe_guard",
     "set_status",
