@@ -11,6 +11,19 @@
   --caution: #fb923c;
 }
 
+/* Reduced motion: the chart and panels honor the OS preference (M11
+   T11.1, D-080) - transitions and animations collapse to none. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 * {
   box-sizing: border-box;
 }
