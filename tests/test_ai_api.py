@@ -167,10 +167,13 @@ def test_runs_endpoint_respects_the_limit(client: TestClient) -> None:
 
 
 def test_a_tool_result_carries_a_ref(client: TestClient) -> None:
-    """D-066: every tool result carries ref_id + dataset_version, so the
-    placeholder resolver can substitute from it (D-059)."""
+    """D-066: every tool result carries a deterministic ref_id; the
+    dataset_version is the REAL one the result read (or None when the
+    result is not dataset-scoped) — never a generic "1" (review P1 #2)."""
     with connection_scope() as conn:
         executor = _tool_executor(conn)
         result: dict[str, Any] = executor("list_hypotheses", {})
         assert result["ref_id"] != ""
-        assert result["dataset_version"] == "1"
+        # a registry read is not dataset-scoped: dataset_version is None,
+        # not a fabricated "1"
+        assert result["dataset_version"] is None

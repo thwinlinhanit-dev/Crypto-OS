@@ -20,6 +20,8 @@ from pydantic import BaseModel
 from sqlalchemy import Connection, text
 
 from apps.api.db import connection_scope
+from engine.ai.handlers import BOUND_TOOLS as _BOUND_TOOLS
+from engine.ai.handlers import _audit
 from engine.ai.providers import Message, provider
 from engine.ai.registry import ToolNotFoundError, tools
 from engine.ai.registry import tool as registry_tool
@@ -88,69 +90,24 @@ def _tool_executor(conn: Connection) -> Any:
             registry_tool(name)
         except ToolNotFoundError:
             raise HTTPException(422, f"unknown tool {name!r}") from None
-        result: dict[str, Any] = {
-            "tool": name,
-            "ok": True,
-            "ref_id": f"{name}:{abs(hash(json.dumps(args, sort_keys=True))) & 0xFFFFFFFFFF:X}",
-            "dataset_version": "1",
-        }
-        if name == "get_experiment":
-            row = conn.execute(
-                text(
-                    "SELECT experiment_id, status, title FROM research.experiment "
-                    "WHERE experiment_id = :id"
+        # D-059/D-066: a tool without a real handler MUST NOT return a
+        # success-shaped result. An unbound computation is an explicit
+        # failure the model can see (the trust boundary: never fake a
+        # research result).
+        bound = _BOUND_TOOLS.get(name)
+        if bound is None:
+            result = {
+                "tool": name,
+                "ok": False,
+                "error": "NOT_IMPLEMENTED",
+                "message": (
+                    f"tool {name!r} has no data-backed handler; it cannot run a "
+                    "real computation"
                 ),
-                {"id": str(args.get("experiment_id", ""))},
-            ).first()
-            if row is None:
-                result["ok"] = False
-                result["error"] = "not found"
-            else:
-                result["experiment_id"] = str(row.experiment_id)
-                result["status"] = row.status
-                result["title"] = row.title
-        elif name == "list_hypotheses":
-            rows = conn.execute(
-                text(
-                    "SELECT hyp_id, status, statement FROM research.hypothesis "
-                    "ORDER BY preregistered_at DESC LIMIT :limit"
-                ),
-                {"limit": min(int(args.get("limit", 20)), 100)},
-            ).all()
-            result["hypotheses"] = [
-                {
-                    "hypothesis_id": str(row.hyp_id),
-                    "status": row.status,
-                    "statement": row.statement,
-                }
-                for row in rows
-            ]
-        elif name == "search_instruments":
-            rows = conn.execute(
-                text(
-                    "SELECT instrument_id, symbol FROM market.instrument "
-                    "WHERE symbol ILIKE :q ORDER BY symbol LIMIT 20"
-                ),
-                {"q": f"%{args.get('query', '')}%"},
-            ).all()
-            result["instruments"] = [
-                {"instrument_id": str(row.instrument_id), "symbol": row.symbol}
-                for row in rows
-            ]
-        # audit every executed call (D-062: agents.tool_call + audit_log);
-        # the run row is created by the caller, so audit_log carries the
-        # tool detail here
-        conn.execute(
-            text(
-                "INSERT INTO system.audit_log (actor, action, target, detail) "
-                "VALUES ('copilot', 'ai.tool_call', :target, :detail)"
-            ),
-            {
-                "target": name,
-                "detail": json.dumps({"tool": name, "ref_id": result["ref_id"]}),
-            },
-        )
-        return result
+            }
+            _audit(conn, name, result)
+            return result
+        return bound(conn, args)
 
     return _execute
 
@@ -207,7 +164,16 @@ async def chat(body: ChatRequest) -> Any:
             "type": "done",
             "run_id": run_id,
             "tool_calls": [
-                {"name": e.name, "result_ref": e.ref_id}
+                {
+                    "name": e.name,
+                    "result_ref": e.ref_id,
+                    "ok": e.result.get("ok", False),
+                    **(
+                        {"error": e.result.get("error")}
+                        if not e.result.get("ok", True)
+                        else {}
+                    ),
+                }
                 for e in turn.tool_executions
             ],
             "unresolved_placeholders": turn.unresolved_placeholders,
