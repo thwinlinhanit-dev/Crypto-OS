@@ -1,6 +1,7 @@
 """M12 — the visualization runtime package (spec §1: a controlled
 projection layer over the existing engines)."""
 
+from engine.visualization.absorption import AbsorptionSignal, absorption
 from engine.visualization.canvas import (
     DEFAULT_VISIBLE,
     LAYERS,
@@ -18,6 +19,12 @@ from engine.visualization.data_api import (
     quality_of,
     truncate_as_of,
 )
+from engine.visualization.footprint import (
+    FOOTPRINT_MODES,
+    FootprintCell,
+    build_footprint,
+    render_footprint,
+)
 from engine.visualization.heatmap import (
     HEATMAP_MODES,
     HeatmapCell,
@@ -27,6 +34,14 @@ from engine.visualization.heatmap import (
     sparsify,
 )
 from engine.visualization.layout import Layout, layout_hash
+from engine.visualization.microstructure import (
+    TradeBucket,
+    cvd,
+    delta,
+    render_cvd,
+    render_delta,
+    taker_decomposition,
+)
 from engine.visualization.models import (
     ALLOWED_LIFECYCLE_TRANSITIONS,
     DATASETS,
@@ -43,6 +58,17 @@ from engine.visualization.models import (
     assert_valid_quality_state,
     assert_valid_render_kind,
     is_terminal_lifecycle,
+)
+from engine.visualization.orderbook import (
+    LiquidityZone,
+    OrderbookSnapshot,
+    apply_ops,
+    detect_zones,
+    liquidity_walls,
+    migration,
+    render_orderbook_heatmap,
+    sweep,
+    void,
 )
 from engine.visualization.profile import ProfileBin, build_profile, render_profile
 from engine.visualization.program import (
@@ -81,6 +107,7 @@ __all__ = [
     "ALLOWED_LIFECYCLE_TRANSITIONS",
     "DATASETS",
     "DEFAULT_VISIBLE",
+    "FOOTPRINT_MODES",
     "HEATMAP_MODES",
     "LAYERS",
     "LIFECYCLE",
@@ -89,22 +116,29 @@ __all__ = [
     "QUALITY_STATES",
     "RENDER_KINDS",
     "RUNTIME",
+    "AbsorptionSignal",
     "Crosshair",
     "DatasetResponse",
+    "FootprintCell",
     "HeatmapCell",
     "HudElement",
     "Layer",
     "LayerStack",
     "Layout",
     "LineSeries",
+    "LiquidityZone",
+    "OrderbookSnapshot",
     "ProfileBin",
     "ProvenanceValue",
     "SandboxRequest",
     "TableRow",
+    "TradeBucket",
     "Viewport",
     "VisualizationProgram",
+    "absorption",
     "add_layer",
     "aggregate_for_zoom",
+    "apply_ops",
     "assert_datasets_declared",
     "assert_distinguishable",
     "assert_no_forbidden_capabilities",
@@ -115,19 +149,29 @@ __all__ = [
     "assert_valid_provenance",
     "assert_valid_quality_state",
     "assert_valid_render_kind",
+    "build_footprint",
     "build_profile",
     "classify",
     "clip",
+    "cvd",
     "default_stack",
+    "delta",
+    "detect_zones",
     "is_terminal_lifecycle",
     "layers_at",
     "layout_hash",
+    "liquidity_walls",
+    "migration",
     "program_hash",
     "quality_of",
     "remove_layer",
+    "render_cvd",
+    "render_delta",
+    "render_footprint",
     "render_heatmap",
     "render_hud",
     "render_line",
+    "render_orderbook_heatmap",
     "render_profile",
     "render_table",
     "render_viewport",
@@ -135,7 +179,10 @@ __all__ = [
     "set_visibility",
     "sparse_equals_dense",
     "sparsify",
+    "sweep",
+    "taker_decomposition",
     "truncate_as_of",
     "validate_program",
+    "void",
     "zoom_aggregate",
 ]
