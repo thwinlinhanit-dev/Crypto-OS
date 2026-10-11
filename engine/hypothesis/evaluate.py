@@ -64,8 +64,9 @@ class Evaluation:
 
 def horizon_summaries(stats_result: Mapping[str, Any]) -> dict[int, dict[str, Any]]:
     """The per-horizon summaries from the M5 ``compute_stats`` result, keyed
-    by horizon. A horizon with no observations is reported with n=0 (never
-    fabricated)."""
+    by horizon (the M5 entry keys the horizon as ``h``; the pooled block
+    carries ``mean_r``/``win_rate``/``ci_median_r`` directly). A horizon with
+    no observations is reported with n=0 (never fabricated)."""
     horizons = stats_result.get("horizons")
     if not isinstance(horizons, Sequence) or isinstance(horizons, (str, bytes)):
         return {}
@@ -73,10 +74,17 @@ def horizon_summaries(stats_result: Mapping[str, Any]) -> dict[int, dict[str, An
     for entry in horizons:
         if not isinstance(entry, Mapping):
             continue
-        horizon = entry.get("horizon")
+        horizon = entry.get("h")
         if not isinstance(horizon, int):
             continue
-        out[horizon] = dict(entry)
+        # the pooled statistics live in the segment blocks; ``base`` is the
+        # all-segments block (IS+OOS pooled) - the horizon's headline
+        pooled = entry.get("base")
+        summary: dict[str, Any] = dict(entry)
+        if isinstance(pooled, Mapping):
+            summary.update(pooled)
+            # the segment blocks carry the CI as ``ci_median_r`` too
+        out[horizon] = summary
     return out
 
 

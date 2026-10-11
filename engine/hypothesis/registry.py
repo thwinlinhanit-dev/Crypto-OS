@@ -312,6 +312,8 @@ def _version_dict(row: Any) -> dict[str, Any]:
         "expected_direction": row.expected_direction,
         "baseline": row.baseline,
         "falsification_criteria": row.falsification_criteria,
+        "proposed_statistical_method": row.proposed_statistical_method,
+        "data_requirements": row.data_requirements,
         "economic_significance_threshold": (
             float(row.economic_significance_threshold)
             if row.economic_significance_threshold is not None

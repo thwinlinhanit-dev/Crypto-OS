@@ -24,9 +24,15 @@ from engine.config.defaults import load_defaults
 from engine.errors import ValidationError
 from engine.hypothesis.models import DIRECTIONS
 
-#: The default cluster models (spec §8.2: the detector's documented
-#: assumption; a hypothesis may narrow it, never widen it silently).
-DEFAULT_CLUSTER_MODELS: Final[tuple[str, ...]] = ("INDEPENDENT", "SYMBOL", "TIMEFRAME")
+#: The default cluster models: the M5 engine's actual vocabulary (spec
+#: §8.2; a hypothesis may narrow it, never widen it silently). MARKET_EVENT
+#: is not default (it needs a derived k); CUSTOM is accepted-then-rejected
+#: by the engine with the M5 message.
+from engine.stats.clusters import CLUSTER_MODELS
+
+DEFAULT_CLUSTER_MODELS: Final[tuple[str, ...]] = tuple(
+    m for m in CLUSTER_MODELS if m not in ("MARKET_EVENT", "CUSTOM")
+)
 
 #: The statistical methods the builder accepts (spec §11.1: the method is
 #: declared in the hypothesis, not chosen after the results).
@@ -63,6 +69,7 @@ class ExperimentConfig:
     expected_direction: str
     variant_count: int = 1
     selection_method: str = "PRE_SPECIFIED"
+    market_event_k: int | None = None
     extras: Mapping[str, Any] = field(default_factory=dict)
 
     def config_hash(self) -> str:
@@ -88,11 +95,16 @@ class ExperimentConfig:
 
     def stats_params(self) -> dict[str, Any]:
         """The ``params`` mapping the M5 ``compute_stats`` consumes."""
-        return {
+        params: dict[str, Any] = {
             "horizons": list(self.horizons),
             "bootstrap_resamples": self.bootstrap_resamples,
             "bootstrap_seed": self.bootstrap_seed,
         }
+        # MARKET_EVENT needs k (spec 8.2); derived, never invented: the
+        # caller passes the resolved value through ``market_event_k``
+        if "MARKET_EVENT" in self.cluster_models and self.market_event_k is not None:
+            params["market_event_k"] = self.market_event_k
+        return params
 
 
 def _require_horizon_list(value: Any) -> tuple[int, ...]:

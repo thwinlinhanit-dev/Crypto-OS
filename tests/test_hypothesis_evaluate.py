@@ -32,18 +32,18 @@ def _m5_result(
     consumes - it never fabricates the statistics itself)."""
     entries = []
     for h in horizons:
-        entries.append(
-            {
-                "horizon": h,
-                "n": n,
-                "mean_pct": mean_r,
-                "mean_r": mean_r,
-                "median_r": mean_r,
-                "win_rate": win_rate,
-                "ci_median_r": (0.1, 0.9) if ci_excludes_zero else (-0.2, 0.3),
-                "ci_excludes_zero": ci_excludes_zero,
-            }
-        )
+        base = {
+            "n": n,
+            "mean_pct": mean_r,
+            "mean_r": mean_r,
+            "median_r": mean_r,
+            "win_rate": win_rate,
+            "ci_median_r": (0.1, 0.9) if ci_excludes_zero else (-0.2, 0.3),
+            "ci_excludes_zero": ci_excludes_zero,
+        }
+        # the real M5 entry: the horizon key is "h", the pooled stats live
+        # in the "base" segment block
+        entries.append({"h": h, "base": base})
     return {
         "n_raw": n,
         "n_eff": n,
@@ -60,6 +60,8 @@ def _m5_result(
 
 
 def test_horizons_are_extracted_keyed_by_horizon() -> None:
+    """The M5 entry keys the horizon as ``h`` and carries the pooled stats in
+    the ``base`` block."""
     result = _m5_result(horizons=(1, 5, 10))
     summaries = horizon_summaries(result)
     assert sorted(summaries) == [1, 5, 10]
@@ -70,8 +72,13 @@ def test_a_result_without_horizons_is_empty() -> None:
     assert horizon_summaries({"horizons": []}) == {}
 
 
+def test_a_malformed_h_is_skipped() -> None:
+    summaries = horizon_summaries({"horizons": [{"h": "x"}, {"h": 5}]})
+    assert list(summaries) == [5]
+
+
 def test_a_malformed_horizon_is_skipped() -> None:
-    result: dict[str, Any] = {"horizons": [{"horizon": "x"}, {"horizon": 5}]}
+    result: dict[str, Any] = {"horizons": [{"h": "x"}, {"h": 5}]}
     assert list(horizon_summaries(result)) == [5]
 
 
