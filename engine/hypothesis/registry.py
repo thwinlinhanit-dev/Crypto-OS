@@ -103,9 +103,22 @@ def validate_definition(spec: Mapping[str, Any]) -> None:
     # the observation timestamp rule is mandatory: a hypothesis without a
     # time-availability rule cannot be evaluated causally (PD-2)
     rule = str(spec.get("observation_ts_rule", ""))
-    if "close_time" not in rule and "bar_close" not in rule:
+    if not rule:
         raise ValidationError(
-            "observation_ts_rule must reference a closed-bar timestamp (PD-2)",
+            "observation_ts_rule is required (PD-2)",
+            {"observation_ts_rule": rule},
+        )
+    # the rule must anchor on a CLOSED bar and must not reference the future
+    # (a next-bar or forward timestamp is look-ahead, PD-2)
+    leak_markers = ("next bar", "forward", "future", "subsequent", "after the bar")
+    if any(marker in rule.lower() for marker in leak_markers):
+        raise ValidationError(
+            "observation_ts_rule references future information (PD-2)",
+            {"observation_ts_rule": rule},
+        )
+    if "close_time" not in rule and "bar_close" not in rule and "closed" not in rule:
+        raise ValidationError(
+            "observation_ts_rule must anchor on a closed-bar timestamp (PD-2)",
             {"observation_ts_rule": rule},
         )
 
