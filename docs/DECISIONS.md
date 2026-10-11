@@ -84,7 +84,11 @@ Every deviation from / clarification to the Master Spec or IMPLEMENTATION_SPEC_v
 | D-078 | 2026-10-10 | A backup bundle is JSON with schema_version + notebook/registry/lineage sections | `export_backup`/`validate_bundle`/`import_backup`. | Spec M11 T11.4; the sections are the spec's three exports. |
 | D-079 | 2026-10-10 | Import is idempotent (ON CONFLICT DO NOTHING) and preserves the frozen contract | Every insert is ON CONFLICT DO NOTHING; a frozen experiment imports frozen. | Re-importing a bundle must not duplicate or unfreeze (D-021). |
 | D-080 | 2026-10-10 | A11y: the contrast ratio is pinned by a test over the CSS vars | `tests/test_a11y.py` checks --text/--muted at 4.5:1 and the status colors at 3:1; the reduced-motion rule exists. | WCAG AA; a regression in the palette fails CI. |
-| D-081 | 2026-10-10 | The chart canvas is keyboard-operable via the command palette | The non-canvas controls are native buttons/checkboxes with aria-labels; the canvas is driven through the palette. | WCAG 2.1 keyboard operability without re-implementing the chart. |
+| D-082 | 2026-10-11 | The visualization runtime reuses the event provenance vocabulary (OBSERVED/CALCULATED/INFERRED) and adds AI as the fourth class | `engine/visualization/provenance.py` + the §22 test. | Spec §22; a model value must never masquerade as an observation (§3). |
+| D-083 | 2026-10-11 | `program_hash` is sha256 of the canonical JSON, never Python's `hash()` | `engine/visualization/program.py::program_hash`; the determinism test. | §6 reproducibility; the HF ref_id lesson (process-randomized hash). |
+| D-084 | 2026-10-11 | The M12 sandbox refuses undeclared datasets before execution | `engine/visualization/sandbox.py::assert_datasets_declared`; the permission-safety test. | §30 permission safety; the M9 closed-registry pattern applied to datasets. |
+| D-085 | 2026-10-11 | M12 ships pure engine functions; the §8 worker/WASM backends and the §28 DB tables are deferred | `engine/visualization/` (no migration in M12). | §38.10 (build M12 only); backend parity is a gate for when WASM exists. |
+| D-086 | 2026-10-11 | The chart canvas is keyboard-operable via the command palette | The non-canvas controls are native buttons/checkboxes with aria-labels; the canvas is driven through the palette. | WCAG 2.1 keyboard operability without re-implementing the chart. |
 
 ## Open questions (not decisions — require owner input)
 
