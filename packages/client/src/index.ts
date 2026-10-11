@@ -58,6 +58,13 @@ export {
   getNote,
   patchNote,
   deleteNote,
+  createHFHypothesis,
+  getHFHypothesis,
+  patchHFHypothesisStatus,
+  addHFHypothesisVersion,
+  validateHFDefinition,
+  findHFDuplicates,
+  getHFVocabularies,
 } from "./api";
 export type {
   CandlesView,
@@ -108,4 +115,5 @@ export type {
   WatchlistView,
   WindowView,
 } from "./api";
+export type { HFHypothesisView } from "./api";
 export type { components, paths } from "./schema";

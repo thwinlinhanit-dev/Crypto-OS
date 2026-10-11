@@ -627,3 +627,106 @@ export async function deleteNote(noteId: string, baseUrl: string = DEFAULT_API_B
     );
   }
 }
+
+// --------------------------------------------------------------------------
+// Hypothesis Factory (spec §19): the manual research workflow (Phase 2 UI).
+// Every AI output is a proposal, never a finding - the UI mirrors the same
+// rule: a proposal page and the status ladder render what the API returns.
+// --------------------------------------------------------------------------
+
+export type HFHypothesisView = {
+  hypothesis_id: string;
+  title: string;
+  domain: string;
+  origin: string;
+  status: string;
+  original_question: string | null;
+  version: number | null;
+  spec: Record<string, unknown> | null;
+};
+
+export async function createHFHypothesis(
+  body: {
+    title: string;
+    domain: string;
+    origin: string;
+    spec: Record<string, unknown>;
+    original_question?: string | null;
+    created_by?: string;
+  },
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<HFHypothesisView> {
+  return (await postJson("/v1/hypothesis-factory/hypotheses", baseUrl, body)) as HFHypothesisView;
+}
+
+export async function getHFHypothesis(
+  hypothesisId: string,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<HFHypothesisView> {
+  return (await readJson(
+    `/v1/hypothesis-factory/hypotheses/${encodeURIComponent(hypothesisId)}`,
+    baseUrl,
+  )) as HFHypothesisView;
+}
+
+export async function patchHFHypothesisStatus(
+  hypothesisId: string,
+  status: string,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<HFHypothesisView> {
+  return (await callJson(
+    `/v1/hypothesis-factory/hypotheses/${encodeURIComponent(hypothesisId)}/status`,
+    baseUrl,
+    {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ status }),
+    },
+  )) as HFHypothesisView;
+}
+
+export async function addHFHypothesisVersion(
+  hypothesisId: string,
+  spec: Record<string, unknown>,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<{ hypothesis_id: string; version: number }> {
+  return (await postJson(
+    `/v1/hypothesis-factory/hypotheses/${encodeURIComponent(hypothesisId)}/versions`,
+    baseUrl,
+    spec,
+  )) as { hypothesis_id: string; version: number };
+}
+
+export async function validateHFDefinition(
+  spec: Record<string, unknown>,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<{ valid: boolean }> {
+  return (await postJson("/v1/hypothesis-factory/validate-definition", baseUrl, spec)) as {
+    valid: boolean;
+  };
+}
+
+export async function findHFDuplicates(
+  spec: Record<string, unknown>,
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<{ matches: { hypothesis_id: string; title: string; status: string; match: string }[] }> {
+  return (await postJson("/v1/hypothesis-factory/hypotheses/find-duplicates", baseUrl, spec)) as {
+    matches: { hypothesis_id: string; title: string; status: string; match: string }[];
+  };
+}
+
+export async function getHFVocabularies(
+  baseUrl: string = DEFAULT_API_BASE,
+): Promise<{
+  statuses: string[];
+  origins: string[];
+  relationships: string[];
+  domains?: string[];
+}> {
+  return (await readJson("/v1/hypothesis-factory/vocabularies", baseUrl)) as {
+    statuses: string[];
+    origins: string[];
+    relationships: string[];
+    domains?: string[];
+  };
+}

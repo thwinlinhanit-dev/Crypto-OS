@@ -411,6 +411,52 @@
         "title": "ChatRequest",
         "type": "object"
       },
+      "CreateHypothesisRequest": {
+        "description": "POST body: the formal hypothesis (spec \u00a76).",
+        "properties": {
+          "created_by": {
+            "default": "owner",
+            "title": "Created By",
+            "type": "string"
+          },
+          "domain": {
+            "title": "Domain",
+            "type": "string"
+          },
+          "origin": {
+            "title": "Origin",
+            "type": "string"
+          },
+          "original_question": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Original Question"
+          },
+          "spec": {
+            "additionalProperties": true,
+            "title": "Spec",
+            "type": "object"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "domain",
+          "origin",
+          "spec"
+        ],
+        "title": "CreateHypothesisRequest",
+        "type": "object"
+      },
       "DataQualityView": {
         "description": "Guardian state for the event's instrument/timeframe.",
         "properties": {
@@ -2056,6 +2102,25 @@
         "title": "JobView",
         "type": "object"
       },
+      "LedgerRequest": {
+        "description": "POST body: the testing-family declaration (spec \u00a712, HF-005).",
+        "properties": {
+          "correction_plan": {
+            "default": "BENJAMINI_HOCHBERG",
+            "title": "Correction Plan",
+            "type": "string"
+          },
+          "family_id": {
+            "title": "Family Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "family_id"
+        ],
+        "title": "LedgerRequest",
+        "type": "object"
+      },
       "LineageView": {
         "description": "Read-only lineage (spec 8.5): nodes that exist, and what is not built yet.",
         "properties": {
@@ -2279,6 +2344,36 @@
           "computed_at"
         ],
         "title": "QualityView",
+        "type": "object"
+      },
+      "RelationshipRequest": {
+        "description": "POST body: an evidence-graph edge (spec \u00a718.2).",
+        "properties": {
+          "rationale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rationale"
+          },
+          "relationship": {
+            "title": "Relationship",
+            "type": "string"
+          },
+          "to_hypothesis_id": {
+            "title": "To Hypothesis Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "to_hypothesis_id",
+          "relationship"
+        ],
+        "title": "RelationshipRequest",
         "type": "object"
       },
       "RepairRequest": {
@@ -2777,6 +2872,20 @@
           "created_at"
         ],
         "title": "StatsResultView",
+        "type": "object"
+      },
+      "StatusRequest": {
+        "description": "PATCH body: the status transition (spec \u00a714.2).",
+        "properties": {
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "StatusRequest",
         "type": "object"
       },
       "StatusResponse": {
@@ -3927,6 +4036,121 @@
         "tags": [
           "strategy",
           "strategy"
+        ]
+      }
+    },
+    "/v1/backups": {
+      "post": {
+        "description": "POST /v1/backups: export the notebook + registry + lineage (spec\nM11 T11.4). The response is the bundle; the UI offers it as a\ndownload (OQ-27).",
+        "operationId": "create_backup_v1_backups_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Create Backup V1 Backups Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Create Backup",
+        "tags": [
+          "backup"
+        ]
+      }
+    },
+    "/v1/backups/import": {
+      "post": {
+        "description": "POST /v1/backups/import: validate + import a bundle (D-079:\nidempotent; the frozen contract preserved).",
+        "operationId": "import_backup_bundle_v1_backups_import_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "title": "Bundle",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Import Backup Bundle V1 Backups Import Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Import Backup Bundle",
+        "tags": [
+          "backup"
+        ]
+      }
+    },
+    "/v1/backups/{backup_id}": {
+      "get": {
+        "description": "GET /v1/backups/{id}: a stored bundle by id. The default deployment\nkeeps no server-side bundles (export is a direct download), so this\nanswers 404 unless the id names a stored export.",
+        "operationId": "get_backup_v1_backups__backup_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "backup_id",
+            "required": true,
+            "schema": {
+              "title": "Backup Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Backup V1 Backups  Backup Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Backup",
+        "tags": [
+          "backup"
         ]
       }
     },
@@ -5195,6 +5419,63 @@
         ]
       }
     },
+    "/v1/funding/{instrument_id}": {
+      "get": {
+        "description": "GET /v1/funding/{instrument}: funding history (spec \u00a711, T10.1).",
+        "operationId": "get_funding_v1_funding__instrument_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "instrument_id",
+            "required": true,
+            "schema": {
+              "title": "Instrument Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Funding V1 Funding  Instrument Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Funding",
+        "tags": [
+          "perp"
+        ]
+      }
+    },
     "/v1/hypotheses": {
       "get": {
         "description": "List hypotheses; ``?status=REJECTED`` is the Graveyard view (spec 8.4).",
@@ -5431,6 +5712,455 @@
         "tags": [
           "hypotheses",
           "hypotheses"
+        ]
+      }
+    },
+    "/v1/hypothesis-factory/hypotheses": {
+      "post": {
+        "description": "``hypothesis.create``: a formally defined, versioned hypothesis.",
+        "operationId": "create_hypothesis_v1_hypothesis_factory_hypotheses_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHypothesisRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Create Hypothesis V1 Hypothesis Factory Hypotheses Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Hypothesis",
+        "tags": [
+          "hypothesis-factory"
+        ]
+      }
+    },
+    "/v1/hypothesis-factory/hypotheses/find-duplicates": {
+      "post": {
+        "description": "``hypothesis.find_duplicates``: the deterministic exact-dup search\n(spec \u00a78 level 1).",
+        "operationId": "find_duplicates_v1_hypothesis_factory_hypotheses_find_duplicates_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "title": "Body",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Find Duplicates V1 Hypothesis Factory Hypotheses Find Duplicates Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Find Duplicates",
+        "tags": [
+          "hypothesis-factory"
+        ]
+      }
+    },
+    "/v1/hypothesis-factory/hypotheses/{hypothesis_id}": {
+      "get": {
+        "description": "``hypothesis.get``: the hypothesis + its latest version.",
+        "operationId": "get_hypothesis_v1_hypothesis_factory_hypotheses__hypothesis_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hypothesis_id",
+            "required": true,
+            "schema": {
+              "title": "Hypothesis Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Hypothesis V1 Hypothesis Factory Hypotheses  Hypothesis Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Hypothesis",
+        "tags": [
+          "hypothesis-factory"
+        ]
+      }
+    },
+    "/v1/hypothesis-factory/hypotheses/{hypothesis_id}/relationships": {
+      "post": {
+        "description": "An evidence-graph edge (spec \u00a718.2).",
+        "operationId": "add_relationship_v1_hypothesis_factory_hypotheses__hypothesis_id__relationships_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hypothesis_id",
+            "required": true,
+            "schema": {
+              "title": "Hypothesis Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelationshipRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Add Relationship V1 Hypothesis Factory Hypotheses  Hypothesis Id  Relationships Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Relationship",
+        "tags": [
+          "hypothesis-factory"
+        ]
+      }
+    },
+    "/v1/hypothesis-factory/hypotheses/{hypothesis_id}/status": {
+      "patch": {
+        "description": "A status transition through the explicit table (spec \u00a714.2).",
+        "operationId": "set_status_v1_hypothesis_factory_hypotheses__hypothesis_id__status_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hypothesis_id",
+            "required": true,
+            "schema": {
+              "title": "Hypothesis Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Set Status V1 Hypothesis Factory Hypotheses  Hypothesis Id  Status Patch",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Status",
+        "tags": [
+          "hypothesis-factory"
+        ]
+      }
+    },
+    "/v1/hypothesis-factory/hypotheses/{hypothesis_id}/testing-family": {
+      "post": {
+        "description": "The research-ledger declaration BEFORE the inferential analysis\n(spec \u00a712, HF-005).",
+        "operationId": "declare_testing_family_v1_hypothesis_factory_hypotheses__hypothesis_id__testing_family_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hypothesis_id",
+            "required": true,
+            "schema": {
+              "title": "Hypothesis Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LedgerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Declare Testing Family V1 Hypothesis Factory Hypotheses  Hypothesis Id  Testing Family Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Declare Testing Family",
+        "tags": [
+          "hypothesis-factory"
+        ]
+      }
+    },
+    "/v1/hypothesis-factory/hypotheses/{hypothesis_id}/versions": {
+      "post": {
+        "description": "Append a new version (spec \u00a718.1: a change is a new version).",
+        "operationId": "add_version_v1_hypothesis_factory_hypotheses__hypothesis_id__versions_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hypothesis_id",
+            "required": true,
+            "schema": {
+              "title": "Hypothesis Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "title": "Body",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Add Version V1 Hypothesis Factory Hypotheses  Hypothesis Id  Versions Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Version",
+        "tags": [
+          "hypothesis-factory"
+        ]
+      }
+    },
+    "/v1/hypothesis-factory/validate-definition": {
+      "post": {
+        "description": "``hypothesis.validate_definition``: reject an underspecified\nhypothesis (spec \u00a76/\u00a710).",
+        "operationId": "validate_definition_v1_hypothesis_factory_validate_definition_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "title": "Body",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Validate Definition V1 Hypothesis Factory Validate Definition Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Validate Definition",
+        "tags": [
+          "hypothesis-factory"
+        ]
+      }
+    },
+    "/v1/hypothesis-factory/vocabularies": {
+      "get": {
+        "description": "The status/domain/origin/relationship vocabularies (the UI's source).",
+        "operationId": "vocabularies_v1_hypothesis_factory_vocabularies_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "domain",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Domain",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Vocabularies V1 Hypothesis Factory Vocabularies Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Vocabularies",
+        "tags": [
+          "hypothesis-factory"
         ]
       }
     },
@@ -5712,6 +6442,63 @@
         ]
       }
     },
+    "/v1/liquidations/{instrument_id}": {
+      "get": {
+        "description": "GET /v1/liquidations/{instrument}: forced liquidations (spec \u00a711).",
+        "operationId": "get_liquidations_v1_liquidations__instrument_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "instrument_id",
+            "required": true,
+            "schema": {
+              "title": "Instrument Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Liquidations V1 Liquidations  Instrument Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Liquidations",
+        "tags": [
+          "perp"
+        ]
+      }
+    },
     "/v1/mtf": {
       "get": {
         "description": "Spec 11: per-timeframe regime summary for one instrument (D-054: the\nregime module is the single definition).",
@@ -5963,6 +6750,73 @@
         "tags": [
           "notes",
           "notes"
+        ]
+      }
+    },
+    "/v1/oi/{instrument_id}": {
+      "get": {
+        "description": "GET /v1/oi/{instrument}: open-interest history (spec \u00a711, T10.1).",
+        "operationId": "get_open_interest_v1_oi__instrument_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "instrument_id",
+            "required": true,
+            "schema": {
+              "title": "Instrument Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tf",
+            "required": false,
+            "schema": {
+              "default": "1D",
+              "title": "Tf",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 200,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Open Interest V1 Oi  Instrument Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Open Interest",
+        "tags": [
+          "perp"
         ]
       }
     },

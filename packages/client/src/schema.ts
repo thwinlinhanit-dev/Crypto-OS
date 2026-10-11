@@ -202,6 +202,71 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/backups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Backup
+         * @description POST /v1/backups: export the notebook + registry + lineage (spec
+         *     M11 T11.4). The response is the bundle; the UI offers it as a
+         *     download (OQ-27).
+         */
+        post: operations["create_backup_v1_backups_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/backups/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Backup Bundle
+         * @description POST /v1/backups/import: validate + import a bundle (D-079:
+         *     idempotent; the frozen contract preserved).
+         */
+        post: operations["import_backup_bundle_v1_backups_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/backups/{backup_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Backup
+         * @description GET /v1/backups/{id}: a stored bundle by id. The default deployment
+         *     keeps no server-side bundles (export is a direct download), so this
+         *     answers 404 unless the id names a stored export.
+         */
+        get: operations["get_backup_v1_backups__backup_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/baselines/random": {
         parameters: {
             query?: never;
@@ -577,6 +642,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/funding/{instrument_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Funding
+         * @description GET /v1/funding/{instrument}: funding history (spec §11, T10.1).
+         */
+        get: operations["get_funding_v1_funding__instrument_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/hypotheses": {
         parameters: {
             query?: never;
@@ -645,6 +730,189 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/hypothesis-factory/hypotheses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Hypothesis
+         * @description ``hypothesis.create``: a formally defined, versioned hypothesis.
+         */
+        post: operations["create_hypothesis_v1_hypothesis_factory_hypotheses_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hypothesis-factory/hypotheses/find-duplicates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Find Duplicates
+         * @description ``hypothesis.find_duplicates``: the deterministic exact-dup search
+         *     (spec §8 level 1).
+         */
+        post: operations["find_duplicates_v1_hypothesis_factory_hypotheses_find_duplicates_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hypothesis-factory/hypotheses/{hypothesis_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Hypothesis
+         * @description ``hypothesis.get``: the hypothesis + its latest version.
+         */
+        get: operations["get_hypothesis_v1_hypothesis_factory_hypotheses__hypothesis_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hypothesis-factory/hypotheses/{hypothesis_id}/relationships": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Relationship
+         * @description An evidence-graph edge (spec §18.2).
+         */
+        post: operations["add_relationship_v1_hypothesis_factory_hypotheses__hypothesis_id__relationships_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hypothesis-factory/hypotheses/{hypothesis_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Set Status
+         * @description A status transition through the explicit table (spec §14.2).
+         */
+        patch: operations["set_status_v1_hypothesis_factory_hypotheses__hypothesis_id__status_patch"];
+        trace?: never;
+    };
+    "/v1/hypothesis-factory/hypotheses/{hypothesis_id}/testing-family": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Declare Testing Family
+         * @description The research-ledger declaration BEFORE the inferential analysis
+         *     (spec §12, HF-005).
+         */
+        post: operations["declare_testing_family_v1_hypothesis_factory_hypotheses__hypothesis_id__testing_family_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hypothesis-factory/hypotheses/{hypothesis_id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Version
+         * @description Append a new version (spec §18.1: a change is a new version).
+         */
+        post: operations["add_version_v1_hypothesis_factory_hypotheses__hypothesis_id__versions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hypothesis-factory/validate-definition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate Definition
+         * @description ``hypothesis.validate_definition``: reject an underspecified
+         *     hypothesis (spec §6/§10).
+         */
+        post: operations["validate_definition_v1_hypothesis_factory_validate_definition_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/hypothesis-factory/vocabularies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vocabularies
+         * @description The status/domain/origin/relationship vocabularies (the UI's source).
+         */
+        get: operations["vocabularies_v1_hypothesis_factory_vocabularies_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/indicators": {
         parameters: {
             query?: never;
@@ -700,6 +968,26 @@ export interface paths {
          * @description One queued/running/finished job (spec section 11).
          */
         get: operations["job_view_v1_jobs__job_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/liquidations/{instrument_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Liquidations
+         * @description GET /v1/liquidations/{instrument}: forced liquidations (spec §11).
+         */
+        get: operations["get_liquidations_v1_liquidations__instrument_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -779,6 +1067,26 @@ export interface paths {
          * @description Edit a note's title, body, chart state or experiment link.
          */
         patch: operations["patch_note_v1_notes__note_id__patch"];
+        trace?: never;
+    };
+    "/v1/oi/{instrument_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Open Interest
+         * @description GET /v1/oi/{instrument}: open-interest history (spec §11, T10.1).
+         */
+        get: operations["get_open_interest_v1_oi__instrument_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/v1/scanner": {
@@ -1167,6 +1475,29 @@ export interface components {
              * @default Research
              */
             mode: string;
+        };
+        /**
+         * CreateHypothesisRequest
+         * @description POST body: the formal hypothesis (spec §6).
+         */
+        CreateHypothesisRequest: {
+            /**
+             * Created By
+             * @default owner
+             */
+            created_by: string;
+            /** Domain */
+            domain: string;
+            /** Origin */
+            origin: string;
+            /** Original Question */
+            original_question?: string | null;
+            /** Spec */
+            spec: {
+                [key: string]: unknown;
+            };
+            /** Title */
+            title: string;
         };
         /**
          * DataQualityView
@@ -1884,6 +2215,19 @@ export interface components {
             timestamps: components["schemas"]["JobTimestamps"];
         };
         /**
+         * LedgerRequest
+         * @description POST body: the testing-family declaration (spec §12, HF-005).
+         */
+        LedgerRequest: {
+            /**
+             * Correction Plan
+             * @default BENJAMINI_HOCHBERG
+             */
+            correction_plan: string;
+            /** Family Id */
+            family_id: string;
+        };
+        /**
          * LineageView
          * @description Read-only lineage (spec 8.5): nodes that exist, and what is not built yet.
          */
@@ -1977,6 +2321,18 @@ export interface components {
             state: string;
             /** Timeframe */
             timeframe: string;
+        };
+        /**
+         * RelationshipRequest
+         * @description POST body: an evidence-graph edge (spec §18.2).
+         */
+        RelationshipRequest: {
+            /** Rationale */
+            rationale?: string | null;
+            /** Relationship */
+            relationship: string;
+            /** To Hypothesis Id */
+            to_hypothesis_id: string;
         };
         /**
          * RepairRequest
@@ -2163,6 +2519,14 @@ export interface components {
             scope: components["schemas"]["ScopeView"];
             /** Seed */
             seed: number | null;
+        };
+        /**
+         * StatusRequest
+         * @description PATCH body: the status transition (spec §14.2).
+         */
+        StatusRequest: {
+            /** Status */
+            status: string;
         };
         /**
          * StatusResponse
@@ -2761,6 +3125,98 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TradeView"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_backup_v1_backups_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    import_backup_bundle_v1_backups_import_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_backup_v1_backups__backup_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                backup_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
             /** @description Validation Error */
@@ -3490,6 +3946,41 @@ export interface operations {
             };
         };
     };
+    get_funding_v1_funding__instrument_id__get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                instrument_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_hypotheses_v1_hypotheses_get: {
         parameters: {
             query?: {
@@ -3651,6 +4142,331 @@ export interface operations {
             };
         };
     };
+    create_hypothesis_v1_hypothesis_factory_hypotheses_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateHypothesisRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    find_duplicates_v1_hypothesis_factory_hypotheses_find_duplicates_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_hypothesis_v1_hypothesis_factory_hypotheses__hypothesis_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hypothesis_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_relationship_v1_hypothesis_factory_hypotheses__hypothesis_id__relationships_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hypothesis_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RelationshipRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_status_v1_hypothesis_factory_hypotheses__hypothesis_id__status_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hypothesis_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StatusRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    declare_testing_family_v1_hypothesis_factory_hypotheses__hypothesis_id__testing_family_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hypothesis_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LedgerRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_version_v1_hypothesis_factory_hypotheses__hypothesis_id__versions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hypothesis_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    validate_definition_v1_hypothesis_factory_validate_definition_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    vocabularies_v1_hypothesis_factory_vocabularies_get: {
+        parameters: {
+            query?: {
+                domain?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     indicators_v1_indicators_get: {
         parameters: {
             query: {
@@ -3740,6 +4556,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["JobView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_liquidations_v1_liquidations__instrument_id__get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                instrument_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
             /** @description Validation Error */
@@ -3923,6 +4774,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NoteView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_open_interest_v1_oi__instrument_id__get: {
+        parameters: {
+            query?: {
+                tf?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                instrument_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
             /** @description Validation Error */
