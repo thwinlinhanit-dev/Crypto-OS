@@ -65,9 +65,104 @@ def export_backup(conn: Connection) -> dict[str, Any]:
         )
     ).all()
 
+    # the HF tables (0011): the version history, the evidence graph and the
+    # multiple-testing ledger - the research record (spec §18.2/§12)
+    hf_versions = conn.execute(
+        text(
+            "SELECT hypothesis_id, version, description, mechanism, null_hypothesis,"
+            " alternative_hypothesis, independent_vars, dependent_vars, features,"
+            " population, timeframe, event_definition, observation_ts_rule,"
+            " outcome_horizon, expected_direction, baseline, inclusion_criteria,"
+            " exclusion_criteria, confounders, data_requirements,"
+            " proposed_statistical_method, proposed_robustness_tests,"
+            " falsification_criteria, economic_significance_threshold,"
+            " known_limitations, created_by"
+            " FROM research.hypothesis_version ORDER BY hypothesis_id, version"
+        )
+    ).all()
+    hf_relationships = conn.execute(
+        text(
+            "SELECT from_hypothesis_id, to_hypothesis_id, relationship, rationale"
+            " FROM research.hypothesis_relationship ORDER BY from_hypothesis_id,"
+            " to_hypothesis_id, relationship"
+        )
+    ).all()
+    hf_ledger = conn.execute(
+        text(
+            "SELECT family_id, hypothesis_id, correction_plan"
+            " FROM research.research_ledger ORDER BY family_id, hypothesis_id"
+        )
+    ).all()
+    hf_registry = conn.execute(
+        text(
+            "SELECT hyp_id, hf_domain, hf_origin, hf_status, original_question"
+            " FROM research.hypothesis"
+        )
+    ).all()
+
     return {
         "schema_version": BACKUP_SCHEMA_VERSION,
         "created_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+        "hypothesis_factory": {
+            "registry": [
+                {
+                    "hypothesis_id": str(row.hyp_id),
+                    "domain": row.hf_domain,
+                    "origin": row.hf_origin,
+                    "status": row.hf_status,
+                    "original_question": row.original_question,
+                }
+                for row in hf_registry
+            ],
+            "versions": [
+                {
+                    "hypothesis_id": str(row.hypothesis_id),
+                    "version": int(row.version),
+                    "description": row.description,
+                    "mechanism": row.mechanism,
+                    "null_hypothesis": row.null_hypothesis,
+                    "alternative_hypothesis": row.alternative_hypothesis,
+                    "independent_vars": row.independent_vars,
+                    "dependent_vars": row.dependent_vars,
+                    "features": row.features,
+                    "population": row.population,
+                    "timeframe": row.timeframe,
+                    "event_definition": row.event_definition,
+                    "observation_ts_rule": row.observation_ts_rule,
+                    "outcome_horizon": row.outcome_horizon,
+                    "expected_direction": row.expected_direction,
+                    "baseline": row.baseline,
+                    "inclusion_criteria": row.inclusion_criteria,
+                    "exclusion_criteria": row.exclusion_criteria,
+                    "confounders": row.confounders,
+                    "data_requirements": row.data_requirements,
+                    "proposed_statistical_method": row.proposed_statistical_method,
+                    "proposed_robustness_tests": row.proposed_robustness_tests,
+                    "falsification_criteria": row.falsification_criteria,
+                    "economic_significance_threshold": row.economic_significance_threshold,
+                    "known_limitations": row.known_limitations,
+                    "created_by": row.created_by,
+                }
+                for row in hf_versions
+            ],
+            "relationships": [
+                {
+                    "from": str(row.from_hypothesis_id),
+                    "to": str(row.to_hypothesis_id),
+                    "relationship": row.relationship,
+                    "rationale": row.rationale,
+                }
+                for row in hf_relationships
+            ],
+            "ledger": [
+                {
+                    "family_id": row.family_id,
+                    "hypothesis_id": str(row.hypothesis_id),
+                    "correction_plan": row.correction_plan,
+                }
+                for row in hf_ledger
+            ],
+        },
         "notebook": [
             {
                 "note_id": str(row.note_id),
@@ -155,6 +250,14 @@ def validate_bundle(bundle: Any) -> dict[str, Any]:
     for section in ("notebook", "registry", "lineage"):
         if not isinstance(bundle.get(section), dict if section != "notebook" else list):
             raise BackupValidationError(f"section {section!r} has the wrong shape")
+    # the HF section is optional (a pre-0011 bundle imports without it)
+    hf = bundle.get("hypothesis_factory")
+    if hf is not None:
+        if not isinstance(hf, dict):
+            raise BackupValidationError("hypothesis_factory must be an object")
+        for key in ("registry", "versions", "relationships", "ledger"):
+            if not isinstance(hf.get(key), list):
+                raise BackupValidationError(f"hypothesis_factory.{key} must be a list")
     registry = bundle["registry"]
     if not isinstance(registry, dict):
         raise BackupValidationError("registry must be an object")
@@ -266,5 +369,112 @@ def import_backup(conn: Connection, bundle: Any) -> dict[str, int]:
             },
         )
         inserted["experiments"] += int(getattr(result, "rowcount", 0) or 0)
+
+    # the HF tables (0011): the version history, the evidence graph and the
+    # multiple-testing ledger - imported idempotently (D-079). The registry
+    # rows UPDATE the HF vocabulary columns so a re-import keeps them in
+    # sync; versions/relationships/ledger insert-or-skip.
+    hf = validated.get("hypothesis_factory") or {}
+    inserted["hf_versions"] = 0
+    inserted["hf_relationships"] = 0
+    inserted["hf_ledger"] = 0
+
+    for entry in hf.get("registry", []):
+        conn.execute(
+            text(
+                "UPDATE research.hypothesis SET hf_domain = :domain,"
+                " hf_origin = :origin, hf_status = :status,"
+                " original_question = :question WHERE hyp_id = :id"
+            ),
+            {
+                "id": entry["hypothesis_id"],
+                "domain": entry.get("domain") or "DERIVATIVES",
+                "origin": entry.get("origin") or "HUMAN",
+                "status": entry.get("status") or "NOT_TESTED",
+                "question": entry.get("original_question"),
+            },
+        )
+
+    for version in hf.get("versions", []):
+        result = conn.execute(
+            text(
+                "INSERT INTO research.hypothesis_version (hypothesis_id, version,"
+                " description, mechanism, null_hypothesis, alternative_hypothesis,"
+                " independent_vars, dependent_vars, features, population, timeframe,"
+                " event_definition, observation_ts_rule, outcome_horizon,"
+                " expected_direction, baseline, inclusion_criteria, exclusion_criteria,"
+                " confounders, data_requirements, proposed_statistical_method,"
+                " proposed_robustness_tests, falsification_criteria,"
+                " economic_significance_threshold, known_limitations, created_by)"
+                " VALUES (:id, :v, :description, :mechanism, :null_h, :alt_h,"
+                " CAST(:ivars AS jsonb), CAST(:dvars AS jsonb), CAST(:features AS jsonb),"
+                " :population, :tf, CAST(:event AS jsonb), :ts_rule, :horizon,"
+                " :direction, :baseline, CAST(:incl AS jsonb), CAST(:excl AS jsonb),"
+                " CAST(:conf AS jsonb), CAST(:data_req AS jsonb), :method,"
+                " CAST(:robust AS jsonb), CAST(:falsify AS jsonb), :econ, :limits, :by)"
+                " ON CONFLICT (hypothesis_id, version) DO NOTHING"
+            ),
+            {
+                "id": version["hypothesis_id"],
+                "v": int(version["version"]),
+                "description": version.get("description"),
+                "mechanism": version.get("mechanism"),
+                "null_h": version["null_hypothesis"],
+                "alt_h": version["alternative_hypothesis"],
+                "ivars": json.dumps(version.get("independent_vars") or []),
+                "dvars": json.dumps(version.get("dependent_vars") or []),
+                "features": json.dumps(version.get("features") or []),
+                "population": version["population"],
+                "tf": version["timeframe"],
+                "event": json.dumps(version.get("event_definition")),
+                "ts_rule": version["observation_ts_rule"],
+                "horizon": version["outcome_horizon"],
+                "direction": version["expected_direction"],
+                "baseline": version.get("baseline"),
+                "incl": json.dumps(version.get("inclusion_criteria")),
+                "excl": json.dumps(version.get("exclusion_criteria")),
+                "conf": json.dumps(version.get("confounders")),
+                "data_req": json.dumps(version.get("data_requirements") or []),
+                "method": version["proposed_statistical_method"],
+                "robust": json.dumps(version.get("proposed_robustness_tests")),
+                "falsify": json.dumps(version.get("falsification_criteria") or []),
+                "econ": version.get("economic_significance_threshold"),
+                "limits": version.get("known_limitations"),
+                "by": version.get("created_by") or "owner",
+            },
+        )
+        inserted["hf_versions"] += int(getattr(result, "rowcount", 0) or 0)
+
+    for edge in hf.get("relationships", []):
+        result = conn.execute(
+            text(
+                "INSERT INTO research.hypothesis_relationship (from_hypothesis_id,"
+                " to_hypothesis_id, relationship, rationale)"
+                " VALUES (:f, :t, :r, :why)"
+                " ON CONFLICT ON CONSTRAINT hf_relationship_unique DO NOTHING"
+            ),
+            {
+                "f": edge["from"],
+                "t": edge["to"],
+                "r": edge["relationship"],
+                "why": edge.get("rationale"),
+            },
+        )
+        inserted["hf_relationships"] += int(getattr(result, "rowcount", 0) or 0)
+
+    for entry in hf.get("ledger", []):
+        result = conn.execute(
+            text(
+                "INSERT INTO research.research_ledger (family_id, hypothesis_id,"
+                " correction_plan) VALUES (:family, :hyp, :plan)"
+                " ON CONFLICT ON CONSTRAINT research_ledger_unique DO NOTHING"
+            ),
+            {
+                "family": entry["family_id"],
+                "hyp": entry["hypothesis_id"],
+                "plan": entry["correction_plan"],
+            },
+        )
+        inserted["hf_ledger"] += int(getattr(result, "rowcount", 0) or 0)
 
     return inserted
