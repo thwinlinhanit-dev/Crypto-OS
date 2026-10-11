@@ -185,6 +185,7 @@ def conn() -> Iterator[Connection]:
             "TRUNCATE validation.run, strategy.trade, strategy.backtest,"
             " research.event, research.event_outcome, research.stats_result,"
             " research.hypothesis, research.note, research.variant, research.experiment,"
+            " research.hypothesis_version, research.hypothesis_relationship, research.research_ledger,"
             " research.experiment_family",
         ):
             connection.execute(text(statement))

@@ -105,12 +105,15 @@ class FixtureAdapter:
 #: Research tables, in one TRUNCATE: the M5b foreign keys (variant/experiment ->
 #: family, experiment -> hypothesis) require the referencing tables to be
 #: truncated together. Append-only tables use TRUNCATE because their row
-#: triggers reject DELETE outright (PD-13).
+#: triggers reject DELETE outright (PD-13). The HF tables (0011) reference
+#: research.hypothesis, so they are truncated with it.
 RESEARCH_TABLES = (
     "validation.run, strategy.trade, strategy.backtest,"
     " research.event, research.event_outcome, research.stats_result,"
     " research.hypothesis, research.note, research.variant, research.experiment,"
-    " research.experiment_family"
+    " research.experiment_family,"
+    " research.hypothesis_version, research.hypothesis_relationship,"
+    " research.research_ledger"
 )
 
 

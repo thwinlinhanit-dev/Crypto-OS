@@ -54,6 +54,7 @@ def conn() -> Iterator[Connection]:
         "TRUNCATE validation.run, strategy.trade, strategy.backtest, strategy.strategy_version,"
         " research.event, research.event_outcome, research.stats_result,"
         " research.hypothesis, research.note, research.variant,"
+            " research.hypothesis_version, research.hypothesis_relationship, research.research_ledger,"
         " research.experiment, research.experiment_family",
     ):
         connection.execute(text(statement))
@@ -74,6 +75,7 @@ def conn() -> Iterator[Connection]:
             "TRUNCATE validation.run, strategy.trade, strategy.backtest, strategy.strategy_version,"
             " research.event, research.event_outcome, research.stats_result,"
             " research.hypothesis, research.note, research.variant,"
+            " research.hypothesis_version, research.hypothesis_relationship, research.research_ledger,"
             " research.experiment, research.experiment_family",
         ):
             connection.execute(text(statement))

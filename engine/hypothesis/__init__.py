@@ -1,0 +1,51 @@
+"""HF Phase 1 — the Hypothesis Factory engine package (spec §3)."""
+
+from engine.hypothesis.models import (
+    ALLOWED_TRANSITIONS,
+    DOMAINS,
+    ORIGINS,
+    RELATIONSHIPS,
+    STATUSES,
+    assert_valid_domain,
+    assert_valid_origin,
+    assert_valid_relationship,
+    assert_valid_status,
+    assert_valid_transition,
+    is_terminal,
+)
+from engine.hypothesis.registry import (
+    KNOWN_FEATURES,
+    add_relationship,
+    add_version,
+    create_hypothesis,
+    declare_testing_family,
+    dedup_key,
+    find_duplicates,
+    get_hypothesis,
+    set_status,
+    validate_definition,
+)
+
+__all__ = [
+    "ALLOWED_TRANSITIONS",
+    "DOMAINS",
+    "KNOWN_FEATURES",
+    "ORIGINS",
+    "RELATIONSHIPS",
+    "STATUSES",
+    "add_relationship",
+    "add_version",
+    "assert_valid_domain",
+    "assert_valid_origin",
+    "assert_valid_relationship",
+    "assert_valid_status",
+    "assert_valid_transition",
+    "create_hypothesis",
+    "declare_testing_family",
+    "dedup_key",
+    "find_duplicates",
+    "get_hypothesis",
+    "is_terminal",
+    "set_status",
+    "validate_definition",
+]

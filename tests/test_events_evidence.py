@@ -290,7 +290,9 @@ def test_evidence_recompute_path(client: TestClient, conn: Connection, seeded: s
     conn.execute(
         text(
             "TRUNCATE validation.run, strategy.trade, strategy.backtest,"
-            " research.event, research.event_outcome, research.stats_result"
+            " research.event, research.event_outcome, research.stats_result,"
+            " research.hypothesis_version, research.hypothesis_relationship,"
+            " research.research_ledger"
         )
     )
     conn.commit()
@@ -326,7 +328,9 @@ def test_evidence_unpersisted_custom_params_404(
     conn.execute(
         text(
             "TRUNCATE validation.run, strategy.trade, strategy.backtest,"
-            " research.event, research.event_outcome, research.stats_result"
+            " research.event, research.event_outcome, research.stats_result,"
+            " research.hypothesis_version, research.hypothesis_relationship,"
+            " research.research_ledger"
         )
     )
     conn.commit()

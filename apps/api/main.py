@@ -25,6 +25,7 @@ from apps.api.events import router as events_router
 from apps.api.evidence import router as evidence_router
 from apps.api.experiments import router as experiments_router
 from apps.api.hypotheses import router as hypotheses_router
+from apps.api.hypothesis_factory import router as hypothesis_factory_router
 from apps.api.market import router as market_router
 from apps.api.notes import router as notes_router
 from apps.api.perp import router as perp_router
@@ -125,6 +126,10 @@ def create_app() -> FastAPI:
     # M11 hardening (spec M11 T11.4, design note m11_hardening):
     # POST /v1/backups (export), POST /v1/backups/import.
     app.include_router(backup_router)
+    # HF (Hypothesis Factory, spec §19, design note
+    # docs/hypothesis-factory/ARCHITECTURE.md): hypothesis CRUD,
+    # versioning, status, relationships, dedup, the research ledger.
+    app.include_router(hypothesis_factory_router)
     # M5 stats (spec section 11, design note m5_stats section 4):
     # POST /v1/stats + GET /v1/stats/{ref_id}, reads only (PD-1).
     app.include_router(stats_router)
