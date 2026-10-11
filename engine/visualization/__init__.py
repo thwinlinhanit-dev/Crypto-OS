@@ -1,12 +1,32 @@
 """M12 — the visualization runtime package (spec §1: a controlled
 projection layer over the existing engines)."""
 
+from engine.visualization.canvas import (
+    DEFAULT_VISIBLE,
+    LAYERS,
+    Layer,
+    LayerStack,
+    add_layer,
+    assert_valid_layer,
+    default_stack,
+    remove_layer,
+    set_visibility,
+)
 from engine.visualization.data_api import (
     DatasetResponse,
     assert_datasets_declared,
     quality_of,
     truncate_as_of,
 )
+from engine.visualization.heatmap import (
+    HEATMAP_MODES,
+    HeatmapCell,
+    aggregate_for_zoom,
+    render_heatmap,
+    sparse_equals_dense,
+    sparsify,
+)
+from engine.visualization.layout import Layout, layout_hash
 from engine.visualization.models import (
     ALLOWED_LIFECYCLE_TRANSITIONS,
     DATASETS,
@@ -24,6 +44,7 @@ from engine.visualization.models import (
     assert_valid_render_kind,
     is_terminal_lifecycle,
 )
+from engine.visualization.profile import ProfileBin, build_profile, render_profile
 from engine.visualization.program import (
     VisualizationProgram,
     program_hash,
@@ -47,40 +68,74 @@ from engine.visualization.sandbox import (
     assert_no_forbidden_capabilities,
     run_program,
 )
+from engine.visualization.viewport import (
+    Crosshair,
+    Viewport,
+    clip,
+    layers_at,
+    render_viewport,
+    zoom_aggregate,
+)
 
 __all__ = [
     "ALLOWED_LIFECYCLE_TRANSITIONS",
     "DATASETS",
+    "DEFAULT_VISIBLE",
+    "HEATMAP_MODES",
+    "LAYERS",
     "LIFECYCLE",
     "PERMISSION_KEYS",
     "PROVENANCE_CLASSES",
     "QUALITY_STATES",
     "RENDER_KINDS",
     "RUNTIME",
+    "Crosshair",
     "DatasetResponse",
+    "HeatmapCell",
     "HudElement",
+    "Layer",
+    "LayerStack",
+    "Layout",
     "LineSeries",
+    "ProfileBin",
     "ProvenanceValue",
     "SandboxRequest",
     "TableRow",
+    "Viewport",
     "VisualizationProgram",
+    "add_layer",
+    "aggregate_for_zoom",
     "assert_datasets_declared",
     "assert_distinguishable",
     "assert_no_forbidden_capabilities",
     "assert_valid_dataset",
+    "assert_valid_layer",
     "assert_valid_lifecycle",
     "assert_valid_lifecycle_transition",
     "assert_valid_provenance",
     "assert_valid_quality_state",
     "assert_valid_render_kind",
+    "build_profile",
     "classify",
+    "clip",
+    "default_stack",
     "is_terminal_lifecycle",
+    "layers_at",
+    "layout_hash",
     "program_hash",
     "quality_of",
+    "remove_layer",
+    "render_heatmap",
     "render_hud",
     "render_line",
+    "render_profile",
     "render_table",
+    "render_viewport",
     "run_program",
+    "set_visibility",
+    "sparse_equals_dense",
+    "sparsify",
     "truncate_as_of",
     "validate_program",
+    "zoom_aggregate",
 ]

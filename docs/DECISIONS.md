@@ -88,7 +88,11 @@ Every deviation from / clarification to the Master Spec or IMPLEMENTATION_SPEC_v
 | D-083 | 2026-10-11 | `program_hash` is sha256 of the canonical JSON, never Python's `hash()` | `engine/visualization/program.py::program_hash`; the determinism test. | §6 reproducibility; the HF ref_id lesson (process-randomized hash). |
 | D-084 | 2026-10-11 | The M12 sandbox refuses undeclared datasets before execution | `engine/visualization/sandbox.py::assert_datasets_declared`; the permission-safety test. | §30 permission safety; the M9 closed-registry pattern applied to datasets. |
 | D-085 | 2026-10-11 | M12 ships pure engine functions; the §8 worker/WASM backends and the §28 DB tables are deferred | `engine/visualization/` (no migration in M12). | §38.10 (build M12 only); backend parity is a gate for when WASM exists. |
-| D-086 | 2026-10-11 | The chart canvas is keyboard-operable via the command palette | The non-canvas controls are native buttons/checkboxes with aria-labels; the canvas is driven through the palette. | WCAG 2.1 keyboard operability without re-implementing the chart. |
+| D-087 | 2026-10-11 | The canvas layer vocabulary is closed (PRICE..AI); an unknown layer is refused before the stack is built | `engine/visualization/canvas.py::LAYERS` + the fail-closed test. | Spec §12; a layer outside the vocabulary is a programming error, not a silent pass. |
+| D-088 | 2026-10-11 | Viewport clipping and zoom aggregation change only the render graph, never the stored rows | `engine/visualization/viewport.py::clip`/`zoom_aggregate`; the property tests. | Spec §14/§31; the optimization must never change numerical results. |
+| D-089 | 2026-10-11 | The heatmap's sparse representation must render identically to the dense grid | `engine/visualization/heatmap.py::sparse_equals_dense`; the property test. | Spec §14/§31; optimization never changes results. |
+| D-090 | 2026-10-11 | M13 ships pure engine modules; the canvas UI component and the §28 DB tables land with the API/canvas slice | `engine/visualization/` (no migration in M13). | Spec §38.10 (build the milestone only); the same sequencing as M12. |
+| D-091 | 2026-10-11 | The chart canvas is keyboard-operable via the command palette | The non-canvas controls are native buttons/checkboxes with aria-labels; the canvas is driven through the palette. | WCAG 2.1 keyboard operability without re-implementing the chart. |
 
 ## Open questions (not decisions — require owner input)
 
