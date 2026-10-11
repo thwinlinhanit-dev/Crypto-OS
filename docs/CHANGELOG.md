@@ -3,6 +3,56 @@
 Format follows [Keep a Changelog](https://keepachangelog.com/); version tags start at M0
 (the spec defines no release numbering yet).
 
+## [Hypothesis Factory] - 2026-10-11 - The research-workflow engine (spec §24)
+
+Turns a research question into a falsifiable hypothesis, tests it against the
+existing M5–M7 engine, and decides honestly whether it survives. No live
+trading (PD-1); every AI output is a proposal a human approves (spec §25).
+
+### Added
+- Data model (Phase 1): `engine/hypothesis/models.py` + migration `0011` —
+  `research.hypothesis_version` (the formal definition: null/alt, features,
+  population, horizon, thresholds, falsification criteria),
+  `.hypothesis_relationship` (the evidence graph),
+  `.research_ledger` (the multiple-testing family, spec §12); the
+  status/origin/domain vocabularies as DB CHECKs; the pure status-transition
+  rules. Migration `0012` adds the idempotent-import natural keys (D-079).
+- Registry (Phase 1): `engine/hypothesis/registry.py` — hypothesis CRUD,
+  deterministic dedup keys, the evidence-graph edges, the ledger;
+  `apps/api/hypothesis_factory.py` (the REST surface).
+- Experiment integration (Phase 3): `engine/hypothesis/experiment.py` +
+  `runner.py` — the hypothesis → resolved-config seam composing M5/M6/M7
+  (never a duplicate engine); job execution via the M1 seam; config hashes;
+  reproducibility metadata (PD-6).
+- Statistical analysis (Phase 4): `engine/hypothesis/stats.py` — the
+  statistical engine + the synthetic methodology suite.
+- AI generation (Phase 5): `engine/hypothesis/generate.py` — every output is
+  a proposal, not a decision.
+- Robustness & falsification (Phase 6): `engine/hypothesis/robustness.py` +
+  `evaluate.py` — the falsification evaluator + the transition decision
+  (spec §13/§14.2).
+- MCP exposure (Phase 7): `engine/hypothesis/mcp.py` — the MCP tool surface +
+  the decision provider (spec §18).
+- Operational hardening (Phase 8): `engine/hypothesis/hardening.py` — resource
+  controls (generation/mcp/max_bars budgets; narrow-never-widen, fail-closed,
+  PD-10) + the HF backup/recovery round-trip in `engine/backup.py`.
+- Phase 2 UI: `apps/web/app/hypothesis-factory/page.tsx` — the manual research
+  workflow (research-question entry preserved verbatim → hypothesis editor →
+  definition validation → stored-hypothesis view + the §14.2 evidence ladder).
+  No AI provider required. PD-5: every status and number comes from a server
+  response — the page never computes or decides. Client functions in
+  `packages/client/src/api.ts`; the "Hypothesis Factory" nav link.
+
+### HF evidence
+- Suite: 970 passed + 2 skipped (Phase 8, commit 846206d); ruff + mypy strict
+  (194 files) clean; web tsc clean; `next build` passes with
+  `/hypothesis-factory` prerendered. Alembic HEAD=0012 (live-applied).
+- NOT re-run: the full pytest suite after the Phase 2 UI commit (83af84b).
+  The PG18 scratch cluster on :54333 is in a 0xC0000142 (DLL-init) crash loop
+  and cannot be revived from the current shell. The suite must be re-run once
+  the cluster is recovered.
+
+
 ## [M11] - 2026-10-10 - Hardening: a11y, performance gates, e2e, backup/export
 
 ### Added
