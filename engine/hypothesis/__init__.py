@@ -8,6 +8,11 @@ from engine.hypothesis.evaluate import (
     horizon_summaries,
     transition_is_legal,
 )
+from engine.hypothesis.experiment import (
+    ExperimentConfig,
+    build_experiment_config,
+    scope_universe_guard,
+)
 from engine.hypothesis.models import (
     ALLOWED_TRANSITIONS,
     DOMAINS,
@@ -43,6 +48,7 @@ __all__ = [
     "STATUSES",
     "CriterionOutcome",
     "Evaluation",
+    "ExperimentConfig",
     "add_relationship",
     "add_version",
     "assert_valid_domain",
@@ -50,6 +56,7 @@ __all__ = [
     "assert_valid_relationship",
     "assert_valid_status",
     "assert_valid_transition",
+    "build_experiment_config",
     "create_hypothesis",
     "decide_transition",
     "declare_testing_family",
@@ -59,6 +66,7 @@ __all__ = [
     "get_hypothesis",
     "horizon_summaries",
     "is_terminal",
+    "scope_universe_guard",
     "set_status",
     "transition_is_legal",
     "validate_definition",
