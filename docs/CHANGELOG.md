@@ -51,7 +51,17 @@ trading (PD-1); every AI output is a proposal a human approves (spec §25).
   The PG18 scratch cluster on :54333 is in a 0xC0000142 (DLL-init) crash loop
   and cannot be revived from the current shell. The suite must be re-run once
   the cluster is recovered.
-
+- DB-free re-run (2026-10-12, HEAD bddefb1): 647 passed + 1 skipped across
+  the 43 no-database test files — the whole deterministic engine layer,
+  including all 91 DB-free HF engine tests (17 models + 17 experiment +
+  15 stats + 21 evaluate + 21 robustness); 0 failures, 0 errors. Slow files
+  are property tests, not hangs (test_features_truncation: 3 passed in 61.7s);
+  test_events_parity_h10 skips by design (the OQ-22 reference export).
+- Still DB-blocked (2026-10-12): the 32 live-database files, including the
+  61 DB-backed HF tests (14 registry + 6 runner + 14 generate + 15 hardening
+  + 12 mcp). Neither :5433 (the .env target) nor :54333 answers — no
+  listener; the guarded fixtures skip fail-fast via connect_timeout=3
+  (D-076), never hang. Last confirmed state for these: the 970 + 2 above.
 
 ## [M11] - 2026-10-10 - Hardening: a11y, performance gates, e2e, backup/export
 
