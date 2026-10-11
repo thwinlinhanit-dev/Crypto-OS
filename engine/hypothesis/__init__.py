@@ -1,5 +1,13 @@
 """HF Phase 1 — the Hypothesis Factory engine package (spec §3)."""
 
+from engine.hypothesis.evaluate import (
+    CriterionOutcome,
+    Evaluation,
+    decide_transition,
+    evaluate,
+    horizon_summaries,
+    transition_is_legal,
+)
 from engine.hypothesis.models import (
     ALLOWED_TRANSITIONS,
     DOMAINS,
@@ -33,6 +41,8 @@ __all__ = [
     "ORIGINS",
     "RELATIONSHIPS",
     "STATUSES",
+    "CriterionOutcome",
+    "Evaluation",
     "add_relationship",
     "add_version",
     "assert_valid_domain",
@@ -41,11 +51,15 @@ __all__ = [
     "assert_valid_status",
     "assert_valid_transition",
     "create_hypothesis",
+    "decide_transition",
     "declare_testing_family",
     "dedup_key",
+    "evaluate",
     "find_duplicates",
     "get_hypothesis",
+    "horizon_summaries",
     "is_terminal",
     "set_status",
+    "transition_is_legal",
     "validate_definition",
 ]
