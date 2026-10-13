@@ -3,6 +3,47 @@
 Format follows [Keep a Changelog](https://keepachangelog.com/); version tags start at M0
 (the spec defines no release numbering yet).
 
+## [M16: AI Visualization] - 2026-10-12 - Programmable-visualization AI layer (spec §25/§26/§36)
+
+Turns a natural-language request into a **validated, reproducible** visualization
+program. Generated code is untrusted until it passes the same gate a human's
+program does, and every tool result carries the §26 envelope. No trading tier,
+ever (D-103).
+
+### Added
+- The §25 generation pipeline (`engine/visualization/ai_generation.py`, pure):
+  closed-vocabulary dataset match (word-boundary for short keywords, D-106),
+  availability check (no silent dataset substitution), assumption proposal,
+  program generation, validate/fixture-test gate (deterministic synthetic rows,
+  `dataset_version="FIXTURE"`, structure-only render — D-109), sandbox run,
+  provenance-aware explanation.
+- The M16 editor (`edit_program`) — a version-gated re-validation seam
+  (behavior edits require a new version; `DEPRECATED` is terminal; D-107) and
+  read-only debugger (`debug_program`, D-108).
+- The §26 MCP tool surface (`engine/visualization/mcp.py`): the 11 owned tools
+  registered into the M9 registry (extend, not replace) with one real JSON
+  Schema each (D-111); `get_chart_context` reused from M9. The
+  `VISUALIZATION_WRITE` tier extends the M9 `Tier` literal; no trading tier
+  (D-103).
+- Design note `specs/design/m16_ai_visualization.md` and decisions D-102…D-111.
+
+### Verification
+- `tests/test_visualization_ai.py` (51 tests), plus the M14 runtime/canvas
+  suites and the AI registry/MCP/API/trust-boundary suites: **182 passed,
+  0 failed, 22 skipped** (the skips are the DB-backed AI API tests, cluster
+  down — unchanged). ruff + mypy clean on `engine/`, `apps/` (133 files).
+- The full `pytest` suite is still DB-blocked (scratch cluster down); the
+  deterministic engine layer above is green against current `HEAD`.
+
+### Fixed
+- The DB engine now binds a 3s `connect_timeout`, so an unreachable cluster
+  fails fast (a dead port raises `OperationalError` in seconds) instead of
+  blocking ~2 min per try — the suite and `GET /v1/status` report
+  "database unreachable" rather than looking stuck (D-112; complements D-076).
+  Pinned by `tests/test_db_failfast.py` (no live database required).
+
+
+
 ## [Hypothesis Factory] - 2026-10-11 - The research-workflow engine (spec §24)
 
 Turns a research question into a falsifiable hypothesis, tests it against the

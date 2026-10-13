@@ -16,23 +16,32 @@ from engine.ai.registry import (
     tool,
     tools,
 )
+from engine.visualization.mcp import TOOL_NAMES as VISUALIZATION_TOOL_NAMES
 
 
 def test_the_twenty_spec_tools_exist() -> None:
     """Spec §9 names the tools verbatim; the registry matches it exactly
-    (21 names — the spec's list is the authority, not the round number)."""
-    all_names = names()
-    assert len(all_names) == 21, sorted(all_names)
-    assert sorted(READ_ONLY_NAMES + RESEARCH_NAMES) == all_names
+    (21 names — the spec's list is the authority, not the round number).
+
+    The §26 visualization tools (M16) extend the SAME registry, so this
+    counts only the §9 M9 layer; the visualization layer is asserted in
+    tests/test_visualization_ai.py."""
+    m9_names = [n for n in names() if n not in VISUALIZATION_TOOL_NAMES]
+    assert len(m9_names) == 21, sorted(m9_names)
+    assert sorted(READ_ONLY_NAMES + RESEARCH_NAMES) == m9_names
 
 
 def test_read_only_tier_is_the_read_subset() -> None:
-    read_tools = {t.name for t in tools("READ_ONLY")}
+    read_tools = {
+        t.name for t in tools("READ_ONLY") if t.name not in VISUALIZATION_TOOL_NAMES
+    }
     assert read_tools == set(READ_ONLY_NAMES)
 
 
 def test_research_tier_is_the_write_subset() -> None:
-    research_tools = {t.name for t in tools("RESEARCH")}
+    research_tools = {
+        t.name for t in tools("RESEARCH") if t.name not in VISUALIZATION_TOOL_NAMES
+    }
     assert research_tools == set(RESEARCH_NAMES)
 
 

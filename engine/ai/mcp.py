@@ -1,10 +1,11 @@
 """M9 — the MCP server (spec §9, design note m9_ai section 5, D-062).
 
-Exposes the READ_ONLY + RESEARCH tools over MCP (stdio + HTTP), same
-schemas; **every call is written to agents.tool_call and system.audit_log**
-(the M9 AC: "MCP calls audited"). Tiers in v1: READ_ONLY, RESEARCH; order
-tools do not exist — a request naming an unknown tool is refused
-(fail-closed, PD-4/D-063).
+Exposes the READ_ONLY, RESEARCH + VISUALIZATION_WRITE tools over MCP
+(stdio + HTTP), same schemas; **every call is written to
+agents.tool_call and system.audit_log** (the M9 AC: "MCP calls audited").
+Tiers: READ_ONLY, RESEARCH, VISUALIZATION_WRITE (D-103); **no trading
+tier ever exists** — order tools do not exist, and a request naming an
+unknown tool is refused (fail-closed, PD-4/D-063).
 
 The server is transport-agnostic: ``dispatch()`` handles one JSON-RPC
 request and returns one JSON-RPC response, so the stdio and HTTP front
@@ -23,7 +24,7 @@ from sqlalchemy import Connection, text
 from engine.ai.registry import ToolNotFoundError, tools
 from engine.ai.registry import tool as registry_tool
 
-TIERS: Final = ("READ_ONLY", "RESEARCH")
+TIERS: Final = ("READ_ONLY", "RESEARCH", "VISUALIZATION_WRITE")
 
 # JSON-RPC error codes used by the fail-closed paths
 ERR_PARSE: Final = -32700

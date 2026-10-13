@@ -73,6 +73,23 @@ def test_tools_list_rejects_an_unknown_tier() -> None:
     assert response["error"]["code"] == ERR_INVALID_PARAMS
 
 
+def test_tools_list_accepts_the_visualization_write_tier() -> None:
+    """D-103: the §26 VISUALIZATION_WRITE tier reaches the MCP surface."""
+    response = dispatch(
+        {
+            "jsonrpc": "2.0",
+            "id": 33,
+            "method": "tools/list",
+            "params": {"tier": "VISUALIZATION_WRITE"},
+        },
+        executor=_executor,
+        audit=None,
+    )
+    assert "error" not in response
+    tools_ = response["result"]["tools"]
+    assert {t["tier"] for t in tools_} <= {"VISUALIZATION_WRITE"}
+
+
 def test_tools_call_executes_and_returns_the_ref() -> None:
     response = dispatch(
         {

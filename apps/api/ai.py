@@ -22,6 +22,7 @@ from sqlalchemy import Connection, text
 from apps.api.db import connection_scope
 from engine.ai.handlers import BOUND_TOOLS as _BOUND_TOOLS
 from engine.ai.handlers import _audit
+from engine.ai.mcp import TIERS as _TIER_VOCABULARY
 from engine.ai.providers import Message, provider
 from engine.ai.registry import ToolNotFoundError, tools
 from engine.ai.registry import tool as registry_tool
@@ -186,9 +187,9 @@ async def chat(body: ChatRequest) -> Any:
 @router.get("/tools", response_model=ToolsResponse)
 async def list_tools(tier: str | None = Query(default=None)) -> ToolsResponse:
     """GET /v1/ai/tools: the registry as JSON (spec §11)."""
-    if tier is not None and tier not in ("READ_ONLY", "RESEARCH"):
+    if tier is not None and tier not in _TIER_VOCABULARY:
         raise HTTPException(422, f"unknown tier {tier!r}")
-    selected_tier = tier if tier in ("READ_ONLY", "RESEARCH") else None
+    selected_tier = tier if tier in _TIER_VOCABULARY else None
     return ToolsResponse(
         tools=[
             {

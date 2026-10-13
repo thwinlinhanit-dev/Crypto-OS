@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from contextlib import contextmanager
+from typing import Final
 
 from sqlalchemy import Connection, Engine, create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
@@ -12,12 +13,27 @@ from apps.api.settings import get_settings
 
 _engine: Engine | None = None
 _session_factory: sessionmaker[Session] | None = None
+#: Seconds a fresh connection waits before reporting the database unreachable
+#: (docs/BACKLOG.md "DB-backed tests need one reachable database"). Short enough
+#: that a dead cluster surfaces in seconds, long enough for a busy server to
+#: accept the connection.
+_CONNECT_TIMEOUT_S: Final[int] = 3
 
 
 def get_engine() -> Engine:
     global _engine
     if _engine is None:
-        _engine = create_engine(get_settings().database_url, pool_pre_ping=True, future=True)
+        _engine = create_engine(
+            get_settings().database_url,
+            pool_pre_ping=True,
+            future=True,
+            # Fail fast when no cluster answers on the configured URL: without a
+            # connect timeout a dead port hangs the connection attempt for the
+            # OS default (~2 min per try), so the suite and the status endpoint
+            # look like slow tests instead of reporting "database unreachable"
+            # (docs/BACKLOG.md "DB-backed tests need one reachable database").
+            connect_args={"connect_timeout": _CONNECT_TIMEOUT_S},
+        )
     return _engine
 
 

@@ -74,6 +74,16 @@ class VisualizationProgram:
             "parameters": dict(self.parameters),
             "performance_budget": self.performance_budget,
             "created_by": self.created_by,
+            # §6 required metadata: the hash is computed from
+            # (source, visualization_id, version, runtime) — the frozen
+            # dataclass carries it by construction, never a Python hash()
+            # (D-110; the sandbox and the §26 envelope read it from here).
+            "program_hash": program_hash(
+                self.source,
+                visualization_id=self.visualization_id,
+                version=self.version,
+                runtime=self.runtime,
+            ),
         }
 
 

@@ -80,6 +80,13 @@ def test_tools_endpoint_rejects_an_unknown_tier(client: TestClient) -> None:
     assert response.status_code == 422
 
 
+def test_tools_endpoint_accepts_the_visualization_write_tier(client: TestClient) -> None:
+    """D-103: the §26 tier vocabulary reaches the public tools endpoint."""
+    response = client.get("/v1/ai/tools", params={"tier": "VISUALIZATION_WRITE"})
+    assert response.status_code == 200, response.text
+    assert {t["tier"] for t in response.json()["tools"]} <= {"VISUALIZATION_WRITE"}
+
+
 def test_chat_streams_a_delta_and_a_done_event(client: TestClient) -> None:
     """The echo provider echoes the prompt; the done event carries the run
     id and the (empty) tool calls."""

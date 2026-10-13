@@ -16,7 +16,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Final, Literal
 
-Tier = Literal["READ_ONLY", "RESEARCH"]
+Tier = Literal["READ_ONLY", "RESEARCH", "VISUALIZATION_WRITE"]
 
 
 class ToolNotFoundError(KeyError):
