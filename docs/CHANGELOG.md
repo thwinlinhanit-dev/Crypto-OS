@@ -3,6 +3,29 @@
 Format follows [Keep a Changelog](https://keepachangelog.com/); version tags start at M0
 (the spec defines no release numbering yet).
 
+## [Infra: dev DB cluster as a service] - 2026-10-13 - local Postgres 18 runs as a Windows service
+
+The dev/scratch Postgres 18 cluster now runs as the **`pg-scratch-cryptoos` Windows
+service** on port **54333** (data dir `%USERPROFILE%\pgdata-cryptosos`, `autovacuum=off`),
+started by the SCM instead of a shell-spawned `pg_ctl start`. This ends the
+`0xC0000142` crash loop: the agent shell's restricted **job object** killed every process
+Postgres forked (the postmaster reached "ready", then each backend/startup process died at
+DLL init with `STATUS_DLL_INIT_FAILED`, forcing a full shutdown). The service launches
+outside the job object, so backends survive (D-113, docs/BACKLOG.md).
+
+### Verified
+- `pg_isready :54333` → accepting connections; a `psql` backend connects cleanly.
+- **Full suite green against the live cluster: 1167 passed, 0 failed, 2 skipped** (179s) —
+  the deferred verification outstanding since Phase 8. DB-backed suites now execute
+  instead of skip-guarding. Ruff + mypy clean.
+- API `GET /v1/status` → `{"status":"ok","database":"up"}`.
+
+### Notes
+- `.env` `DATABASE_URL` points at `localhost:54333`. A **Process-scope `DATABASE_URL`
+  env var overrides `.env`** (pydantic-settings) — export it explicitly per shell when they differ.
+- The suite still runs destructive `DELETE` against the configured DB (docs/BACKLOG.md
+  "Test isolation"); the service cluster is disposable, and a per-run-schema fixture is still parked.
+
 ## [M16: AI Visualization] - 2026-10-12 - Programmable-visualization AI layer (spec §25/§26/§36)
 
 Turns a natural-language request into a **validated, reproducible** visualization

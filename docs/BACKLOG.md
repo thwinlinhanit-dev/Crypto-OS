@@ -19,14 +19,22 @@ built now and what would have to be true to pick it up.
   so `make test` and `make check` can run at any time without a follow-up seed.
 - **DB-backed tests need one reachable database.** `get_settings().database_url`
   defaults to `localhost:5432`; when nothing answers there the connection attempts
-  hang (no fail-fast), so the suite appears to hang rather than fail. M5 was
-  verified against a throwaway cluster on `127.0.0.1:54333` (`initdb --auth=trust`,
-  `pg_ctl ... -o "-p 54333 -c listen_addresses=localhost -c autovacuum=off"`,
-  `createdb cryptoos`) with `DATABASE_URL` exported per shell; PostgreSQL 18's
-  autovacuum child dies under restricted job objects (`0xC0000142`), so it must be
-  disabled for the scratch cluster. To pick it up with the entry above: a
-  session/database fixture (per-run schema or container) plus a fail-fast timeout
-  in `get_engine()` for a clean "database unreachable" message.
+  hang (no fail-fast, now bounded by `connect_timeout=3` in `get_engine()` — D-112),
+  so a dead URL surfaces as a clean "database unreachable" instead of a hang.
+  **Resolved for local dev:** the cluster runs as the `pg-scratch-cryptoos`
+  Windows service (data dir `%USERPROFILE%\pgdata-cryptosos`, port `54333`,
+  `autovacuum=off`), started by the SCM. This shell's restricted **job object**
+  kills every process Postgres *forks* — the postmaster starts and reaches
+  "ready", then each client backend / startup process dies at DLL init with
+  `0xC0000142` (`STATUS_DLL_INIT_FAILED`), forcing a full cluster shutdown (the
+  crash loop). The parent binary is fine (`postgres --version` works), so this is
+  not a missing VC++ runtime or a version mismatch. Running as a **service**
+  escapes the job object because the SCM is not a child of this shell (D-113).
+  `.env` points `DATABASE_URL` at `localhost:54333`; note a Process-scope
+  `DATABASE_URL` env var overrides `.env` (pydantic-settings), so export it
+  explicitly per shell when needed.
+  Still parked with the entry above: a session/database fixture (per-run schema
+  or container) so the suite is fully isolated from the dev database.
 
 ## M5 park list (design note `specs/design/m5_stats.md` section 12)
 
